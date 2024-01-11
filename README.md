@@ -1,4 +1,4 @@
-<h1 align="center">Master Arbeit</h1>
+<h1 align="center">Master Thesis</h1>
 <p align="center">
    High Performance Multicasting on the Cloud
 </p>
@@ -63,6 +63,11 @@ All are based on a [Ubuntu 22.04 Jammy machine](https://releases.ubuntu.com/jamm
    ```
 
 ### AWS
+   ```bash
+
+   ```
+
+### Google Cloud Platform (GCP)
    ```bash
 
    ```
