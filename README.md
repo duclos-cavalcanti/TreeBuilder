@@ -89,6 +89,9 @@ This project is released under the BSD 3-Clause license. See [LICENSE](LICENSE).
 
 ## 4. Resources 
 - [DPDK](https://www.dpdk.org/)
+- [eBPF](https://ebpf.io/)
+- [AWS-CLI](https://docs.aws.amazon.com/cli/?nc2=h_ql_doc_cli)
+- [GCP](https://cloud.google.com/)
 
 ---
 <p align="center">
