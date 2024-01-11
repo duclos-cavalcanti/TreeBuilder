@@ -54,12 +54,20 @@ Check out the [_wiki_](https://github.com/duclos-cavalcanti/master-arbeit/wiki) 
     # recursive flag needed to include submodule
    ```
 
-2. Install submodules.
-   ```bash
-   printf 'Hello World\n'
-    ```
+## 2. Dependencies
+All are based on a [Ubuntu 22.04 Jammy machine](https://releases.ubuntu.com/jammy/).
 
-## 2. Usage
+### Network Tools
+   ```bash
+   sudo apt install net-tools
+   ```
+
+### AWS
+   ```bash
+
+   ```
+
+## 3. Usage
 
 1. Build
     ```bash 
