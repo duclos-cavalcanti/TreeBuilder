@@ -1,0 +1,3 @@
+[submodule "dom-tenant-service"]
+	path = dom-tenant-service
+	url = git@github.com:HaseebLUMS/dom-tenant-service.git
