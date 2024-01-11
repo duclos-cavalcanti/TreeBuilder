@@ -59,7 +59,7 @@ All are based on a [Ubuntu 22.04 Jammy machine](https://releases.ubuntu.com/jamm
 
 ### Network Tools
    ```bash
-   sudo apt install net-tools
+   sudo apt install net-tools inetutils-traceroute
    ```
 
 ### AWS
