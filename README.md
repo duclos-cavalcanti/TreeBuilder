@@ -83,9 +83,9 @@ gcloud components install gsutil
 ```
 
 ### AWS
-   ```bash
-
-   ```
+```bash
+echo "UNTESTED YET"
+```
 
 ## 3. Usage
 
