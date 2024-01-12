@@ -8,7 +8,7 @@ build:
 	@printf 'build\n'
 
 update:
-	git submodule update
+	git submodule update --recursive
 
 clean:
 	@printf 'clean\n'
