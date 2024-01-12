@@ -68,9 +68,24 @@ All are based on a [Ubuntu 22.04 Jammy machine](https://releases.ubuntu.com/jamm
    ```
 
 ### Google Cloud Platform (GCP)
+1. Installation
    ```bash
-
+sudo apt-get install apt-transport-https ca-certificates gnupg
+curl https://packages.cloud.google.com/apt/doc/apt-key.gpg | sudo apt-key --keyring /usr/share/keyrings/cloud.google.gpg add -
+echo "deb [signed-by=/usr/share/keyrings/cloud.google.gpg] https://packages.cloud.google.com/apt cloud-sdk main" | sudo tee /etc/apt/sources.list.d/google-cloud-sdk.list
+sudo apt update
+sudo apt-get install google-cloud-sdk
    ```
+
+2. Configuration 
+```bash 
+gcloud init
+```
+
+3. Optional
+```bash 
+gcloud components install gsutil
+```
 
 ## 3. Usage
 
