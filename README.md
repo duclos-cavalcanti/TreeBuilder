@@ -74,10 +74,9 @@ sudo apt-get install google-cloud-sdk
 
 2. Configuration 
 ```bash 
-gcloud init
-gcloud auth login 
-gcloud config set project <VALUE> # multicast1
-# needed to enable access to a specific project on google cloud
+gcloud init                         # iniit gcloud on system
+gcloud auth login                   # login into google cloud account used for cloud development
+gcloud config set project <VALUE>   # set project name, here it's multicast1
 ```
 
 3. Optional
