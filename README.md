@@ -75,6 +75,8 @@ sudo apt-get install google-cloud-sdk
 2. Configuration 
 ```bash 
 gcloud init
+gcloud auth login 
+# needed to enable access to a specific project on google cloud
 ```
 
 3. Optional
