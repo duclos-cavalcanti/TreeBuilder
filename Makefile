@@ -7,13 +7,13 @@ all: build
 build:
 	@printf 'build\n'
 
-submodule:
+update-module:
+	git submodule update --recursive
+
+update:
 	@git add dom-tenant-service
 	@git commit -m "Updated submodule"
 	@git push origin main
-
-update:
-	git submodule update --recursive
 
 clean:
 	@printf 'clean\n'
