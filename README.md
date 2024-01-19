@@ -41,6 +41,11 @@
 
 __Abstract:__ _Not defined yet._
 
+Msc. Thesis work performed at NYU under [Dr.Anirudh Sivaraman](https://anirudhsk.github.io/) and lead PhD candidate 
+[Muhammad Haseeb](https://haseeblums.github.io/). Advised by the [Chair of Communication Networks](https://www.ce.cit.tum.de/en/lkn/home/) 
+at [TUM](https://www.cit.tum.de/cit/startseite/).
+
+
 - [Kickoff](https://docs.google.com/presentation/d/1jYG-S1xyy03R2H4vy9wFlQLlAAt9CFZ3rXdfz10VZpw/edit?usp=sharing)
 - [Presentation](https://docs.google.com/presentation/d/1jYG-S1xyy03R2H4vy9wFlQLlAAt9CFZ3rXdfz10VZpw/edit?usp=sharing)
 
