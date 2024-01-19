@@ -28,6 +28,7 @@ def pkg():
 
     command = f"tar -czf {package} --exclude .git -C ./src/ ."
     subprocess.run(command, shell=True)
+    upload(package, package)
 
     pkg_scripts()
     return
