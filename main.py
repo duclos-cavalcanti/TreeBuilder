@@ -16,6 +16,11 @@ def upload(src, dst, origin=f"{BUCKET}"):
     subprocess.run(command, shell=True)
     return
 
+def pkg_scripts():
+    upload("./scripts/client.sh", "client.sh")
+    upload("./scripts/proxy.sh", "proxy.sh")
+    upload("./scripts/recipient.sh", "recipient.sh")
+
 def pkg():
     package = "bundle.tar.gz"
     if os.path.exists(package):
@@ -24,10 +29,7 @@ def pkg():
     command = f"tar -czf {package} --exclude={package} --exclude analysis --exclude .git -C ./dom-tenant-service/ ."
     subprocess.run(command, shell=True)
 
-    upload(package, package)
-    upload("./scripts/client.sh", "client.sh")
-    upload("./scripts/proxy.sh", "proxy.sh")
-    upload("./scripts/recipient.sh", "recipient.sh")
+    pkg_scripts()
     return
 
 def template():
@@ -67,7 +69,7 @@ def deploy():
     return
 
 def delete():
-    command = f"{DELETE} ${STACK}"
+    command = f"{DELETE} {STACK}"
     subprocess.run(command, shell=True)
     return
 
@@ -75,7 +77,7 @@ def parse():
     arg_def = argparse.ArgumentParser()
     arg_def.add_argument(
         "action",
-        choices=["template", "deploy", "delete", "package"],
+        choices=["template", "deploy", "delete", "package", "scripts"],
         help="Example: python3 main.py <action>"
     )
 
@@ -89,10 +91,14 @@ def main():
             template()
         case "package":
             pkg()
+        case "scripts":
+            pkg_scripts()
         case "deploy":
             deploy()
         case "delete":
             delete()
+
+    return
 
 
 if __name__ == "__main__":
