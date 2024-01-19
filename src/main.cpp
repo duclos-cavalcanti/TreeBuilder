@@ -19,6 +19,6 @@ int main(int argc, char *argv[]) {
         rte_exit(EXIT_FAILURE, "Error with EAL initialization\n");
     }
 
-    printf("Number of ETHERNET DEVICES: %d", rte_eth_dev_count_avail());
+    printf("Number of ETHERNET DEVICES: %d\n", rte_eth_dev_count_avail());
     return 0;
 }
