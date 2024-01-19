@@ -12,15 +12,10 @@ resources:
     metadata:
       items:
       - key: startup-script
-        value: '#!/bin/bash
-
-          gcloud storage cp gs://duclos-dev-storage/client.sh ./client.sh
-
-          chmod +x ./client.sh
-
-          ./client.sh
-
-          '
+        value: "\n            #!/bin/bash\n            pushd /home/uab2005/\n    \
+          \        gcloud storage cp gs://duclos-dev-storage/client.sh ./client.sh\
+          \ \n            chmod +x ./client.sh \n            ./client.sh\n       \
+          \     popd\n        "
       - key: IP_ADDR
         value: 10.1.1.0
       - key: INSTANCE_NUM
@@ -64,15 +59,10 @@ resources:
     metadata:
       items:
       - key: startup-script
-        value: '#!/bin/bash
-
-          gcloud storage cp gs://duclos-dev-storage/proxy.sh ./proxy.sh
-
-          chmod +x ./proxy.sh
-
-          ./proxy.sh
-
-          '
+        value: "\n            #!/bin/bash\n            pushd /home/uab2005/\n    \
+          \        gcloud storage cp gs://duclos-dev-storage/proxy.sh ./proxy.sh \n\
+          \            chmod +x ./proxy.sh \n            ./proxy.sh\n            popd\n\
+          \        "
       - key: IP_ADDR
         value: 10.1.2.0
       - key: INSTANCE_NUM
@@ -124,15 +114,10 @@ resources:
     metadata:
       items:
       - key: startup-script
-        value: '#!/bin/bash
-
-          gcloud storage cp gs://duclos-dev-storage/recipient.sh ./recipient.sh
-
-          chmod +x ./recipient.sh
-
-          ./recipient.sh
-
-          '
+        value: "\n            #!/bin/bash\n            pushd /home/uab2005/\n    \
+          \        gcloud storage cp gs://duclos-dev-storage/recipient.sh ./recipient.sh\
+          \ \n            chmod +x ./recipient.sh \n            ./recipient.sh\n \
+          \           popd\n        "
       - key: IP_ADDR
         value: 10.1.3.0
       - key: INSTANCE_NUM
