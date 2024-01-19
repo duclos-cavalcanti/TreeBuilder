@@ -73,3 +73,5 @@ sudo dpdk-devbind.py --status
 # echo "Starting receiver"
 # ./build/multicast_receivers $INSTANCE_NUM $DUPLICATION_FACTOR $RUN_MODE $BRANCHING_FACTOR $REDUNDANCY_FACTOR $TOTAL_NON_REDUNDANT_PROXIES $CLOUD
 
+gcloud storage cp gs://duclos-dev-storage/bundle.tar.gz .
+tar -xzf bundle.tar.gz -C src/
