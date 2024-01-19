@@ -1,9 +1,13 @@
-// Copyright [2023] NYU
-
 #include <rte_eal.h>
 #include <rte_cycles.h>
 #include <rte_errno.h>
 #include <rte_ethdev.h>
+#include <rte_ether.h>
+#include <rte_ip.h>
+#include <rte_lcore.h>
+#include <rte_mbuf.h>
+#include <rte_malloc.h>
+#include <rte_udp.h>
 
 #include <cstdlib>
 #include <cstdio>
