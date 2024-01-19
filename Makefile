@@ -2,10 +2,8 @@ SHELL := /bin/bash
 
 all: build
 
-.PHONY: build update template pkg deploy delete package clean
-
-
-.PHONY: scripts pkg-scripts
+.PHONY: build update pkg deploy delete package clean
+.PHONY: scripts
 
 build:
 	@printf 'build\n'
@@ -18,10 +16,10 @@ update:
 template: templates/instance.yaml
 	@python3 main.py template
 
-scripts: pkg-scripts
-
-pkg-scripts:
+pkg-scripts: $(wildcard scripts/*.sh)
 	@python3 main.py scripts
+
+scripts: pkg-scripts
 
 pkg:
 	@python3 main.py package
