@@ -38,13 +38,14 @@ sudo rm -rf src/
 sudo mkdir src/
 sudo chmod 777 src/
 sudo chown -R root:root ./src
+
 gcloud storage cp gs://duclos-dev-storage/bundle.tar.gz .
 tar -xzf bundle.tar.gz -C src/
 # sudo rm -rf dom-tenant-service/
 # sudo mkdir dom-tenant-service/
 # sudo chmod 777 dom-tenant-service/
 # sudo chown -R root:root ./dom-tenant-service
-
+#
 # gcloud storage cp gs://cdm-templates-nyu-systems-multicast/bundled_proj.tar.gz .
 # tar -xzf bundled_proj.tar.gz -C dom-tenant-service/
 export HOME=/root
