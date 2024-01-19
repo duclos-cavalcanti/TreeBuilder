@@ -1,25 +1,26 @@
 SHELL := /bin/bash
 
-all: build
+all: help
 
-.PHONY: build update pkg deploy delete package clean
+.PHONY: build update template pkg deploy delete clean
 .PHONY: scripts
 
+help:
+	echo help
+
 build:
-	@printf 'build\n'
+	@MAKE -C src
 
 update:
 	@git add dom-tenant-service
 	@git commit -m "Updated submodule"
 	@git push origin main
 
-template: templates/instance.yaml
+template:
 	@python3 main.py template
 
-pkg-scripts: $(wildcard scripts/*.sh)
+scripts: $(wildcard scripts/*.sh)
 	@python3 main.py scripts
-
-scripts: pkg-scripts
 
 pkg:
 	@python3 main.py package
