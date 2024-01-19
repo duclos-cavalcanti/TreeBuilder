@@ -32,7 +32,7 @@ echo "Redundancy Factor: $REDUNDANCY_FACTOR"
 echo "Total Non-redundant Proxies: $TOTAL_NON_REDUNDANT_PROXIES"
 echo "Duplication Factor: $DUPLICATION_FACTOR"
 
-# echo "Downloading service bundle"
+echo "Downloading service bundle"
 cd /home/uab2005
 sudo rm -rf src/
 sudo mkdir src/
