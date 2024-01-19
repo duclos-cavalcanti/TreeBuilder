@@ -2,7 +2,7 @@ SHELL := /bin/bash
 
 all: build
 
-.PHONY: build update pkg deploy delete package clean
+.PHONY: build update template pkg deploy delete package clean
 
 build:
 	@printf 'build\n'
@@ -12,10 +12,13 @@ update:
 	@git commit -m "Updated submodule"
 	@git push origin main
 
+template: templates/instance.yaml
+	@python3 main.py template
+
 pkg:
 	@python3 main.py package
 
-deploy:
+deploy: template pkg
 	@python3 main.py deploy
 
 delete:
