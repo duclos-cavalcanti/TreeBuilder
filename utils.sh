@@ -21,5 +21,14 @@ glogf() {
 
 groot() {
     [ -z $1 ] && INSTANCE="recipient-dev" || INSTANCE="$1"
-    gcloud compute ssh "root@${INSTANCE}" --zone "us-east4-c" --project "multicast1" -- "cd /home/uab2005; bash"
+    [ -z $2 ] && COMMAND="cd /home/uab2005" || COMMAND="$2"
+    gcloud compute ssh "root@${INSTANCE}" --zone "us-east4-c" --project "multicast1" -- "${COMMAND}; bash"
+}
+
+gcli() {
+    groot client0000 "cd /home/uab2005/dom-tenant-service/src"
+}
+
+grec() {
+    groot recipient0000
 }
