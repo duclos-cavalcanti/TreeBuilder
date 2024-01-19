@@ -27,9 +27,9 @@ def pkg():
     if os.path.exists(package):
         os.remove(package)
 
-    command = f"tar -czf {package} --exclude .git -C ./src/ ."
+    command = f"tar -czf ./build/{package} --exclude .git -C ./src/ ."
     subprocess.run(command, shell=True)
-    upload(package, package)
+    upload(f"./build/{package}", package)
 
     pkg_scripts()
     return
