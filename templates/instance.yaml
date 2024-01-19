@@ -14,7 +14,7 @@ resources:
       - key: startup-script
         value: '#!/bin/bash
 
-          gcloud storage cp gs://cdm-templates-nyu-systems-multicast/client.sh ./client.sh
+          gcloud storage cp gs://duclos-dev-storage/client.sh ./client.sh
 
           chmod +x ./client.sh
 
@@ -66,7 +66,7 @@ resources:
       - key: startup-script
         value: '#!/bin/bash
 
-          gcloud storage cp gs://cdm-templates-nyu-systems-multicast/proxy.sh ./proxy.sh
+          gcloud storage cp gs://duclos-dev-storage/proxy.sh ./proxy.sh
 
           chmod +x ./proxy.sh
 
@@ -126,8 +126,7 @@ resources:
       - key: startup-script
         value: '#!/bin/bash
 
-          gcloud storage cp gs://cdm-templates-nyu-systems-multicast/recipient.sh
-          ./recipient.sh
+          gcloud storage cp gs://duclos-dev-storage/recipient.sh ./recipient.sh
 
           chmod +x ./recipient.sh
 
