@@ -5,7 +5,7 @@ import argparse
 import yaml
 
 STACK   = "duclos-dev"
-BUCKET  = "cdm-templates-nyu-systems-multicast"
+BUCKET  = "duclos-dev-storage"
 
 DEPLOY  =   f"gcloud deployment-manager -q deployments create {STACK} --config"
 DELETE  =   f"gcloud deployment-manager -q deployments delete {STACK}"
