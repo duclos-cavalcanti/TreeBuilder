@@ -41,9 +41,9 @@
 
 __Abstract:__ _Not defined yet._
 
-Msc. Thesis work performed at NYU, advised [TUM's](https://www.cit.tum.de/cit/startseite/) [Chair of Communication Networks](https://www.ce.cit.tum.de/en/lkn/home/), 
+Msc. Thesis work performed at NYU, advised by the [Chair of Communication Networks](https://www.ce.cit.tum.de/en/lkn/home/) at TUM, 
 [Dr.Anirudh Sivaraman](https://anirudhsk.github.io/) and his lead PhD candidate [Muhammad Haseeb](https://haseeblums.github.io/). This contribution 
-is however within the larger current research of Dr.Anirudh Sivaraman's and his team.
+is however within the larger current research of Dr.Anirudh Sivaraman's & Co.
 
 
 - [Kickoff](https://docs.google.com/presentation/d/1jYG-S1xyy03R2H4vy9wFlQLlAAt9CFZ3rXdfz10VZpw/edit?usp=sharing)
