@@ -1,0 +1,149 @@
+resources:
+- name: client-dev
+  properties:
+    disks:
+    - autoDelete: true
+      boot: true
+      deviceName: boot
+      initializeParams:
+        sourceImage: projects/multicast1/global/images/multicast-ubuntu-2204-ebpf
+      type: PERSISTENT
+    machineType: zones/us-east4-c/machineTypes/e2-standard-4
+    metadata:
+      items:
+      - key: startup-script
+        value: ""
+      - key: IP_ADDR
+        value: 10.1.1.0
+      - key: INSTANCE_NUM
+        value: '0'
+      - key: BKT_NAME
+        value: cdm-templates-nyu-systems-multicast
+      - key: RUN_MODE
+        value: dpdk
+      - key: CLOUD
+        value: gcp
+    networkInterfaces:
+    - accessConfigs:
+      - networkTier: PREMIUM
+        type: ONE_TO_ONE_NAT
+      network: projects/multicast1/global/networks/multicast-management
+      networkIP: 10.1.1.0
+      nicType: GVNIC
+      stackType: IPV4_ONLY
+      subnetwork: projects/multicast1/regions/us-east4/subnetworks/multicast-management
+    - network: projects/multicast1/global/networks/multicast-service
+      networkIP: 10.0.1.0
+      nicType: GVNIC
+      stackType: IPV4_ONLY
+      subnetwork: projects/multicast1/regions/us-east4/subnetworks/multicast-service
+    serviceAccounts:
+    - email: multicast-service-vm@multicast1.iam.gserviceaccount.com
+      scopes:
+      - https://www.googleapis.com/auth/cloud-platform
+    zone: us-east4-c
+  type: compute.v1.instance
+- name: proxy-dev
+  properties:
+    disks:
+    - autoDelete: true
+      boot: true
+      deviceName: boot
+      initializeParams:
+        sourceImage: projects/multicast1/global/images/multicast-ubuntu-2204-ebpf
+      type: PERSISTENT
+    machineType: zones/us-east4-c/machineTypes/e2-standard-4
+    metadata:
+      items:
+      - key: startup-script
+        value: ""
+      - key: IP_ADDR
+        value: 10.1.2.0
+      - key: INSTANCE_NUM
+        value: '0'
+      - key: BKT_NAME
+        value: cdm-templates-nyu-systems-multicast
+      - key: RUN_MODE
+        value: dpdk
+      - key: CLOUD
+        value: gcp
+      - key: BRANCHING_FACTOR
+        value: '2'
+      - key: REDUNDANCY_FACTOR
+        value: '0'
+      - key: TOTAL_NON_REDUNDANT_PROXIES
+        value: '3'
+      - key: DUPLICATION_FACTOR
+        value: '1'
+    networkInterfaces:
+    - accessConfigs:
+      - networkTier: PREMIUM
+        type: ONE_TO_ONE_NAT
+      network: projects/multicast1/global/networks/multicast-management
+      networkIP: 10.1.2.0
+      nicType: GVNIC
+      stackType: IPV4_ONLY
+      subnetwork: projects/multicast1/regions/us-east4/subnetworks/multicast-management
+    - network: projects/multicast1/global/networks/multicast-service
+      networkIP: 10.0.2.0
+      nicType: GVNIC
+      stackType: IPV4_ONLY
+      subnetwork: projects/multicast1/regions/us-east4/subnetworks/multicast-service
+    serviceAccounts:
+    - email: multicast-service-vm@multicast1.iam.gserviceaccount.com
+      scopes:
+      - https://www.googleapis.com/auth/cloud-platform
+    zone: us-east4-c
+  type: compute.v1.instance
+- name: recipient-dev
+  properties:
+    disks:
+    - autoDelete: true
+      boot: true
+      deviceName: boot
+      initializeParams:
+        sourceImage: projects/multicast1/global/images/multicast-ubuntu-2204-ebpf
+      type: PERSISTENT
+    machineType: zones/us-east4-c/machineTypes/e2-standard-4
+    metadata:
+      items:
+      - key: startup-script
+        value: ""
+      - key: IP_ADDR
+        value: 10.1.3.0
+      - key: INSTANCE_NUM
+        value: '0'
+      - key: BKT_NAME
+        value: cdm-templates-nyu-systems-multicast
+      - key: RUN_MODE
+        value: dpdk
+      - key: CLOUD
+        value: gcp
+      - key: BRANCHING_FACTOR
+        value: '2'
+      - key: REDUNDANCY_FACTOR
+        value: '0'
+      - key: TOTAL_NON_REDUNDANT_PROXIES
+        value: '3'
+      - key: DUPLICATION_FACTOR
+        value: '1'
+    networkInterfaces:
+    - accessConfigs:
+      - networkTier: PREMIUM
+        type: ONE_TO_ONE_NAT
+      network: projects/multicast1/global/networks/multicast-management
+      networkIP: 10.1.3.0
+      nicType: GVNIC
+      stackType: IPV4_ONLY
+      subnetwork: projects/multicast1/regions/us-east4/subnetworks/multicast-management
+    - network: projects/multicast1/global/networks/multicast-service
+      networkIP: 10.0.3.0
+      nicType: GVNIC
+      stackType: IPV4_ONLY
+      subnetwork: projects/multicast1/regions/us-east4/subnetworks/multicast-service
+    serviceAccounts:
+    - email: multicast-service-vm@multicast1.iam.gserviceaccount.com
+      scopes:
+      - https://www.googleapis.com/auth/cloud-platform
+    zone: us-east4-c
+  type: compute.v1.instance
