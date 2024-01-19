@@ -38,8 +38,8 @@ def template():
         with open(n, "w") as stream:
             yaml.dump(data, stream)
 
-    ret = "./vms/instance.yaml"
-    base = "./vms/base.yaml"
+    ret = "./templates/instance.yaml"
+    base = "./templates/base.yaml"
     instances = [ "client", "proxy", "recipient"]
 
     data = load_yaml(base)
