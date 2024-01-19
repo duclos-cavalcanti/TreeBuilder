@@ -15,7 +15,8 @@ glog() {
 
 glogf() {
     [ -z $1 ] && INSTANCE="recipient-dev" || INSTANCE="$1"
-    glog ${INSTANCE} > LOG.TXT
+    [ -z $2 ] && LOG="LOG.TXT" || LOG="$2"
+    glog ${INSTANCE} > ${LOG}
 }
 
 groot() {
