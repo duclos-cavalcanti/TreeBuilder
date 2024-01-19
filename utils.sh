@@ -10,7 +10,7 @@ glog() {
     gcloud compute ssh --zone "us-east4-c" \
                         "${INSTANCE}" \
                         --project "multicast1" \
-                        --command="sudo journalctl -u google-startup-scripts.service"
+                        --command="sudo journalctl -u google-startup-scripts.service" | less
 }
 
 glogf() {
