@@ -33,12 +33,18 @@ echo "Total Non-redundant Proxies: $TOTAL_NON_REDUNDANT_PROXIES"
 echo "Duplication Factor: $DUPLICATION_FACTOR"
 
 # echo "Downloading service bundle"
-# cd /home/uab2005
+cd /home/uab2005
+sudo rm -rf src/
+sudo mkdir src/
+sudo chmod 777 src/
+sudo chown -R root:root ./src
+gcloud storage cp gs://duclos-dev-storage/bundle.tar.gz .
+tar -xzf bundle.tar.gz -C src/
 # sudo rm -rf dom-tenant-service/
 # sudo mkdir dom-tenant-service/
 # sudo chmod 777 dom-tenant-service/
 # sudo chown -R root:root ./dom-tenant-service
-# 
+
 # gcloud storage cp gs://cdm-templates-nyu-systems-multicast/bundled_proj.tar.gz .
 # tar -xzf bundled_proj.tar.gz -C dom-tenant-service/
 export HOME=/root
@@ -72,6 +78,3 @@ sudo dpdk-devbind.py --status
 # 
 # echo "Starting receiver"
 # ./build/multicast_receivers $INSTANCE_NUM $DUPLICATION_FACTOR $RUN_MODE $BRANCHING_FACTOR $REDUNDANCY_FACTOR $TOTAL_NON_REDUNDANT_PROXIES $CLOUD
-
-gcloud storage cp gs://duclos-dev-storage/bundle.tar.gz .
-tar -xzf bundle.tar.gz -C src/
