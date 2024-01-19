@@ -5,6 +5,7 @@ import argparse
 import yaml
 
 STACK   = "duclos-dev"
+CONFIG  = "./build/instance.yaml"
 BUCKET  = "duclos-dev-storage"
 
 DEPLOY  =   f"gcloud deployment-manager -q deployments create {STACK} --config"
@@ -43,7 +44,7 @@ def template():
             yaml.dump(data, stream)
 
     base = "./assets/base.yaml"
-    instance = "./build/instance.yaml"
+    instance = CONFIG
     instances = [ "client", "proxy", "recipient"]
 
     data = load_yaml(base)
@@ -67,12 +68,11 @@ def template():
     return
 
 def deploy():
-    template = "./templates/instance.yaml"
-    if not os.path.exists(template):
-        print(f"Template file doesn't exist: {template}!")
+    if not os.path.exists(CONFIG):
+        print(f"Template file doesn't exist: {CONFIG}!")
         sys.exit(1)
 
-    command = f"{DEPLOY} {template}"
+    command = f"{DEPLOY} {CONFIG}"
     subprocess.run(command, shell=True)
     return
 
