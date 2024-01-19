@@ -32,15 +32,15 @@ echo "Redundancy Factor: $REDUNDANCY_FACTOR"
 echo "Total Non-redundant Proxies: $TOTAL_NON_REDUNDANT_PROXIES"
 echo "Duplication Factor: $DUPLICATION_FACTOR"
 
-echo "Downloading service bundle"
-cd /home/uab2005
-sudo rm -rf dom-tenant-service/
-sudo mkdir dom-tenant-service/
-sudo chmod 777 dom-tenant-service/
-sudo chown -R root:root ./dom-tenant-service
-
-gcloud storage cp gs://cdm-templates-nyu-systems-multicast/bundle.tar.gz .
-tar -xzf bundle.tar.gz -C dom-tenant-service/
+# echo "Downloading service bundle"
+# cd /home/uab2005
+# sudo rm -rf dom-tenant-service/
+# sudo mkdir dom-tenant-service/
+# sudo chmod 777 dom-tenant-service/
+# sudo chown -R root:root ./dom-tenant-service
+# 
+# gcloud storage cp gs://cdm-templates-nyu-systems-multicast/bundled_proj.tar.gz .
+# tar -xzf bundled_proj.tar.gz -C dom-tenant-service/
 export HOME=/root
 
 echo "Starting DPDK for ens5 and saving ens4 information"
@@ -54,23 +54,22 @@ sysctl -w vm.nr_hugepages=5000
 sudo dpdk-devbind.py --bind=igb_uio 00:05.0
 sudo dpdk-devbind.py --status
 
-echo "Deploying ttcs"
-cd dom-tenant-service/gcp-deploy
-sudo chmod +x ../aws-deploy/stats_to_s3.sh
-sudo chmod +x ./deploy_ttcs.sh
+# echo "Deploying ttcs"
+# cd dom-tenant-service/gcp-deploy
+# sudo chmod +x ../aws-deploy/stats_to_s3.sh
+# sudo chmod +x ./deploy_ttcs.sh
 # sudo ./deploy_ttcs.sh ./assets/ttcs-agent.cfg $IP_ADDR
 
-cd ..
-cp ./../mac.txt ./config/mac.txt
-cp ./../macsocket.txt ./config/macsocket.txt
-cp ./../ip.txt ./config/ip.txt
-cp ./../ipsocket.txt ./config/ipsocket.txt
-cd ./src
-
-echo "Compiling receiver"
-make multicast_receivers
-
-echo "Starting receiver"
-echo "./build/multicast_receivers $INSTANCE_NUM $DUPLICATION_FACTOR $RUN_MODE $BRANCHING_FACTOR $REDUNDANCY_FACTOR $TOTAL_NON_REDUNDANT_PROXIES $CLOUD"
+# cd ..
+# cp ./../mac.txt ./config/mac.txt
+# cp ./../macsocket.txt ./config/macsocket.txt
+# cp ./../ip.txt ./config/ip.txt
+# cp ./../ipsocket.txt ./config/ipsocket.txt
+# cd ./src
+# 
+# echo "Compiling receiver"
+# make multicast_receivers
+# 
+# echo "Starting receiver"
 # ./build/multicast_receivers $INSTANCE_NUM $DUPLICATION_FACTOR $RUN_MODE $BRANCHING_FACTOR $REDUNDANCY_FACTOR $TOTAL_NON_REDUNDANT_PROXIES $CLOUD
 

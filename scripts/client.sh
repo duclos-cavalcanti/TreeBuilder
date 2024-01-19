@@ -28,8 +28,8 @@ sudo mkdir dom-tenant-service/
 sudo chmod 777 dom-tenant-service/
 sudo chown -R root:root ./dom-tenant-service
 
-gcloud storage cp gs://cdm-templates-nyu-systems-multicast/bundle.tar.gz .
-tar -xzf bundle.tar.gz -C dom-tenant-service/
+# gcloud storage cp gs://cdm-templates-nyu-systems-multicast/bundled_proj.tar.gz .
+# tar -xzf bundled_proj.tar.gz -C dom-tenant-service/
 export HOME=/root
 
 echo "Deploying ttcs"

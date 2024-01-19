@@ -39,8 +39,8 @@ sudo mkdir dom-tenant-service/
 sudo chmod 777 dom-tenant-service/
 sudo chown -R root:root ./dom-tenant-service
 
-gcloud storage cp gs://cdm-templates-nyu-systems-multicast/bundle.tar.gz .
-tar -xzf bundle.tar.gz -C dom-tenant-service/
+# gcloud storage cp gs://cdm-templates-nyu-systems-multicast/bundled_proj.tar.gz .
+# tar -xzf bundled_proj.tar.gz -C dom-tenant-service/
 export HOME=/root
 
 echo "Starting DPDK for ens5 and saving ens4 information"
@@ -59,17 +59,17 @@ cd dom-tenant-service/gcp-deploy
 sudo chmod +x ./deploy_ttcs.sh
 # sudo ./deploy_ttcs.sh ./assets/ttcs-agent.cfg $IP_ADDR
 
-cd ..
-sudo tc qdisc add dev ens4 clsact
-cp ./../mac.txt ./config/mac.txt
-cp ./../macsocket.txt ./config/macsocket.txt
-cp ./../ip.txt ./config/ip.txt
-cp ./../ipsocket.txt ./config/ipsocket.txt
-cd ./src
-
-echo "Compiling proxy"
-clang -g -O2 -Wall -target bpf -I ~/iproute2/include/ -c ./multicast_proxy/tc-replication.c -o tc-replication.o
-make multicast_proxy
-
-echo "Starting proxy"
-./build/multicast_proxy $INSTANCE_NUM $BRANCHING_FACTOR $RUN_MODE $REDUNDANCY_FACTOR $TOTAL_NON_REDUNDANT_PROXIES $CLOUD
+# cd ..
+# sudo tc qdisc add dev ens4 clsact
+# cp ./../mac.txt ./config/mac.txt
+# cp ./../macsocket.txt ./config/macsocket.txt
+# cp ./../ip.txt ./config/ip.txt
+# cp ./../ipsocket.txt ./config/ipsocket.txt
+# cd ./src
+# 
+# echo "Compiling proxy"
+# clang -g -O2 -Wall -target bpf -I ~/iproute2/include/ -c ./multicast_proxy/tc-replication.c -o tc-replication.o
+# make multicast_proxy
+# 
+# echo "Starting proxy"
+# ./build/multicast_proxy $INSTANCE_NUM $BRANCHING_FACTOR $RUN_MODE $REDUNDANCY_FACTOR $TOTAL_NON_REDUNDANT_PROXIES $CLOUD
