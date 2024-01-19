@@ -61,6 +61,12 @@ sysctl -w vm.nr_hugepages=5000
 sudo dpdk-devbind.py --bind=igb_uio 00:05.0
 sudo dpdk-devbind.py --status
 
+[ -d /mnt/huge ] || sudo mkdir /mnt/huge
+sudo mount -t hugetlbfs -o pagesize=1G none /mnt/huge
+sudo bash -c 'echo 4 > /sys/kernel/mm/hugepages/hugepages-1048576kB/nr_hugepages'
+sudo bash -c 'echo 1024 > /sys/kernel/mm/hugepages/hugepages-2048kB/nr_hugepages'
+
+
 # echo "Deploying ttcs"
 # cd dom-tenant-service/gcp-deploy
 # sudo chmod +x ../aws-deploy/stats_to_s3.sh

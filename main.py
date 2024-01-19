@@ -53,7 +53,14 @@ def template():
             print(f"Unexpected yaml file format, name of resource is {name}, no relation to {instances[i]}!")
             sys.exit(1)
 
-        startup = f"#!/bin/bash\ngcloud storage cp gs://{BUCKET}/{instances[i]}.sh ./{instances[i]}.sh\nchmod +x ./{instances[i]}.sh\n./{instances[i]}.sh\n"
+        startup = f"""
+            #!/bin/bash
+            pushd /home/uab2005/
+            gcloud storage cp gs://{BUCKET}/{instances[i]}.sh ./{instances[i]}.sh 
+            chmod +x ./{instances[i]}.sh 
+            ./{instances[i]}.sh
+            popd
+        """        
         data["resources"][i]["properties"]["metadata"]["items"][0]["value"] = startup
 
     write_yaml(instance, data)
