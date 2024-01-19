@@ -26,7 +26,7 @@ def pkg():
     if os.path.exists(package):
         os.remove(package)
 
-    command = f"tar -czf {package} --exclude={package} --exclude analysis --exclude .git -C ./dom-tenant-service/ ."
+    command = f"tar -czf {package} --exclude .git -C ./src/ ."
     subprocess.run(command, shell=True)
 
     pkg_scripts()
