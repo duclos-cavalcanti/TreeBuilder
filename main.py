@@ -17,9 +17,9 @@ def upload(src, dst, origin=f"{BUCKET}"):
     return
 
 def pkg_scripts():
-    upload("./scripts/client.sh", "client.sh")
-    upload("./scripts/proxy.sh", "proxy.sh")
-    upload("./scripts/recipient.sh", "recipient.sh")
+    upload("./assets/client.sh", "client.sh")
+    upload("./assets/proxy.sh", "proxy.sh")
+    upload("./assets/recipient.sh", "recipient.sh")
 
 def pkg():
     package = "bundle.tar.gz"
@@ -42,8 +42,8 @@ def template():
         with open(n, "w") as stream:
             yaml.dump(data, stream)
 
-    base = "./templates/base.yaml"
-    instance = "./templates/instance.yaml"
+    base = "./assets/base.yaml"
+    instance = "./build/instance.yaml"
     instances = [ "client", "proxy", "recipient"]
 
     data = load_yaml(base)
