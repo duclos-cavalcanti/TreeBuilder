@@ -1,6 +1,6 @@
 SHELL := /bin/bash
 
-all: help
+all: template pkg deploy
 
 .PHONY: help
 help:
@@ -25,11 +25,7 @@ pkg:
 	@python3 main.py package
 
 .PHONY: deploy
-deploy: template pkg
-	@python3 main.py deploy
-
-.PHONY: run
-run: 
+deploy:
 	@python3 main.py deploy
 
 .PHONY: delete
