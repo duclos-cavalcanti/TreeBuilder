@@ -20,12 +20,12 @@ resources:
       - networkTier: PREMIUM
         type: ONE_TO_ONE_NAT
       network: projects/multicast1/global/networks/multicast-management
-      networkIP: 10.1.1.16
+      networkIP: 10.1.1.255
       nicType: GVNIC
       stackType: IPV4_ONLY
       subnetwork: projects/multicast1/regions/us-east4/subnetworks/multicast-management
     - network: projects/multicast1/global/networks/multicast-service
-      networkIP: 10.0.1.16
+      networkIP: 10.0.1.255
       nicType: GVNIC
       stackType: IPV4_ONLY
       subnetwork: projects/multicast1/regions/us-east4/subnetworks/multicast-service
