@@ -78,7 +78,7 @@ def deploy():
     return
 
 def delete():
-    command = f"{DELETE} {STACK}"
+    command = f"{DELETE}"
     subprocess.run(command, shell=True)
     return
 
