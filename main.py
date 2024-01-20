@@ -5,8 +5,8 @@ import argparse
 import yaml
 
 STACK   = "duclos-dev"
-CONFIG  = "./build/instance.yaml"
 BUCKET  = "duclos-dev-storage"
+CONFIG  = "./build/instance.yaml"
 
 DEPLOY  =   f"gcloud deployment-manager -q deployments create {STACK} --config"
 DELETE  =   f"gcloud deployment-manager -q deployments delete {STACK}"
@@ -17,21 +17,20 @@ def upload(src, dst, origin=f"{BUCKET}"):
     subprocess.run(command, shell=True)
     return
 
-def pkg_scripts():
-    upload("./assets/client.sh", "client.sh")
-    upload("./assets/proxy.sh", "proxy.sh")
-    upload("./assets/recipient.sh", "recipient.sh")
-
 def pkg():
+    folder="dom-tenant-service"
     package = "bundle.tar.gz"
     if os.path.exists(package):
         os.remove(package)
 
-    command = f"tar -czf ./build/{package} --exclude .git -C ./src/ ."
+    command = f"tar -czf ./build/{package} --exclude .git -C ./{folder}/ ."
     subprocess.run(command, shell=True)
-    upload(f"./build/{package}", package)
 
-    pkg_scripts()
+    upload(f"./build/{package}", package)
+    upload("./assets/startup/base.sh", "base.sh")
+    upload("./assets/startup/client.sh", "client.sh")
+    upload("./assets/startup/proxy.sh", "proxy.sh")
+    upload("./assets/startup/recipient.sh", "recipient.sh")
     return
 
 def template():
@@ -45,21 +44,23 @@ def template():
 
     base = "./assets/base.yaml"
     instance = CONFIG
-    instances = [ "client", "proxy", "recipient"]
+    instances = [ "base-dev", "client-dev", "proxy-dev", "recipient-dev"]
 
     data = load_yaml(base)
-    for i in (0, 1, 2):
+    for i in range(len(data["resources"])):
         name = data["resources"][i]["name"] 
-        if instances[i] not in data["resources"][i]["name"]:
-            print(f"Unexpected yaml file format, name of resource is {name}, no relation to {instances[i]}!")
+
+        if name not in instances:
+            print(f"Unexpected yaml file format, name of resource is {name}, not found in instances array!")
             sys.exit(1)
 
+        script = instances[instances.index(name)][:-len("-dev")]
         startup = f"""
             #!/bin/bash
             pushd /home/uab2005/
-            gcloud storage cp gs://{BUCKET}/{instances[i]}.sh ./{instances[i]}.sh 
-            chmod +x ./{instances[i]}.sh 
-            ./{instances[i]}.sh
+            gcloud storage cp gs://{BUCKET}/{script}.sh ./{script}.sh 
+            chmod +x ./{script}.sh 
+            ./{script}.sh
             popd
         """        
         data["resources"][i]["properties"]["metadata"]["items"][0]["value"] = startup
@@ -99,8 +100,6 @@ def main():
             template()
         case "package":
             pkg()
-        case "scripts":
-            pkg_scripts()
         case "deploy":
             deploy()
         case "delete":

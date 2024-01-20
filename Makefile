@@ -3,7 +3,6 @@ SHELL := /bin/bash
 all: help
 
 .PHONY: build update template pkg deploy delete clean
-.PHONY: scripts
 
 help:
 	echo help
@@ -18,9 +17,6 @@ update:
 
 template:
 	@python3 main.py template
-
-scripts: $(wildcard scripts/*.sh)
-	@python3 main.py scripts
 
 pkg:
 	@python3 main.py package
