@@ -34,4 +34,4 @@ delete:
 
 .PHONY: clean
 clean:
-	@printf 'clean\n'
+	@echo clean
