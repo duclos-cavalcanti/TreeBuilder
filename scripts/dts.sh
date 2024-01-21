@@ -13,28 +13,28 @@ usage() {
 main() {
     local action="$1"
     local dir=$(basename $(pwd))
-    if [ -d "./dom-tenant-service" ]; then 
+    if [ -d "./module" ]; then 
         case $action in
             create)
-                pushd dom-tenant-service; pushd gcp-deploy
+                pushd module; pushd gcp-deploy
                 python3 run.py create-template -r 10 -p 3 -b 2 -c 1 -rm dpdk -dm standard -conf 0
                 popd; popd
                 ;;
         
             deploy)
-                pushd dom-tenant-service; pushd gcp-deploy
+                pushd module; pushd gcp-deploy
                 python3 run.py deploy-stack
                 popd; popd
                 ;;
         
             package)
                 rm -f dts.tar.gz
-                tar -czf dts.tar.gz  --exclude .git -C ./dom-tenant-service .
+                tar -czf dts.tar.gz  --exclude .git -C ./module .
                 gcloud storage cp dts.tar.gz gs://cdm-templates-nyu-systems-multicast/bundled_proj.tar.gz
                 ;;
         
             delete)
-                pushd dom-tenant-service; pushd gcp-deploy
+                pushd module; pushd gcp-deploy
                 python3 run.py delete-stack
                 popd; popd
                 ;;
@@ -43,7 +43,7 @@ main() {
                 ;;
         esac
     else 
-        err "Incorrect base directory: ${dir}"
+        err "Incorrect base directory: $(pwd)\nCouldn't find submodule"
     fi
 }
 
