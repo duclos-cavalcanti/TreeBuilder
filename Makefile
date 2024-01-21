@@ -12,7 +12,7 @@ build:
 
 .PHONY: update
 update:
-	@git add dom-tenant-service
+	@git add module
 	@git commit -m "Updated submodule"
 	@git push origin main
 
