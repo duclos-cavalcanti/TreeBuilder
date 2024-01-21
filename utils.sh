@@ -40,3 +40,9 @@ gprox() {
 grec() {
     groot recipient0000
 }
+
+gsh() {
+    local INSTANCE=$(gcloud compute instances list | tail -n +2 | awk '{print $1}' |  fzf --height 40% --reverse)
+    [ -z "$1" ] && COMMAND="cd /home/uab2005" || COMMAND="$1"
+    gcloud compute ssh "root@${INSTANCE}" --zone "us-east4-c" --project "multicast1" -- "${COMMAND}; bash"
+}
