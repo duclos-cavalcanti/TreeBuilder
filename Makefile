@@ -1,6 +1,10 @@
 SHELL := /bin/bash
 
-all: template pkg deploy
+PWD := $(shell pwd)
+UID := $(shell id -u)
+GID := $(shell id -g)
+
+all: build
 
 .PHONY: help
 help:
@@ -8,7 +12,17 @@ help:
 
 .PHONY: build
 build:
-	@MAKE -C src
+	docker build -t ubuntu-dpdk .
+
+.PHONY: dev
+dev:
+	@docker run --rm \
+	--name dpdk-dev \
+	-v ${PWD}:/root/work \
+	-v ~/.config/nvim:/root/.config/nvim \
+	-v ~/.gitconfig:/root/.gitconfig \
+	--detach-keys="ctrl-@" \
+	-it ubuntu-dpdk
 
 .PHONY: update
 update:
