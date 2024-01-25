@@ -64,7 +64,7 @@ All are based on a [Ubuntu 22.04 Jammy machine](https://releases.ubuntu.com/jamm
 
 ### Network Tools
    ```bash
-   sudo apt install net-tools inetutils-traceroute
+   sudo apt install ethtool net-tools inetutils-traceroute tcpdump
    ```
 
 ### Google Cloud Platform (GCP)
