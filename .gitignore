@@ -1,3 +1,6 @@
 *.tar*
 
 build/*
+bin/*
+lib/dpdk/*
+lib/iouring/*
