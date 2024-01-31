@@ -62,6 +62,14 @@ Check out the [_wiki_](https://github.com/duclos-cavalcanti/master-arbeit/wiki) 
 ## 2. Dependencies
 All are based on a [Ubuntu 22.04 Jammy machine](https://releases.ubuntu.com/jammy/).
 
+### Build Tools
+   ```bash
+    sudo apt install meson cmake ninja build-essential git pkg-config
+    sudo apt-get install linux-image-$(uname -r) -yq
+    sudo apt-get install linux-headers-$(uname -r) -yq
+    pip install pyelftools meson
+   ```
+
 ### Network Tools
    ```bash
    sudo apt install ethtool net-tools inetutils-traceroute tcpdump

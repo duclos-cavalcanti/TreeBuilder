@@ -1,5 +1,4 @@
 FROM ubuntu
-# inspired from https://github.com/shanakaprageeth/docker-dpdk/tree/master
 
 LABEL RUN docker run -it --name ubuntu-dpdk-build
 
