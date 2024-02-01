@@ -4,3 +4,6 @@ build/*
 bin/*
 lib/dpdk/*
 lib/iouring/*
+
+.cache/
+.cache/*
