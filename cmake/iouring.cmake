@@ -1,10 +1,12 @@
 include(ExternalProject)
-set(IOURING_INSTALL_DIR "${PROJECT_SOURCE_DIR}/lib/iouring")
 
-ExternalProject_Add(iouring
+set(LIBURING_INSTALL_DIR "${PROJECT_SOURCE_DIR}/lib/iouring")
+
+ExternalProject_Add(liburing
     GIT_REPOSITORY https://github.com/axboe/liburing.git
     GIT_TAG master
-    CONFIGURE_COMMAND ./configure --prefix=${IOURING_INSTALL_DIR} --cc=gcc --cxx=g++
+    UPDATE_DISCONNECTED TRUE
+    CONFIGURE_COMMAND ./configure --prefix=${LIBURING_INSTALL_DIR} --cc=gcc --cxx=g++
     BUILD_COMMAND make
     INSTALL_COMMAND make install
     BUILD_IN_SOURCE TRUE
@@ -12,6 +14,5 @@ ExternalProject_Add(iouring
     LOG_BUILD ON
     LOG_INSTALL ON
 )
-
-set(ENV{PKG_CONFIG_PATH} "${LIBURING_INSTALL_DIR}/lib/pkgconfig:$ENV{PKG_CONFIG_PATH}")
-pkg_check_modules(LIBURING REQUIRED liburing)
+set(ENV{PKG_CONFIG_PATH} "${PROJECT_SOURCE_DIR}/lib/iouring/lib/pkgconfig:$ENV{PKG_CONFIG_PATH}")
+pkg_search_module(LIBURING QUIET IMPORTED_TARGET liburing)

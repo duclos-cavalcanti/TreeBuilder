@@ -14,6 +14,6 @@ ExternalProject_Add(dpdk
     LOG_INSTALL ON
 )
 
-set(ENV{PKG_CONFIG_PATH} "${DPDK_INSTALL_DIR}/lib/x86_64-linux-gnu/pkgconfig:$ENV{PKG_CONFIG_PATH}")
-pkg_check_modules(DPDK REQUIRED libdpdk)
-
+set(ENV{PKG_CONFIG_PATH} "${PROJECT_SOURCE_DIR}/lib/dpdk/lib/x86_64-linux-gnu/pkgconfig:$ENV{PKG_CONFIG_PATH}")
+pkg_search_module(DPDK QUIET IMPORTED_TARGET libdpdk)
+string(REPLACE ";" " " DPDK_CFLAGS "${DPDK_CFLAGS}")
