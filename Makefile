@@ -12,14 +12,15 @@ help:
 
 .PHONY: build
 build:
-	docker build -t ubuntu-dpdk .
+	docker build -t ubuntu-dpdk ./tools/docker/
 
 .PHONY: dev
 dev:
-	@docker run --rm \
+	docker run --rm \
 	--name dpdk-dev \
 	-v ${PWD}:/root/work \
 	-v ~/.config/nvim:/root/.config/nvim \
+	-v ~/.local/nvim:/root/.local/nvim \
 	-v ~/.gitconfig:/root/.gitconfig \
 	--detach-keys="ctrl-@" \
 	-it ubuntu-dpdk
