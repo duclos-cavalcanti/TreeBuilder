@@ -5,6 +5,7 @@ LABEL RUN docker run -it --name ubuntu-dpdk-build
 # install dev packages
 RUN apt-get update -yq
 RUN apt-get install vim curl build-essential python3 python3-pip git wget -yq
+RUN apt-get install clangd man-db -yq
 RUN pip install compiledb
 
 # install DPDK packages 
@@ -37,4 +38,5 @@ COPY assets/docker/entry.sh /root/entry.sh
 RUN chmod +x /root/entry.sh
 ENTRYPOINT [ "/root/entry.sh" ]
 
+RUN unminimize
 WORKDIR /root
