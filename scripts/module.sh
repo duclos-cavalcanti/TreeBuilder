@@ -1,15 +1,11 @@
 #!/bin/bash 
 
-DEPLOY_DIR="module/aws-deploy"
-
-err() {
-    echo -e "${1}"
-    exit 1
-}
+CLOUD=${2:-aws}
+DEPLOY="module/${CLOUD}-deploy"
 
 usage() {
-    local string=" USAGE: ${0} <action>"
-    err "${string}"
+    local string="USAGE: ${0} <action> [ <cloud> ]"
+    echo "${string}"
 }
 
 main() {
@@ -29,7 +25,7 @@ main() {
                 echo $arg
 
                 command=$(eval "echo \${$arg}")
-                pushd ${DEPLOY_DIR}
+                pushd ${DEPLOY}
                 echo "${command}"
                 ${command}
                 popd
@@ -37,41 +33,34 @@ main() {
         
             deploy)
                 command="python3 run.py deploy-stack"
-                pushd ${DEPLOY_DIR}
+                pushd ${DEPLOY}
                 echo ${command}
                 ${command}
                 popd
                 ;;
 
-            size)
-                command="du -ha --time module/gcp-deploy/build"
-                echo ${command}
-                ${command}
-                ;;
-        
-            restart)
-                echo "Deleting..."
-                ${0} delete
-                sleep 3s
-                echo "Deploying..."
-                ${0} deploy
-                ;;
-        
             delete)
                 command="python3 run.py delete-stack"
-                pushd ${DEPLOY_DIR}
+                pushd ${DEPLOY}
                 echo ${command}
                 ${command}
                 popd
                 ;;
             *)
-                err "INVALID OPTION: ${action}"
+                usage
+                echo "INVALID ACTION: ${action}"
+                exit 1
                 ;;
         esac
     else 
-        err "Incorrect base directory: $(pwd)\nCouldn't find submodule"
+        echo "NO MODULE DIR"
+        exit 1
     fi
 }
 
-[ -z "${1}" ] &&  usage
+if [ -z "${1}" ]; then
+    usage
+    exit 1 
+fi
+
 main $@
