@@ -1,5 +1,7 @@
 #!/bin/bash 
 
+DEPLOY_DIR="module/aws-deploy"
+
 err() {
     echo -e "${1}"
     exit 1
@@ -27,7 +29,7 @@ main() {
                 echo $arg
 
                 command=$(eval "echo \${$arg}")
-                pushd module/gcp-deploy
+                pushd ${DEPLOY_DIR}
                 echo "${command}"
                 ${command}
                 popd
@@ -35,7 +37,7 @@ main() {
         
             deploy)
                 command="python3 run.py deploy-stack"
-                pushd module/gcp-deploy
+                pushd ${DEPLOY_DIR}
                 echo ${command}
                 ${command}
                 popd
@@ -57,10 +59,10 @@ main() {
         
             delete)
                 command="python3 run.py delete-stack"
-                pushd module; pushd gcp-deploy
+                pushd ${DEPLOY_DIR}
                 echo ${command}
                 ${command}
-                popd; popd
+                popd
                 ;;
             *)
                 err "INVALID OPTION: ${action}"
