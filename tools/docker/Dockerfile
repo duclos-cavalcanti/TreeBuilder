@@ -34,9 +34,8 @@ RUN apt-get install libbpf-dev -yq
 
 RUN mv dpdk*    /root
 RUN mv liburing /root
-COPY assets/docker/entry.sh /root/entry.sh
+COPY entry.sh /root/entry.sh
 RUN chmod +x /root/entry.sh
 ENTRYPOINT [ "/root/entry.sh" ]
 
-RUN unminimize
 WORKDIR /root
