@@ -5,6 +5,7 @@
 #include <string.h>
 #include <ctype.h>
 #include <signal.h>
+#include <errno.h>
 
 #include <sys/socket.h>
 #include <sys/types.h>
@@ -12,25 +13,23 @@
 #include <netinet/ip.h>
 #include <arpa/inet.h>
 
-#define PORT 8080
+#define PORT 8081
 #define CLIENT 0
 #define SERVER 1
+#define BUFFER_SIZE 200
 
-static char*    srv_ip = NULL;
-static struct   sockaddr_in srv, cli;
-static int      sockfd;
+volatile int RUNNING = 0;
 
-void handler(int sig) {
-    puts("Signal Received!");
-}
+static char*    server_ip = NULL;
+static struct   sockaddr_in server_addr, client_addr;
 
 int parse(int argc, char **argv) {
     int opt, ret = 0;
     while ( (opt = getopt (argc, argv, "r:p:h") ) != -1 ) {
         switch (opt) {
         case 'h':
-            ret = EXIT_SUCCESS;
-            goto exit;
+            fprintf(stderr, "Usage: %s [-r [client,server]] [-p IP_ADDRESS] [-h]\n", argv[0]);
+            exit(EXIT_SUCCESS);
             break;
 
         case 'r':
@@ -39,92 +38,132 @@ int parse(int argc, char **argv) {
             } else if (strcmp(optarg, "server") == 0) {
                 ret = SERVER;
             } else {
-                ret = EXIT_FAILURE;
-                goto exit;
+                goto err;
             }
             break;
 
         case 'p':
-            srv_ip = optarg;
+            server_ip = optarg;
             break;
 
         default:
-exit:
+err:
             fprintf(stderr, "Usage: %s [-r [client,server]] [-p IP_ADDRESS] [-h]\n", argv[0]);
-            exit(ret);
+            exit(EXIT_SUCCESS);
             break;
         }
     }
 
-    if (optind > argc) goto exit;
+    if (optind > argc) {
+        fprintf(stderr, "Usage: %s [-r [client,server]] [-p IP_ADDRESS] [-h]\n", argv[0]);
+        exit(EXIT_FAILURE);
+    }
+
     return ret;
 }
 
 int server() {
-    int len, n;
-    char buf[200] = { 0 }, out[200] = { 0 };
+    int server_fd, client_fd, n;
+    char rx[BUFFER_SIZE] = { 0 }, tx[BUFFER_SIZE] = { 0 };
+    socklen_t client_addrlen = sizeof(client_addr);
 
-    puts("-- SERVER --");
-
-    if( bind(sockfd, (struct sockaddr*)&srv, sizeof(srv)) < 0) {
-        fprintf(stderr, "Failed to bind to port\n");
+    if ( (server_fd = socket(AF_INET, SOCK_STREAM, 0)) < 0 ) {
+        fprintf(stderr, "Failed to create socket\n");
         exit(EXIT_FAILURE);
     }
 
-    len = sizeof(cli);
+    server_addr.sin_family       = AF_INET;
+    server_addr.sin_port         = htons(PORT);
+    server_addr.sin_addr.s_addr  = INADDR_ANY;
+    printf("-- SERVER: %s:%i --\n", inet_ntoa(server_addr.sin_addr), ntohs(server_addr.sin_port));
+
+    if (bind(server_fd, (struct sockaddr *)&server_addr, sizeof(server_addr)) < 0) {
+        fprintf(stderr, "Failed to bind socket to server address\n");
+        exit(EXIT_FAILURE);
+    }
+
+    if (listen(server_fd, 3) < 0) {
+        fprintf(stderr, "Failed to listen onto socket\n");
+        exit(EXIT_FAILURE);
+    }
+
+    if ((client_fd = accept(server_fd, (struct sockaddr *)&client_addr, &client_addrlen )) < 0) {
+        fprintf(stderr, "Failed to accept client connection onto server's socket\n");
+        exit(EXIT_FAILURE);
+    }
+    printf("ACCEPTED: IP: %s\n", inet_ntoa(client_addr.sin_addr));
+
     do {
-        if ( (n = recvfrom(sockfd, buf, sizeof(buf), 0, (struct sockaddr*)&cli, (socklen_t *) &len)) < 0 ) {
-            fprintf(stderr, "Failed to receive\n");
+        if ( (n = read(client_fd, rx, BUFFER_SIZE)) < 0) {
+            fprintf(stderr, "Failed to read\n");
             exit(EXIT_FAILURE);
         }
 
         for (int i=0; i<n; i++)  
-            if (buf[i] == '\n')
-                buf[i] = '\0';
-        buf[n] = '\0';
+            if (rx[i] == '\n')
+                rx[i] = '\0';
+        rx[n] = '\0';
 
-        printf("RX DATA: %s | IP: %s | PORT: %i | LEN: %d\n", buf, inet_ntoa(cli.sin_addr), ntohs(cli.sin_port), len);
+        printf("RX DATA[%d]: %s | SRC IP: %s\n", n, rx, inet_ntoa(client_addr.sin_addr));
+        for (int i=0; i<n; i++)  
+            tx[i] = toupper(rx[i]);
+        tx[n] = '\0';
         
-        for (int i=0; i<n; i++)  out[i] = toupper(buf[i]);
-        
-        if ( (sendto(sockfd, out, n, 0, (struct sockaddr*)&cli, sizeof(cli))) < 0 ) {
+        printf("TX DATA[%d]: %s\n", (int) strlen(tx), tx);
+        send(client_fd, tx, strlen(tx), 0);
+        close(client_fd);
+    } while(RUNNING);
+
+    puts("-- CLOSED --");
+    close(server_fd);
+    return 0;
+}
+
+int client() {
+    int sockfd, n;
+    char rx[BUFFER_SIZE] = { 0 }, tx[BUFFER_SIZE] = { 0 };
+
+    if ( (sockfd = socket(AF_INET, SOCK_STREAM, 0)) < 0 ) {
+        fprintf(stderr, "Failed to create socket\n");
+        exit(EXIT_FAILURE);
+    }
+
+    server_addr.sin_family       = AF_INET;
+    server_addr.sin_port         = htons(PORT);
+    server_addr.sin_addr.s_addr  = inet_addr( (server_ip) ? server_ip : "127.0.0.1");
+    puts("-- CLIENT --");
+
+    if (connect(sockfd, (struct sockaddr *)&server_addr, sizeof(server_addr)) < 0) {
+        fprintf(stderr, "TCP Connection Failed\n");
+        exit(EXIT_FAILURE);
+    }
+    printf("CONNECTED: IP: %s\n", inet_ntoa(server_addr.sin_addr));
+
+    do {
+        printf("ENTER: ");
+        fgets(tx, sizeof(tx), stdin);
+        printf("TX DATA[%d]: %s", (int) strlen(tx), tx);
+
+        if ( (send(sockfd, tx, strlen(tx), 0)) < 0 ) {
             fprintf(stderr, "Failed to send\n");
             exit(EXIT_FAILURE);
         }
 
-        puts("TX DATA");
-    } while(0);
+        if ( (n = read(sockfd, rx, BUFFER_SIZE)) < 0) {
+            fprintf(stderr, "Failed to read\n");
+            exit(EXIT_FAILURE);
+        }
+        printf("RX DATA[%d]: %s | SRC IP: %s\n", n, rx, inet_ntoa(server_addr.sin_addr));
+    } while(RUNNING);
 
     puts("-- CLOSED --");
     close(sockfd);
     return 0;
 }
 
-int client() {
-    int len, n;
-    char buf[200] = { 0 }, out[200] = { 0 };
-    puts("-- CLIENT --");
-
-    len = sizeof(srv);
-    do {
-        printf("TX DATA: ");
-        fgets(out, sizeof(out), stdin);
-        if ( (sendto(sockfd, out, strlen(out), 0, (struct sockaddr*)&srv, sizeof(srv))) < 0 ) {
-            fprintf(stderr, "Failed to send\n");
-            exit(EXIT_FAILURE);
-        }
-
-        if ( (n = recvfrom(sockfd, buf, sizeof(buf), 0, (struct sockaddr*)&srv, (socklen_t *) &len)) < 0 ) {
-            fprintf(stderr, "Failed to receive\n");
-            exit(EXIT_FAILURE);
-        }
-
-        printf("RX DATA: %s | IP: %s | PORT: %i | LEN: %d\n", buf, inet_ntoa(srv.sin_addr), ntohs(srv.sin_port), len);
-    } while(0);
-
-    puts("-- CLOSED --");
-    close(sockfd);
-    return 0;
+void handler(int sig) {
+    printf("SIGNAL RECEIVED: %s", strsignal(sig));
+    RUNNING = 0;
 }
 
 int main(int argc, char **argv) {
@@ -134,17 +173,6 @@ int main(int argc, char **argv) {
         fprintf(stderr, "Failed to register signal handler\n");
         exit(EXIT_FAILURE);
     }
-
-    if ( (sockfd = socket(AF_INET, SOCK_DGRAM, 0)) < 0 ) {
-        fprintf(stderr, "Failed to create socket\n");
-        exit(EXIT_FAILURE);
-    }
-    memset(&srv, 0, sizeof(srv));
-    memset(&cli, 0, sizeof(cli));
-
-    srv.sin_family       = AF_INET;
-    srv.sin_port         = htons(PORT);
-    srv.sin_addr.s_addr  = inet_addr( (srv_ip) ? srv_ip : "127.0.0.1");
 
     if (role == CLIENT) client();
     else                server();
