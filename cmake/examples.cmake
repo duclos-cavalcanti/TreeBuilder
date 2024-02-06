@@ -2,11 +2,17 @@ set(EXAMPLES_DIR ${PROJECT_SOURCE_DIR}/examples)
 set(ALL_EXAMPLE_TARGETS "")
 
 file(GLOB DIRS RELATIVE ${EXAMPLES_DIR} ${EXAMPLES_DIR}/*)
-message(STATUS "DIRS: ${DIRS}")
 foreach(NAME IN LISTS DIRS)
-    message(STATUS "NAME: ${NAME}")
     if(IS_DIRECTORY ${EXAMPLES_DIR}/${NAME})
         file(GLOB SOURCES "${EXAMPLES_DIR}/${NAME}/*.c")
+
+        if(SOURCES STREQUAL "")
+            file(GLOB SOURCES "${EXAMPLES_DIR}/${NAME}/*.cpp")
+        endif()
+
+        if(SOURCES STREQUAL "")
+            message(FATAL_ERROR "No C or C++ source files found: ${EXAMPLES_DIR}/${NAME}")
+        endif()
 
         set(EXAMPLE_TARGET "example_${NAME}")
         set(EXAMPLE_SOURCES ${SOURCES})
@@ -22,4 +28,4 @@ foreach(NAME IN LISTS DIRS)
 endforeach()
 
 add_custom_target(examples DEPENDS ${ALL_EXAMPLE_TARGETS})
-message(STATUS "ALL: ${ALL_EXAMPLE_TARGETS}")
+message(STATUS "examples: ${ALL_EXAMPLE_TARGETS}")
