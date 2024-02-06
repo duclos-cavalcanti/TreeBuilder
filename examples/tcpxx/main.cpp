@@ -13,6 +13,8 @@
 #include <netinet/ip.h>
 #include <arpa/inet.h>
 
+#include "main.h"
+
 #define PORT 8081
 #define CLIENT 0
 #define SERVER 1
