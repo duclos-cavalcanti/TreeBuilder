@@ -65,8 +65,7 @@ int server() {
         do {
             struct sockaddr_in addr;
             int clientfd = Server.accept(&addr);
-            int n = Server.recv(clientfd);
-            Server.offload(rx, n, clientfd);
+            int n = Server.recv(rx, BUFFER_SIZE, clientfd);
 
             for (int i=0; i<n; i++)   {
                 if (rx[i] == '\n')
@@ -79,8 +78,7 @@ int server() {
             }
             tx[n] = '\0';
             
-            Server.load(tx, strlen(tx), clientfd);
-            Server.send(clientfd);
+            Server.send(tx, strlen(tx), clientfd);
 
         } while(0);
     }
@@ -99,10 +97,8 @@ int client() {
             printf("ENTER: ");
             fgets(tx, sizeof(tx), stdin); tx[strlen(tx) - 1] = '\0';
 
-            Client.load(tx, strlen(tx));
-            Client.send();
-            int n = Client.recv();
-            Client.offload(rx, n);
+            Client.send(tx, strlen(tx));
+            int n = Client.recv(rx, BUFFER_SIZE);
 
         } while(0);
     }
