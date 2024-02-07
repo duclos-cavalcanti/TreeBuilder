@@ -4,6 +4,7 @@ build/*
 bin/*
 lib/dpdk/*
 lib/iouring/*
+lib/zeromq/*
 
 .cache/
 .cache/*
