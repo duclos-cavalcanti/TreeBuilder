@@ -11,24 +11,28 @@ find_package(PkgConfig REQUIRED)
 
 include(dpdk)
 include(iouring)
+include(zeromq)
 
 set(DEBUG_FLAGS "-g")
 set(OPT_FLAGS "-O0")
 set(WARN_FLAGS "-Wall")
-set(GCC_COMPILE_FLAGS "${DEBUG_FLAGS} ${OPT_FLAGS} ${WARN_FLAGS}")
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${GCC_COMPILE_FLAGS} ${DPDK_CFLAGS}")
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${GCC_COMPILE_FLAGS}")
+set(GCC_COMPILE_FLAGS   "${DEBUG_FLAGS} ${OPT_FLAGS} ${WARN_FLAGS}")
+set(CMAKE_C_FLAGS       "${CMAKE_C_FLAGS} ${GCC_COMPILE_FLAGS} ${DPDK_CFLAGS}")
+set(CMAKE_CXX_FLAGS     "${CMAKE_CXX_FLAGS} ${GCC_COMPILE_FLAGS}")
 
 if(NOT DPDK_FOUND OR NOT LIBURING_FOUND)
     message(WARNING "DPDK AND LIBURING WERE NOT FOUND BY PKG-CONFIG.")
 endif()
 
+set(LIBRARY_INCLUDES    ${DPDK_INCLUDE_DIRS} ${LIBURING_INCLUDE_DIRS})
+set(LIBRARY_DIRS        ${DPDK_LIBRARY_DIRS} ${LIBURING_LIBRARY_DIRS})
+set(LIBRARIES           ${DPDK_LINK_LIBRARIES} ${LIBURING_LINK_LIBRARIES})
 
-file(GLOB SOURCES "src/*.c")
-set(PROJECT_SOURCES ${SOURCES})
-set(PROJECT_INCLUDES ${PROJECT_SOURCE_DIR}/src/ ${DPDK_INCLUDE_DIRS} ${LIBURING_INCLUDE_DIRS})
-set(PROJECT_LIBRARY_DIRS ${DPDK_LIBRARY_DIRS} ${LIBURING_LIBRARY_DIRS})
-set(PROJECT_LIBRARIES ${DPDK_LINK_LIBRARIES} ${LIBURING_LINK_LIBRARIES})
+file(GLOB SOURCES           "src/*.c")
+set(PROJECT_SOURCES         ${SOURCES})
+set(PROJECT_INCLUDES        ${PROJECT_SOURCE_DIR}/src/ ${LIBRARY_INCLUDES})
+set(PROJECT_LIBRARY_DIRS    ${LIBRARY_DIRS})
+set(PROJECT_LIBRARIES       ${LIBRARIES})
 
 include_directories(${PROJECT_INCLUDES})
 add_executable(${PROJECT_NAME} ${PROJECT_SOURCES})
@@ -59,9 +63,10 @@ add_custom_target("debug"
 add_custom_target("reset"
     DEPENDS ${PROJECT_NAME}
     WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
-    COMMAND rm -rf ./lib/dpdk/* ./lib/iouring/*
-    COMMAND rm  -rf "${PROJECT_SOURCE_DIR}/build/dpdk-prefix"
-    COMMAND rm  -rf "${PROJECT_SOURCE_DIR}/build/liburing-prefix"
+    COMMAND rm -rf ./lib/dpdk/* ./lib/iouring/* ./lib/zeromq/*
+    COMMAND rm -rf "${PROJECT_SOURCE_DIR}/build/dpdk-prefix"
+    COMMAND rm -rf "${PROJECT_SOURCE_DIR}/build/liburing-prefix"
+    COMMAND rm -rf "${PROJECT_SOURCE_DIR}/build/zeromq-prefix"
 )
 
 include(debug)
