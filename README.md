@@ -65,6 +65,7 @@ All are based on a [Ubuntu 22.04 Jammy machine](https://releases.ubuntu.com/jamm
 ### Build Tools
    ```bash
     sudo apt install meson cmake ninja build-essential git pkg-config
+    sudo apt install libprotobuf-c-dev libprotobuf-dev protobuf-compiler protobuf-codegen
     sudo apt-get install linux-image-$(uname -r) -yq
     sudo apt-get install linux-headers-$(uname -r) -yq
     pip install pyelftools meson
@@ -73,11 +74,6 @@ All are based on a [Ubuntu 22.04 Jammy machine](https://releases.ubuntu.com/jamm
 ### Network Tools
    ```bash
    sudo apt install ethtool net-tools inetutils-traceroute tcpdump
-   ```
-
-### [Protocolbuffers ](https://protobuf.dev/)
-   ```bash
-   sudo apt install libprotobuf-c-dev libprotobuf-dev protobuf-compiler protobuf-codegen
    ```
 
 ### Google Cloud Platform (GCP)
