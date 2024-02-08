@@ -75,6 +75,11 @@ All are based on a [Ubuntu 22.04 Jammy machine](https://releases.ubuntu.com/jamm
    sudo apt install ethtool net-tools inetutils-traceroute tcpdump
    ```
 
+### [Protocolbuffers ](https://protobuf.dev/)
+   ```bash
+   sudo apt install libprotobuf-c-dev libprotobuf-dev protobuf-compiler protobuf-codegen
+   ```
+
 ### Google Cloud Platform (GCP)
 1. Installation
 ```bash
