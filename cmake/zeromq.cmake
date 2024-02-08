@@ -13,6 +13,17 @@ ExternalProject_Add(zeroMQ
     INSTALL_DIR ${ZEROMQ_INSTALL_DIR}
 )
 
-set(ZEROMQ_INCLUDE_DIR      "${ZEROMQ_INSTALL_DIR}/include")
-set(ZEROMQ_LIBRARY_DIRS     "${ZEROMQ_INSTALL_DIR}/lib/")
-set(ZEROMQ_LINK_LIBRARIES   "${ZEROMQ_INSTALL_DIR}/lib/libzmq${CMAKE_SHARED_LIBRARY_SUFFIX}")
+set(CPPZMQ_INSTALL_DIR ${PROJECT_SOURCE_DIR}/lib/cppzmq)
+ExternalProject_Add(cppzmq
+    DEPENDS zeroMQ
+    GIT_REPOSITORY https://github.com/zeromq/cppzmq.git
+    GIT_TAG master
+    CMAKE_ARGS
+        -DCMAKE_INSTALL_PREFIX=${CPPZMQ_INSTALL_DIR}
+        -DZeroMQ_DIR=${ZEROMQ_INSTALL_DIR}/lib/cmake/ZeroMQ
+        -DBUILD_SHARED_LIBS=ON 
+    INSTALL_DIR ${CPPZMQ_INSTALL_DIR}
+)
+
+set(ENV{PKG_CONFIG_PATH} "${ZEROMQ_INSTALL_DIR}/lib/pkgconfig:${CPPZMQ_INSTALL_DIR}/lib/pkgconfig")
+pkg_search_module(CPPZMQ QUIET IMPORTED_TARGET cppzmq)

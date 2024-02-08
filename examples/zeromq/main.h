@@ -2,10 +2,8 @@
 #define __MAIN__H
 
 #include <vector>
-
 #include <string>
-#include <sys/socket.h>
-#include <netinet/in.h>
+#include "zmq.hpp"
 
 class NetworkSocket {
 public:
@@ -16,39 +14,22 @@ public:
         ERR = 3
     } LOG_LEVEL;
 
-    struct Socket {
-        int fd;
-        int port;
-        sockaddr_in addr;
-        socklen_t addrlen;
-
-        Socket(void);
-        ~Socket(void);
-    };
-
     int connect(void);
     int bind(void);
-    int listen(int backlog=5);
-    int accept(struct sockaddr_in* ret);
+    int accept(void);
 
     int send(char* tx, int txlen, int sockfd=-1);
     int recv(char* rx, int rxlen, int sockfd=-1);
 
     int setlog(LOG_LEVEL verbosity);
 
-    NetworkSocket(int PORT, 
-                  const char* IP, 
-                  int FAMILY=AF_INET, 
-                  int TYPE=SOCK_STREAM, 
-                  NetworkSocket::LOG_LEVEL VERBOSITY=NetworkSocket::LOG_LEVEL::INFO);
+    NetworkSocket(const char* FORMAT, int TYPE);
     ~NetworkSocket();
+
 private:
-    LOG_LEVEL _verbosity;
+    zmq::context_t context;
 
-    Socket _socket;
-    std::vector<Socket*> _sockets;
-
-    Socket* fetch(int sockfd);
+    LOG_LEVEL _level;
 };
 
 #endif /* __MAIN__H */

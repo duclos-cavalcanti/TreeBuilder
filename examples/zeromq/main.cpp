@@ -56,17 +56,11 @@ err:
 }
 
 int server() {
+    int n;
     char rx[BUFFER_SIZE] = { 0 }, tx[BUFFER_SIZE] = { 0 };
-    printf("######## SERVER ########\n");
+    printf("######## RESPONDER ########\n");
     {
-        NetworkSocket Server(PORT, NULL, AF_INET, SOCK_STREAM);
-        Server.bind();
-        Server.listen();
         do {
-            struct sockaddr_in addr;
-            int clientfd = Server.accept(&addr);
-            int n = Server.recv(rx, BUFFER_SIZE, clientfd);
-
             for (int i=0; i<n; i++)   {
                 if (rx[i] == '\n')
                     rx[i] = '\0';
@@ -77,9 +71,6 @@ int server() {
                 tx[i] = toupper(rx[i]);
             }
             tx[n] = '\0';
-            
-            Server.send(tx, strlen(tx), clientfd);
-
         } while(0);
     }
 
@@ -88,18 +79,11 @@ int server() {
 
 int client() {
     char rx[BUFFER_SIZE] = { 0 }, tx[BUFFER_SIZE] = { 0 };
-    printf("######## CLIENT ########\n");
+    printf("######## REQUESTER ########\n");
     {
-        NetworkSocket Client(PORT, (IP) ? IP : "127.0.0.1", AF_INET, SOCK_STREAM);
-        Client.connect();
-
         do {
             printf("ENTER: ");
             fgets(tx, sizeof(tx), stdin); tx[strlen(tx) - 1] = '\0';
-
-            Client.send(tx, strlen(tx));
-            int n = Client.recv(rx, BUFFER_SIZE);
-
         } while(0);
     }
     return 0;
