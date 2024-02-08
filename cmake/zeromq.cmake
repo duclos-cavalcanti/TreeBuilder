@@ -1,5 +1,5 @@
 include(ExternalProject)
-set(ZEROMQ_INSTALL_DIR ${CMAKE_BINARY_DIR}/lib/ZeroMQ)
+set(ZEROMQ_INSTALL_DIR ${PROJECT_SOURCE_DIR}/lib/zeromq)
 
 ExternalProject_Add(zeroMQ
     GIT_REPOSITORY https://github.com/zeromq/libzmq.git

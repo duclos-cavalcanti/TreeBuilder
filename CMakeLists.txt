@@ -8,10 +8,12 @@ set(CMAKE_VERBOSE_MAKEFILE OFF)
 
 find_package(Git REQUIRED)
 find_package(PkgConfig REQUIRED)
+find_package(Protobuf REQUIRED)
 
 include(dpdk)
 include(iouring)
 include(zeromq)
+include(proto)
 
 set(DEBUG_FLAGS "-g")
 set(OPT_FLAGS "-O0")
