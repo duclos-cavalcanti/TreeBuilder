@@ -5,6 +5,7 @@ bin/*
 lib/dpdk/*
 lib/iouring/*
 lib/zeromq/*
+lib/proto/*
 
 .cache/
 .cache/*
