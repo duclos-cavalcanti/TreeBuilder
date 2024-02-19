@@ -29,6 +29,18 @@ RUN git clone https://github.com/axboe/liburing.git
 RUN cd liburing && ./configure --cc=gcc --cxx=g++
 RUN cd liburing && make && make install
 
+# zmq and cppzmq
+RUN apt-get install cmake -yq
+RUN git clone https://github.com/zeromq/libzmq.git
+RUN mkdir libzmq/build
+RUN cd libzmq/build && cmake ..
+RUN cd libzmq/build && make -j4 install
+
+RUN git clone https://github.com/zeromq/cppzmq.git
+RUN mkdir cppzmq/build
+RUN cd cppzmq/build && cmake ..
+RUN cd cppzmq/build && make -j4 install
+
 # BPF
 RUN apt-get install libbpf-dev -yq
 

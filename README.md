@@ -41,10 +41,10 @@
 
 __Abstract:__ _Not defined yet._
 
-Msc. Thesis work performed at NYU, advised by the [Chair of Communication Networks](https://www.ce.cit.tum.de/en/lkn/home/) at TUM, 
-[Dr.Anirudh Sivaraman](https://anirudhsk.github.io/) and his lead PhD candidate [Muhammad Haseeb](https://haseeblums.github.io/). This contribution 
-is however within the larger current research of Dr.Anirudh Sivaraman & Co.
-
+Msc. Thesis work performed at NYU and both advised by the [Chair of Communication Networks](https://www.ce.cit.tum.de/en/lkn/home/) at TUM and co-advised by
+[Dr.Anirudh Sivaraman](https://anirudhsk.github.io/) and his team at [Systems@NYU](https://news.cs.nyu.edu/). This contribution 
+is however within the larger current research of Dr.Anirudh Sivaraman and his lead [PhD. Muhammad Haseeb](https://haseeblums.github.io/) based on 
+[Jasper: Scalable and Fair Multicast for Financial Exchanges in the Cloud](https://arxiv.org/abs/2402.09527.)
 
 - [Kickoff](https://docs.google.com/presentation/d/1jYG-S1xyy03R2H4vy9wFlQLlAAt9CFZ3rXdfz10VZpw/edit?usp=sharing)
 - [Presentation](https://docs.google.com/presentation/d/1jYG-S1xyy03R2H4vy9wFlQLlAAt9CFZ3rXdfz10VZpw/edit?usp=sharing)

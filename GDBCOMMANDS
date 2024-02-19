@@ -1,0 +1,23 @@
+set confirm off
+set print pretty on
+
+break main 
+run
+
+commands
+    printf "ARGC:      %d\n", argc
+    printf "ARGV[0]:   %s\n", argv[0]
+end
+
+break func if (foo == "bar")
+commands
+    printf "HELLO WORLD: %d\n", i
+end
+
+break main.cpp:15
+commands
+    set $result = print_return_char()
+    printf "%s\n", $result
+end
+
+
