@@ -4,9 +4,9 @@
 </p>
 <br>
 
-__Abstract:__ _Not defined yet._
+<!-- __Abstract:__ _Not defined yet._ -->
 
-_Master Thesis_ work performed at NYU and both advised by the [Chair of Communication Networks](https://www.ce.cit.tum.de/en/lkn/home/) at TUM and co-advised by
+_Master Thesis_ work performed at NYU, both advised by the [Chair of Communication Networks](https://www.ce.cit.tum.de/en/lkn/home/) at TUM and co-advised by
 [Dr.Anirudh Sivaraman](https://anirudhsk.github.io/) and his team at [Systems@NYU](https://news.cs.nyu.edu/). This contribution 
 is however within the larger current research of Dr.Anirudh Sivaraman and his lead [PhD. Muhammad Haseeb](https://haseeblums.github.io/) based on 
 [Jasper: Scalable and Fair Multicast for Financial Exchanges in the Cloud](https://arxiv.org/abs/2402.09527.).
