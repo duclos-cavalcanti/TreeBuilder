@@ -11,6 +11,22 @@ _Master Thesis_ work performed at NYU, both advised by the [Chair of Communicati
 is however within the larger current research of Dr.Anirudh Sivaraman and his lead [PhD. Muhammad Haseeb](https://haseeblums.github.io/) based on 
 [Jasper: Scalable and Fair Multicast for Financial Exchanges in the Cloud](https://arxiv.org/abs/2402.09527.).
 
+## Introduction
+
+__Jasper__ was made to be a scalable and fair multicast prototype for financial exchanges in the cloud. In the context of High-Frequency Trading (HFT), data regarding the market state has to be disseminated to a large number of market agents at extremely low latencies, as well as done so in an acceptably fair manner. That means, all market agents should be able to perceive an equal market state within any given moment, as well as be notified of changes to said state simultaneously. This ensures a fair and balanced playing field among participants.
+
+There is interest both in academia and in the industry to move the current financial exchange infrastructure to the public cloud. The benefits are clear and among others include better scalability, a more robust infrastructure, flexible resource allocation and potential cost savings. However, a major and understandable concern is the feasibility to implement a fair multicast service for a large number of market participants within acceptable latencies. The public cloud does not currently offer such a service or hardware that supports _multicasting_ for cloud tenants.
+
+Jasper, in a quick summary, employs a tree-like structure of VMS in the cloud, combined with DPDK kernel bypassing and shallow copies of packets to illustrate a competitive prototype of _multicasting_ on the cloud up to 1000 and even 5000 recipients.
+
+The goal of this master thesis would be to build upon the [PhD Thesis from Dr. Vighnesh Sachidananda](https://searchworks.stanford.edu/view/14423035), more specifically on the technique displayed in __Chapter 3, called LemonDrop__. This PhD thesis, on a very high level, addresses the issue of uneven VMS within a cluster. Many times, during deployment or autoscaling of machines on the cloud, there can be VMs that severely underperform even within the same configuration/instance class. These "stragglers" depending on where they are located in the cloud cluster can cause the larger application to suffer greatly in terms of performance/latency. This is specially the case with the Jasper project, where if there are stragglers in initial layers of the tree, this will hugely affect the message propagation.
+
+The idea would be then to adapt __LemonDrop__ to a simpler heuristic that, in the same spirit, from a set of VMS deployed onto a cloud, chooses a subset from it that best facilitates an application's communication patterns. In this case, that application would be Jasper and therefore the heuristic would be mostly focused on choosing the subset based on Jasper's tree-like structure
+
+
+- [Kickoff](https://docs.google.com/presentation/d/1jYG-S1xyy03R2H4vy9wFlQLlAAt9CFZ3rXdfz10VZpw/edit?usp=sharing)
+- [Presentation](https://docs.google.com/presentation/d/1jYG-S1xyy03R2H4vy9wFlQLlAAt9CFZ3rXdfz10VZpw/edit?usp=sharing)
+
 <details closed>
  <summary>
      <b>PAPERS & <a href="https://github.com/duclos-cavalcanti/master-arbeit/wiki/Documentation">NOTES</a></b> 
@@ -33,21 +49,6 @@ is however within the larger current research of Dr.Anirudh Sivaraman and his le
  </p>
 </details>
 
-## Introduction
-
-__Jasper__ was made to be a scalable and fair multicast prototype for financial exchanges in the cloud. In the context of High-Frequency Trading (HFT), data regarding the market state has to be disseminated to a large number of market agents at extremely low latencies, as well as done so in an acceptably fair manner. That means, all market agents should be able to perceive an equal market state within any given moment, as well as be notified of changes to said state simultaneously. This ensures a fair and balanced playing field among participants.
-
-There is interest both in academia and in the industry to move the current financial exchange infrastructure to the public cloud. The benefits are clear and among others include better scalability, a more robust infrastructure, flexible resource allocation and potential cost savings. However, a major and understandable concern is the feasibility to implement a fair multicast service for a large number of market participants within acceptable latencies. The public cloud does not currently offer such a service or hardware that supports _multicasting_ for cloud tenants.
-
-Jasper, in a quick summary, employs a tree-like structure of VMS in the cloud, combined with DPDK kernel bypassing and shallow copies of packets to illustrate a competitive prototype of _multicasting_ on the cloud up to 1000 and even 5000 recipients.
-
-The goal of this master thesis would be to build upon the [PhD Thesis from Dr. Vighnesh Sachidananda](https://searchworks.stanford.edu/view/14423035), more specifically on the technique displayed in __Chapter 3, called LemonDrop__. This PhD thesis, on a very high level, addresses the issue of uneven VMS within a cluster. Many times, during deployment or autoscaling of machines on the cloud, there can be VMs that severely underperform even within the same configuration/instance class. These "stragglers" depending on where they are located in the cloud cluster can cause the larger application to suffer greatly in terms of performance/latency. This is specially the case with the Jasper project, where if there are stragglers in initial layers of the tree, this will hugely affect the message propagation.
-
-The idea would be then to adapt __LemonDrop__ to a simpler heuristic that, in the same spirit, from a set of VMS deployed onto a cloud, chooses a subset from it that best facilitates an application's communication patterns. In this case, that application would be Jasper and therefore the heuristic would be mostly focused on choosing the subset based on Jasper's tree-like structure
-
-
-- [Kickoff](https://docs.google.com/presentation/d/1jYG-S1xyy03R2H4vy9wFlQLlAAt9CFZ3rXdfz10VZpw/edit?usp=sharing)
-- [Presentation](https://docs.google.com/presentation/d/1jYG-S1xyy03R2H4vy9wFlQLlAAt9CFZ3rXdfz10VZpw/edit?usp=sharing)
 
 Check out the [_wiki_](https://github.com/duclos-cavalcanti/master-arbeit/wiki) for more!
 
