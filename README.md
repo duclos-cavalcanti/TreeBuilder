@@ -26,6 +26,8 @@ The idea would be then to adapt __LemonDrop__ to a simpler heuristic that, in th
 - [Kickoff](https://docs.google.com/presentation/d/1jYG-S1xyy03R2H4vy9wFlQLlAAt9CFZ3rXdfz10VZpw/edit?usp=sharing)
 - [Presentation](https://docs.google.com/presentation/d/1jYG-S1xyy03R2H4vy9wFlQLlAAt9CFZ3rXdfz10VZpw/edit?usp=sharing)
 
+Check out the [_wiki_](https://github.com/duclos-cavalcanti/master-arbeit/wiki) for more!
+
 <details closed>
  <summary>
      <b>PAPERS & <a href="https://github.com/duclos-cavalcanti/master-arbeit/wiki/Documentation">NOTES</a></b> 
@@ -47,9 +49,6 @@ The idea would be then to adapt __LemonDrop__ to a simpler heuristic that, in th
 
  </p>
 </details>
-
-
-Check out the [_wiki_](https://github.com/duclos-cavalcanti/master-arbeit/wiki) for more!
 
 ## 1. Setup
 
