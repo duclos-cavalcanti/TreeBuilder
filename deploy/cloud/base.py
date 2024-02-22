@@ -1,12 +1,7 @@
-from . import base
-
-class AWS(base.Cloud):
+class Cloud():
     def __init__(self):
-        print("AWS Initialized")
+        pass
 
     def print(self):
         """docstring for print"""
         print("Print from Cloud")
-        
-
-

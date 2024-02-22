@@ -4,7 +4,7 @@ import sys
 import cloud
 
 def main():
-    c = cloud.Cloud()
+    c = cloud.cloud("gcp")
     c.print()
 
 

@@ -1,5 +1,5 @@
-from .core import Cloud
+from .core import cloud
 
-__all__ = ['Cloud']
+__all__ = ['cloud']
 
 
