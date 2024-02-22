@@ -10,6 +10,7 @@ ExternalProject_Add(zeroMQ
         -DZMQ_BUILD_TESTS=OFF
         -DENABLE_CPACK=OFF
         -DBUILD_SHARED_LIBS=ON 
+        -DENABLE_DRAFTS=ON
     INSTALL_DIR ${ZEROMQ_INSTALL_DIR}
 )
 
@@ -26,4 +27,4 @@ ExternalProject_Add(cppzmq
 )
 
 set(ENV{PKG_CONFIG_PATH} "${ZEROMQ_INSTALL_DIR}/lib/pkgconfig:${CPPZMQ_INSTALL_DIR}/lib/pkgconfig")
-pkg_search_module(CPPZMQ QUIET IMPORTED_TARGET cppzmq)
+pkg_check_modules(CPPZMQ QUIET IMPORTED_TARGET cppzmq)
