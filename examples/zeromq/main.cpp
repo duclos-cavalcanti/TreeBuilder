@@ -1,16 +1,16 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-// strings
+#include <chrono>
+#include <thread>
 #include <string.h>
-
-// getopt
 #include <unistd.h>
 
-#include "main.h"
+#include "ZMQSocket.hpp"
 
-#define CLIENT 0
-#define SERVER 1
+#define CLIENT      0
+#define PROXY       1
+#define RECEIVER    2
 
 int parse(int argc, char **argv) {
     int opt, ret = 0;
@@ -24,8 +24,10 @@ int parse(int argc, char **argv) {
         case 'r':
             if (strcmp(optarg, "client") == 0) {
                 ret = CLIENT;
-            } else if (strcmp(optarg, "server") == 0) {
-                ret = SERVER;
+            } else if (strcmp(optarg, "proxy") == 0) {
+                ret = PROXY;
+            } else if (strcmp(optarg, "receiver") == 0) {
+                ret = RECEIVER;
             } else {
                 goto err;
             }
@@ -47,60 +49,74 @@ err:
     return ret;
 }
 
-int server() {
+int client() {
     printf("Server\n");
     {
         std::string PROTOCOL{"tcp"};
-        std::string IP{"*"};
+        std::string IP{"localhost"};
         std::string PORT{"8081"};
-        std::string FORMAT{PROTOCOL + "://" + IP + ":" + PORT};
-        // "tcp//*:8081"
+        ZMQSocket Client(PROTOCOL, IP, PORT, zmq::socket_type::client, "CLIENT");
 
-        NetworkSocket Server(FORMAT, NetworkSocketType::rep);
-        Server.bind();
-
-        do {
-            NetworkMessage msg{};
-            Server.recv(msg);
-            Server.log("SERVER RECV: " + msg.to_string());
-
-            NetworkMessage reply{std::string{msg.to_string() + " ACKED"}};
-            Server.send(reply);
-        } while(0);
+        Client.send(zmq::message_t{std::string("CLIENT REQ")});
     }
 
     return 0;
 }
 
-int client() {
-    printf("Client\n");
+int proxy() {
+    printf("Proxy\n");
     {
         std::string PROTOCOL{"tcp"};
         std::string IP{"localhost"};
         std::string PORT{"8081"};
-        std::string FORMAT{PROTOCOL + "://" + IP + ":" + PORT};
-        // "tcp//localhost:8081"
 
-        NetworkSocket Client(FORMAT, NetworkSocketType::req);
-        Client.connect();
+        ZMQSocket Proxy(PROTOCOL, IP, PORT, zmq::socket_type::router, "PROXY");
+        Proxy.bind();
 
-        do {
-            NetworkMessage msg{std::string("HELLO")};
-            NetworkMessage resp{};
+        uint32_t client_id = 0;
 
-            Client.send(msg);
-            Client.recv(resp);
-            Client.log("CLIENT RECV: " + resp.to_string());
-        } while(0);
+        while(1) {
+            auto msg = Proxy.recv();
+            auto id = msg.routing_id();
+
+            if (msg.str() == "CLIENT REQ") {
+                Proxy.log({"RECV: CLIENT REQ"});
+                client_id = id;
+            }
+        }
+
+    }
+    return 0;
+}
+
+
+int receiver() {
+    printf("Receiver\n");
+    {
+        std::string PROTOCOL{"tcp"};
+        std::string IP{"localhost"};
+        std::string PORT{"8081"};
+        ZMQSocket Receiver(PROTOCOL, IP, PORT, zmq::socket_type::client, "RECEIVER");
+        Receiver.connect();
+
+        int n = 10;
+        while(n) {
+            Receiver.send(zmq::message_t{std::string("CLIENT REQ")});
+            n--;
+            std::this_thread::sleep_for(std::chrono::seconds(1));
+        }
+
     }
     return 0;
 }
 
 int main(int argc, char **argv) {
+
     int role = parse(argc, argv);
 
-    if (role == CLIENT) client();
-    else                server();
+    if (role == CLIENT)        client();
+    else if (role == PROXY)    proxy();
+    else                       receiver();
 
 	return 0;
 }
