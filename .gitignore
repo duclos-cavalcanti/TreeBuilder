@@ -1,5 +1,8 @@
 *.tar*
 
+*.log 
+*.aux
+
 build/*
 bin/*
 lib/dpdk/*
