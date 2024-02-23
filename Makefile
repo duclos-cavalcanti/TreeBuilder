@@ -31,21 +31,13 @@ update:
 	@git commit -m "Updated submodule"
 	@git push origin main
 
-.PHONY: template
-template:
-	@python3 main.py template
-
-.PHONY: pkg
-pkg:
-	@python3 main.py package
-
 .PHONY: deploy
 deploy:
-	@python3 main.py deploy
+	@python3 deploy/main.py
 
-.PHONY: delete
+.PHONY: docs
 delete:
-	@python3 main.py delete
+	@$(MAKE) -C docs
 
 .PHONY: clean
 clean:
