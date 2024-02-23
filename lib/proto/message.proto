@@ -1,0 +1,56 @@
+syntax = "proto3";
+
+enum MessageType {
+    REQ_UNKNOWN = 0;
+    ACK_UNKNOWN = 1;
+    REQ_MAC_COLLECTION = 2;
+    ACK_MAC_COLLECTION = 3;
+    REQ_MAC_ADDRESS = 4;
+    ACK_MAC_ADDRESS = 5;
+    REQ_STATS_COLLECTION = 6;
+    ACK_STATS_COLLECTION = 7;
+}
+
+message Msg {
+    int64 msg_id = 1;
+    int64 client_send_time = 2;
+    int32 recipient_id = 3;
+    int64 root_send_time = 4;
+    int32 msg_type = 100; // 0=> for sending msgs, 1=> for requesting stats
+    int32 is_from_hedge_node = 6; // 1 => true, 2 => false (see issue #28)
+    int64 experiment_starting_msg_id = 7;
+    int64 deadline = 8;
+    int64 downstream = 9;
+}
+
+message StatsFields {
+    int64 latency = 1;
+    int64 release_time = 2;
+    int32 holding_duration = 3;
+    int64 deadline = 4;
+}
+
+message Stats {
+    int32 recipient_id = 1;
+    map<int64, StatsFields> records = 2;
+    int64 total_msgs = 3;
+}
+
+message ManagementMsg {
+    string mac_address = 1;
+    string ip_address = 2;
+    map<string, string> addrs = 3;
+    int32 msg_type = 4;  // 2 => for sending/requesting mac, 3 => here are macs, 4 => mac collection (from client), 5 => collect stat
+    bool stop = 5; // receivers don't need a reply back so they send stop=true to the client
+    repeated string request = 6;
+}
+
+message HedgingHint {
+    int32 proxy_num = 1;
+    float intensity = 2;
+}
+
+message HoldreleaseHint {
+    int32 index = 1;  // can be a proxy as well as a receiver
+    repeated int32 owd_estimates = 2;
+}
