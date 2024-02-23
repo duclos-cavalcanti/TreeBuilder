@@ -3,4 +3,4 @@
 	url = git@github.com:HaseebLUMS/dom-tenant-service.git
 [submodule "tum"]
 	path = tum
-	url = git@gitlab.lrz.de:cc/hpm.git
+	url = https://gitlab.lrz.de/cc/hpm.git
