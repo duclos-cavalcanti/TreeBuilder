@@ -50,14 +50,12 @@ err:
 }
 
 int client() {
-    printf("Server\n");
+    printf("Client\n");
     {
         std::string PROTOCOL{"tcp"};
         std::string IP{"localhost"};
         std::string PORT{"8081"};
         ZMQSocket Client(PROTOCOL, IP, PORT, zmq::socket_type::client, "CLIENT");
-
-        Client.send(zmq::message_t{std::string("CLIENT REQ")});
     }
 
     return 0;
@@ -70,10 +68,11 @@ int proxy() {
         std::string IP{"localhost"};
         std::string PORT{"8081"};
 
-        ZMQSocket Proxy(PROTOCOL, IP, PORT, zmq::socket_type::router, "PROXY");
+        ZMQSocket Proxy(PROTOCOL, IP, PORT, zmq::socket_type::server, "PROXY");
         Proxy.bind();
 
         uint32_t client_id = 0;
+        uint32_t receiver_id = 0;
 
         while(1) {
             auto msg = Proxy.recv();
@@ -98,14 +97,6 @@ int receiver() {
         std::string PORT{"8081"};
         ZMQSocket Receiver(PROTOCOL, IP, PORT, zmq::socket_type::client, "RECEIVER");
         Receiver.connect();
-
-        int n = 10;
-        while(n) {
-            Receiver.send(zmq::message_t{std::string("CLIENT REQ")});
-            n--;
-            std::this_thread::sleep_for(std::chrono::seconds(1));
-        }
-
     }
     return 0;
 }

@@ -30,8 +30,8 @@ void ZMQSocket::set_log(ZMQSocket::LOG_LEVEL level) {
     this->_level = level;
 }
 
-void ZMQSocket::set_prefix(std::string prefix) {
-    this->_prefix = prefix;
+void ZMQSocket::set_name(std::string name) {
+    this->_name = name;
 }
 
 void ZMQSocket::log(const std::initializer_list<std::string>& strings) {
@@ -40,7 +40,20 @@ void ZMQSocket::log(const std::initializer_list<std::string>& strings) {
 
     std::string data{concatenate(strings)};
     std::cout << "ZMQLOG::" 
-              << this->_prefix
+              << this->_name
+              << " "
+              << data 
+              << std::endl;
+}
+
+void ZMQSocket::log_term(const std::initializer_list<std::string>& strings, ZMQSocket::COLOR color) {
+    if (this->_level == ZMQSocket::LOG_LEVEL::NONE)
+        return;
+
+    std::string data{concatenate(strings)};
+    std::cout << color
+              << "ZMQLOG::" 
+              << this->_name
               << " "
               << data 
               << std::endl;
@@ -68,7 +81,7 @@ ZMQSocket::ZMQSocket(std::string PROTOCOL,
                     std::string NAME,
                     int CONTEXT) : 
     _level(ZMQSocket::LOG_LEVEL::INFO), 
-    _prefix(NAME)
+    _name(NAME)
 {
 
     this->ip        = IP;
@@ -96,7 +109,14 @@ void ZMQSocket::bind(void) {
     this->log({"BOUND IP=", this->ip, " PORT=", this->port});
 }
 
-int ZMQSocket::send(zmq::message_t msg, zmq::send_flags flags) {
+void ZMQSocket::monitor(std::string addr, int events) {
+    // this->socket.monitor(addr, events);
+    this->_monitor = zmq::socket_t (this->context, ZMQ_PAIR);
+    // this->_monitor.connect(addr);
+}
+
+
+int ZMQSocket::send(zmq::message_t& msg, zmq::send_flags flags) {
     auto res = this->socket.send(msg, flags);
     if (res.has_value()) {
         this->log({"SENT DATA"});
@@ -130,39 +150,55 @@ zmq::message_t ZMQSocket::recv(zmq::recv_flags flags) {
 }
 
 int ZMQSocket::send_message(ManagementMsg msg, int message_type) {
-    // msg.set_msg_type(message_type);
-    // return this->send_message(msg);
-    return 0;
+    msg.set_msg_type(message_type);
+    return this->send_message(msg);
 }
 
 int ZMQSocket::send_message(ManagementMsg msg) {
-    // std::string data;
-    // msg.SerializeToString(&data);
+    std::string data;
+    msg.SerializeToString(&data);
+    zmq::message_t zmqmsg(data);
+    this->log({"SENT MESSAGE TYPE: ", std::to_string(msg.msg_type())});
+    return this->send(zmqmsg);
+}
 
-    // this->log({"SENT MESSAGE TYPE: ", std::to_string(msg.msg_type())});
-    // return this->send(zmq::message_t(data));
-    return 0;
+int ZMQSocket::send_message_to(ManagementMsg msg, int routing_id) {
+    std::string data;
+    msg.SerializeToString(&data);
+    zmq::message_t zmqmsg{data};
+    zmqmsg.set_routing_id(routing_id);
+    this->log({"SENT MESSAGE TYPE: ", std::to_string(msg.msg_type())});
+    return this->send(zmqmsg);
 }
 
 int ZMQSocket::recv_message(ManagementMsg& msg) {
-    // zmq::message_t zmqmsg;
-    // int n = this->recv(zmqmsg);
-    // if (n > 0) 
-    //     msg.ParseFromArray((char* )zmqmsg.data(), n);
+    zmq::message_t zmqmsg;
+    int n = this->recv(zmqmsg);
+    if (n > 0) 
+        msg.ParseFromArray((char* )zmqmsg.data(), n);
 
-    // this->log({"RECV MESSAGE TYPE: ", std::to_string(msg.msg_type())});
-    // return n;
-    return 0;
+    this->log({"RECV MESSAGE TYPE: ", std::to_string(msg.msg_type())});
+    return n;
 }
 
 ManagementMsg ZMQSocket::recv_message(void) {
-    // ManagementMsg msg;
-    // zmq::message_t zmqmsg;
-    // int n = this->recv(zmqmsg);
-    // if (n > 0) 
-    //     msg.ParseFromArray((char* )zmqmsg.data(), n);
+    ManagementMsg msg;
+    zmq::message_t zmqmsg;
+    int n = this->recv(zmqmsg);
+    if (n > 0) 
+        msg.ParseFromArray((char* )zmqmsg.data(), n);
 
-    // this->log({"RECV MESSAGE TYPE: ", std::to_string(msg.msg_type())});
-    // return msg;
-    return ManagementMsg();
+    this->log({"RECV MESSAGE TYPE: ", std::to_string(msg.msg_type())});
+    return msg;
+}
+
+int ZMQSocket::recv_message_from(ManagementMsg& msg, int& id) {
+    zmq::message_t zmqmsg;
+    int n = this->recv(zmqmsg);
+    id = zmqmsg.routing_id();
+    if (n > 0) 
+        msg.ParseFromArray((char* )zmqmsg.data(), n);
+
+    this->log({"RECV MESSAGE TYPE: ", std::to_string(msg.msg_type())});
+    return n;
 }
