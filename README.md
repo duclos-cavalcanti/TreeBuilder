@@ -23,8 +23,7 @@ The goal of this master thesis would be to build upon the [PhD Thesis from Dr. V
 
 The idea would be then to adapt __LemonDrop__ to a simpler heuristic that, in the same spirit, from a set of VMS deployed onto a cloud, chooses a subset from it that best facilitates an application's communication patterns. In this case, that application would be Jasper and therefore the heuristic would be mostly focused on choosing the subset based on Jasper's tree-like structure
 
-- [Kickoff](https://docs.google.com/presentation/d/1jYG-S1xyy03R2H4vy9wFlQLlAAt9CFZ3rXdfz10VZpw/edit?usp=sharing)
-- [Presentation](https://docs.google.com/presentation/d/1jYG-S1xyy03R2H4vy9wFlQLlAAt9CFZ3rXdfz10VZpw/edit?usp=sharing)
+- [Kickoff](https://docs.google.com/presentation/d/1XlgH70a5laUlEAKua7f3ALofkX98AMYdCSO5etTrlyw/edit?usp=sharing)
 
 Check out the [_wiki_](https://github.com/duclos-cavalcanti/master-arbeit/wiki) for more!
 
