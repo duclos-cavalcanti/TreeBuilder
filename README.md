@@ -8,7 +8,7 @@
 
 _Master Thesis_ work performed at NYU, advised/supervised by the [Chair of Communication Networks](https://www.ce.cit.tum.de/en/lkn/home/) from the School of CIT at TUM and co-advised by
 [Dr.Anirudh Sivaraman](https://anirudhsk.github.io/) and his team at [Systems@NYU](https://news.cs.nyu.edu/). This contribution 
-is based upon current research of Dr.Anirudh Sivaraman, lead by [PhD. Muhammad Haseeb](https://haseeblums.github.io/) and their work on
+builds upon current research of Dr.Anirudh Sivaraman, lead by [PhD. Muhammad Haseeb](https://haseeblums.github.io/) and based upon
 [Jasper: Scalable and Fair Multicast for Financial Exchanges in the Cloud](https://arxiv.org/abs/2402.09527.).
 
 ## Introduction
