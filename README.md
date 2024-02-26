@@ -6,9 +6,9 @@
 
 <!-- __Abstract:__ _Not defined yet._ -->
 
-_Master Thesis_ work performed at NYU, both advised by the [Chair of Communication Networks](https://www.ce.cit.tum.de/en/lkn/home/) at TUM and co-advised by
+_Master Thesis_ work performed at NYU, advised/supervised by the [Chair of Communication Networks](https://www.ce.cit.tum.de/en/lkn/home/) from the School of CIT at TUM and co-advised by
 [Dr.Anirudh Sivaraman](https://anirudhsk.github.io/) and his team at [Systems@NYU](https://news.cs.nyu.edu/). This contribution 
-is however within the larger current research of Dr.Anirudh Sivaraman and his lead [PhD. Muhammad Haseeb](https://haseeblums.github.io/) based on 
+is based upon current research of Dr.Anirudh Sivaraman, lead by [PhD. Muhammad Haseeb](https://haseeblums.github.io/) and their work on
 [Jasper: Scalable and Fair Multicast for Financial Exchanges in the Cloud](https://arxiv.org/abs/2402.09527.).
 
 ## Introduction
@@ -38,10 +38,10 @@ Check out the [_wiki_](https://github.com/duclos-cavalcanti/master-arbeit/wiki) 
 
  <tr>
      <td>
-     <a href="www.google.com">
-     Foobar
+     <a href="https://searchworks.stanford.edu/view/14423035">
+     Scheduling and autoscaling methods for low latency applications
      </a>
-     <td> <em>2023</em> </td> 
+     <td> <em>2022</em> </td> 
  </tr>
 
  </table> 
