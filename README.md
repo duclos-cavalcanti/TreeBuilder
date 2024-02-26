@@ -27,28 +27,6 @@ The idea would be then to adapt __LemonDrop__ to a simpler heuristic that, in th
 
 Check out the [_wiki_](https://github.com/duclos-cavalcanti/master-arbeit/wiki) for more!
 
-<details closed>
- <summary>
-     <b>PAPERS & <a href="https://github.com/duclos-cavalcanti/master-arbeit/wiki/Documentation">NOTES</a></b> 
- </summary>
- <p>
-
- <table>
- <tr> <th>Title</th> <th>Date</th> </tr>
-
- <tr>
-     <td>
-     <a href="https://searchworks.stanford.edu/view/14423035">
-     Scheduling and autoscaling methods for low latency applications
-     </a>
-     <td> <em>2022</em> </td> 
- </tr>
-
- </table> 
-
- </p>
-</details>
-
 ## 1. Setup
 
 1. Clone the repo
