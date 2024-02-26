@@ -1,6 +1,6 @@
 <h1 align="center">Master Thesis</h1>
 <p align="center">
-   High Performance Multicasting on the Cloud
+   VM Selection and Scheduling Heuristic for Multicasting on the Cloud
 </p>
 <br>
 
