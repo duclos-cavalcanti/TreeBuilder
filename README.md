@@ -48,7 +48,7 @@ cloud tenant solution for financial exchanges in the cloud.
 - [Project Proposal](docs/assets/Kickoff.pdf)
 - [Project Wiki](https://github.com/duclos-cavalcanti/master-arbeit/wiki)
 
-## 1. Setup
+## 1. Setup and Installation
 
 1. Clone the repo
    ```bash
@@ -56,10 +56,8 @@ cloud tenant solution for financial exchanges in the cloud.
     # recursive flag needed to include submodule
    ```
 
-## 2. Dependencies
-All are based on a [Ubuntu 22.04 Jammy machine](https://releases.ubuntu.com/jammy/).
-
-1. Build Tools
+2. Install Dependencies _([Ubuntu 22.04 Jammy machine](https://releases.ubuntu.com/jammy/))_
+    - Build Tools
    ```bash
     sudo apt install meson cmake ninja build-essential git pkg-config
     sudo apt install libprotobuf-c-dev libprotobuf-dev protobuf-compiler protobuf-codegen
@@ -68,14 +66,13 @@ All are based on a [Ubuntu 22.04 Jammy machine](https://releases.ubuntu.com/jamm
     pip install pyelftools meson
    ```
 
-2. Network Tools
+    - Network Tools
    ```bash
    sudo apt install ethtool net-tools inetutils-traceroute tcpdump
    ```
-
 More on further setup, please see [the wiki](https://github.com/duclos-cavalcanti/master-arbeit/wiki/Setup).
 
-## 3. Usage
+## 2. Usage
 
 1. Build
     ```bash 
