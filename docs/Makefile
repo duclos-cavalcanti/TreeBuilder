@@ -36,11 +36,11 @@ build: ${PDFS}
 
 %.pdf: %.tex
 	$(info TEX: $< => PDF: $@)	
-	docker run --rm \
+	@docker run --rm \
 			   --user $(UID):$(GID) \
 			   --name ${NAME} \
 			   -v ${PWD}:/data \
 			   -w /data \
 			   ${DOCKER}:latest \
-			   pdflatex -output-directory /data/assets $< 
-
+			   pdflatex $<; bibtex $*; pdflatex $<
+	@mv $@ assets/

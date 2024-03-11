@@ -2,6 +2,8 @@
 
 *.log 
 *.aux
+*.bbl 
+*.blg 
 
 build/*
 bin/*

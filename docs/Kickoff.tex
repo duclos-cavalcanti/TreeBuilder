@@ -27,33 +27,69 @@
 }
 \makeatother
 
-\title{Thesis Title}
+\title{VM Selection for Financial Exchanges in the Cloud}
 
 \begin{document}
 
 \maketitle
 
 \section{Overview}
-        
-    Write down an overview while including the following points:
-    \begin{itemize}
-        \item What problem do you want to solve? What is the main question(s)?
-        \item Why is it important?
-        \item What is the status quo?
-        \item How do you approach the problem?
-        \item What are the potential challenges?
-    \end{itemize}
+
+Financial exchanges have shown interest in migrating their current infrastructure 
+to the public cloud. The benefits are agreed upon by both the industry and 
+academia, promising a more scalable, robust, and cost-efficient infrastructure. 
+However, a vital concern is the lack of support for fair and performant multicast 
+in the public cloud. Exchanges need to disseminate market data to market participants 
+(MPs) both fast and fairly. Every MP has to receive market state updates 
+almost simultaneously to not create an unfair advantage among MPs.
+
+Different than the current exchange's on-premise data centers, the cloud does not 
+offer native mechanisms for fair data delivery. Recent work, namely Jasper \cite{haseeb2024jasper}, 
+has addressed this gap, offering a solution that creates an overlay multicast tree, leveraging 
+up-to-date advancements in clock synchronization, kernel by-passing, and hedging, 
+to present a scalable and fair multicast on the cloud. Jasper offers a commendable 
+alternative, outperforming contemporary efforts, and Amazon's in-house multicast solution, 
+as well as addressing known irregularities regarding network latency in the cloud.
+
+However, there are possible avenues for improvement. LemonDrop \cite{sachidananda2022scheduling}, a component 
+of a larger body of work, tackles the real issue of inconsistent VM performance within identical instance configurations 
+in the cloud. Under-performing VMs within a given instance class are called \textit{Lemons}. 
+LemonDrop was developed to select and schedule a subset of VMs optimized for a given application's latency needs, by quickly 
+detecting lemon VMs, repositioning them across the system, or dropping them completely.
+It does so by framing the selection and scheduling of VMs as a Quadratic Assignment Problem, where 
+traffic flow between facilities, each assigned to a location, is to be minimized.
+LemonDrop treats services within an application as facilities and the VMs themselves as the locations. 
+
+% LemonDrop takes as inputs the one-way delay (OWD) matrix of a given cloud cluster and 
+% the given application's load-matrix. Finally, it approximately solves the framed QAP via an 
+% algorithm called Fast Approximate Quadratic Programming and further optimization methods to relax constraints imposed 
+% in this scenario.
+
+Within the context of Jasper, lemons have the potential to drastically affect the overall system's performance.
+Inspired by LemonDrop's VM selection method, the proposed work here aims to develop a simpler heuristic that 
+can achieve reasonably good results adapted to the smaller problem set of a multicast tree. 
+Therefore, significant improvements could be brought to Jasper's deployment and performance as a 
+cloud tenant solution for financial exchanges in the cloud.
+
+% \begin{itemize}
+%     \item What problem do you want to solve? What is the main question(s)?
+%     \item Why is it important?
+%     \item What is the status quo?
+%     \item How do you approach the problem?
+%     \item What are the potential challengesa
+% \end{itemize}
  
 \section{Objectives}
-    Write down the sub-tasks that you will work on during the project.
-    \begin{enumerate}
-        \item 
-        \item 
-        \item 
-        \item 
-    \end{enumerate}
+\begin{enumerate}
+    \item Develop a VM selection heuristic for the Cloud. 
+    \item Adapt heuristic to Jasper's tree-like network structure.
+\end{enumerate}
 
 \section{Experimental Setup}
-    
+Creation of a cloud stack and data analysis are be done locally. The cloud stack deployment, node benchmarking and
+heuristic development would be done via Google Cloud credits provided by Dr.Sivaraman's and his team at Systems@NYU.
+
+\bibliographystyle{IEEEtran}
+\bibliography{references}    
     
 \end{document}
