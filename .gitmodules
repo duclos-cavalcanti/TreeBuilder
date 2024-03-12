@@ -1,3 +1,3 @@
-[submodule "module"]
-	path = module
+[submodule "jasper"]
+	path = jasper
 	url = git@github.com:HaseebLUMS/dom-tenant-service.git
