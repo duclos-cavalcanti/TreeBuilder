@@ -1,13 +1,14 @@
 # Notes
 
-This work has been based on two supporting contributions.
-
 Assumptions: 
-    - Lemons are lemons relative to other nodes / positioning in the cloud
-    - Cloud display high latency variance and inconsistent VM behaviour, solver 
-    to find approximate best solution does not translate well to reality.
 
-### 1. [Jasper ](https://arxiv.org/abs/2402.09527)
+- Lemons are lemons relative to other nodes / positioning in the cloud
+- Cloud display high latency variance and inconsistent VM behaviour 
+    - QAP Solver to find approximate best solution does not translate well to reality.
+
+### 0. [CloudEx](https://www.sigops.org/s/conferences/hotos/2021/papers/hotos21-s06-ghalayini.pdf)
+
+### 1. [Jasper](https://arxiv.org/abs/2402.09527)
 
 __Jasper__ was made to be a scalable and fair multicast prototype for financial exchanges in the cloud. In the context of High-Frequency Trading (HFT), data regarding the market state has to be disseminated to a large number of market agents at extremely low latencies, as well as done so in an acceptably fair manner. That means, all market agents should be able to perceive an equal market state within any given moment, as well as be notified of changes to said state simultaneously. This ensures a fair and balanced playing field among participants.
 
@@ -88,16 +89,24 @@ can also work without this input, however with it there are significant enhancem
 
 ## Meeting
 
-- [ ] Jasper Latency: 
-    - 100s of microseconds 
-- [ ] Clockworks Sync: 
-    - Daemon Software 
-    - Error is in 100s of nanoseconds 
+### Topics
+- [ ] Kickoff Presentation
+    - [ ] Length 5 Minutes?
+    - [ ] How much time into Background/Jasper/Financial Exchanges?
+    - [ ] How specific or robust should be initial Heuristic Proposal'?
+    - [ ] Date Slides are to available before Kickoff (1 Week?)
+- [ ] Dry-Run Kickoff
 
 ### Questions
+- [X] Jasper Latency: 100s of microseconds 
+- [X] Clockworks Sync: 
+    - Daemon Software 
+    - Error is in 10s of nanoseconds 
+
+### Study
 - [ ] VM Co-Location? Is it a necessary variable for Jasper?
 - [ ] "In-Network-Time"? What is the Hadamard Product of the Matrices expressing?
-- [ ] Understand 3.2.1 Entirely 
+- [ ] Understand 3.2.1 Entirely: QAP Framing and Solving
     - [ ] Hadamard Product, Trace, Permutation P
 
 
