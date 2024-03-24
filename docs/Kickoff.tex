@@ -35,78 +35,63 @@
 
 \section{Overview}
 
-Financial exchanges have shown interest in migrating their current infrastructure 
-to the public cloud, potentially allowing for greater scalability, robustness, and lower costs.
-In contrast to the exchange's current on-premise data centers, the public cloud does not 
-offer native mechanisms for fair and performant multicast delivery. Disseminating market data 
-to market participants (MPs) both fast and almost simultaneously is a needed requirement to ensure a fair market.
+% Lemondrop uses an application's request pattern and real-time intra-VM OWD latency to 
+% frame the problem of node-to-VM selection as Quadratic Assignment Problem. LemonDrop implements an
+% optimization method obtain a locally optimal solution to a relaxed version of the problem.
 
-Recent work, namely Jasper \cite{haseeb2024jasper}, addressed this by presenting a scalable and fair multicast 
-solution for financial exchanges in the cloud. It does so via the employment of an overlay multicast tree, 
-clock synchronization, kernel by-passing, and more. Jasper achieves considerable performance and fairness, 
-and attempts to address the high network-latency variance in the cloud through custom techniques such as hedging. 
-However, there is room for improvement by optimizing in-host latency via confronting the issue of inconsistent VM performance in the cloud.
-
-LemonDrop \cite{sachidananda2022scheduling} tackles this very problem of discrepant VM behavior 
-within identical instance configurations in the cloud. LemonDrop selects and schedules 
-a subset of VMs optimized for an application's latency needs, by quickly detecting under-performing ones (\textit{Lemons or Stragglers}).
-It frames the selection and scheduling of VMs as a Quadratic Assignment Problem (QAP), minimizing requests among VMs
-by reconfiguring their relative placement and dropping individual ones completely. 
-To accomplish this, LemonDrop uses knowledge of an application's request patterns and real-time intra-VM latency to obtain its proposed configuration.
-
-% LemonDrop \cite{sachidananda2022scheduling} tackles this very problem of inconsistent VM performance 
-% within identical instance configurations in the cloud. LemonDrop was developed to select and schedule 
-% a subset of VMs optimized for a given application's latency needs, by quickly detecting under-performing VMs (\textit{Lemons or Stragglers}).
-% It does so by framing the selection and scheduling of VMs as a Quadratic Assignment Problem (QAP), where 
-% traffic flow between facilities, each assigned to a location, is to be minimized. 
-% LemonDrop treats services within an application as facilities and the VMs themselves as the locations. 
-
-Stragglers can likely affect Jasper's overall system performance drastically.
-This proposed work aims to develop a simpler heuristic than LemonDrop's, that achieves reasonably good results 
-adapted to the smaller problem set of a multicast tree. 
-We believe that due to the known high latency variance in the cloud, LemonDrop's approach of using all-to-all latency measurements
-is an overly-complex solution that may capture an unrealistic snapshot of the cluster's behavior.
-
-% Therefore, significant improvements could be brought to Jasper's deployment and performance as a 
-% modern solution for financial exchanges in the cloud.
+Financial exchanges consider a migration to the cloud for scalability, robustness, and cost-efficiency.
+Jasper \cite{haseeb2024jasper} presents a scalable and fair multicast solution for cloud-based exchanges, 
+addressing the lack of cloud-native mechanisms for such. 
+To achieve this, Jasper employs an overlay multicast tree, leveraging clock synchronization, kernel-bypass techniques, 
+and more.
+However, there are opportunities for enhancement by confronting the issue of inconsistent VM performance 
+within identical instances. LemonDrop \cite{sachidananda2022scheduling} tackles this problem,
+selecting and scheduling a subset of VMs optimized for an application's latency needs by detecting under-performing VMs. 
+It does so by using an application's request pattern and real-time intra-VM OWD latency measurements to 
+frame the problem as a relaxed Quadratic Assignment Problem (QAP). 
+Jasper's performance can drastically be affected by under-performing VMs.
+Yet, we believe that LemonDrop's approach of using all-to-all latency measurements and an optimization routine 
+for the framed QAP is an overly complex solution and may be disproportionally robust 
+for Jasper's use-case of a multicast-tree. 
+% Moreover, it may capture an unrealistic snapshot of the cluster's behavior due to 
+% the known high latency variance in the cloud.
+Finally, the proposed work aims to develop an even simpler heuristic, that achieves reasonably good results 
+adapted to the current smaller problem set.
 
 \section{Objectives}
-Develop a VM Selection Heuristic for tree-like networks in the cloud.
+Develop a VM selection heuristic for tree-like networks in the cloud.
 \begin{enumerate}
-    \item Develop Server-Client Manager application.
+    \item Implement a Server-Client Manager application:
     \begin{enumerate}
-        \item Server: Connects to all client nodes and applies requests onto them:
+        \item Server: Allows user to \textbf{run}, \textbf{terminate} and \textbf{report} on processes across a cluster.        
         \begin{enumerate}
-            \item Launch a process and store it's PID.
-            \item Report data on a previously ran process.
-            \item Kill a previously ran process.
+            \item Connects to client nodes (VMs) and issues action-requests:
+            \begin{enumerate}
+                \item Action(A): Launch a process/program, store and report PID.
+                \item Action(B): Report information on ongoing process.
+                \item Action(C): Kill a previously ran process.
+            \end{enumerate}
         \end{enumerate}
-        \item Client: Waits on Server's connection and reacts to requests.
+        \item Client: Waits on Server's connection and requests.
     \end{enumerate}
-    \item Apply Testbench through Server-Client Manager:
+    \item Employ Testbench via Server-Client Manager:
     \begin{enumerate}
-        \item Server allocate a pool of `N` VMs in the cloud and stores initial configuration.
-        \item Server is able to command client nodes to run, terminate and report on:
-        \begin{enumerate}
-            \item Jasper
-            \item Intra-VM OWD Latency Measurements
-            \item LemonDrop
-        \end{enumerate}
-        \item Server can change change cluter configuration via killing and relaunching processes.
-    \end{enumerate}
-    \item Develop Heuristic:
-    \begin{enumerate}
-        \item Recreate tree by iterativally:
-        \begin{enumerate}
-            \item Benchmark intra-VM latency and choose best node among the pool.
-            \item Place/Assign node to the next available slot in the tree.
-        \end{enumerate}
+        \item Server allocates a pool of \textbf{N} VMs, runs and terminates Jasper on initial configuration.
+        \item Server applies \textbf{heuristic} to develop a new tree configuration by iterativally:
+            \begin{enumerate}
+                \item Running/Obtaining reports on intra-VM latency among nodes in the pool.
+                \item Selecting/Assigning best node to the next available slot in the tree.
+                \item Removing selected node from option-pool.
+            \end{enumerate}
+        \item Server re-deploys new configuration.
     \end{enumerate}
 \end{enumerate}
 
 \section{Experimental Setup}
-Cloud stack deployment, node benchmarking and heuristic development/formulation would be done 
-via Google Cloud Platform (GCP) credits provided by Dr.Sivaraman's and his team at Systems@NYU.
+Cloud VM instances of \textit{c2d-highcpu-8} type would be deployed on Google Cloud's Platform. 
+Each machine offers 8 virtual AMD Milan CPU's, 16GB of Memory and 16Gbps of Network Bandwidth. 
+Results would be compared among a vanilla Jasper run, a heuristic-proposed 
+and a LemonDrop proposed configuration of Jasper, as well as done so across different tree sizes.
 
 \bibliographystyle{IEEEtran}
 \bibliography{references}    
