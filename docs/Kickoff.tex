@@ -36,52 +36,77 @@
 \section{Overview}
 
 Financial exchanges have shown interest in migrating their current infrastructure 
-to the public cloud. The benefits are agreed upon by both the industry and 
-academia, promising a more scalable, robust, and cost-efficient infrastructure. 
-However, in contrast to the exchange's on-premise data centers, the public cloud does not 
-currently offer native mechanisms for fair and performant data delivery. 
-Exchanges need to disseminate market data to market participants (MPs) both fast and 
-virtually simultaneously to not create unfair advantages among MPs.
+to the public cloud, potentially allowing for greater scalability, robustness, and lower costs.
+In contrast to the exchange's current on-premise data centers, the public cloud does not 
+offer native mechanisms for fair and performant multicast delivery. Disseminating market data 
+to market participants (MPs) both fast and almost simultaneously is a needed requirement to ensure a fair market.
 
 Recent work, namely Jasper \cite{haseeb2024jasper}, addressed this by presenting a scalable and fair multicast 
-for financial exchanges in the cloud. It does so via the employment of an overlay multicast tree and leveraging 
-up-to-date advancements in clock synchronization, kernel by-passing, and hedging to simultaneously 
-achieve considerable performance and fairness. Jasper offers a commendable alternative, 
-outperforming a previous system CloudEx and Amazon's commercial multicast solution.
+solution for financial exchanges in the cloud. It does so via the employment of an overlay multicast tree, 
+clock synchronization, kernel by-passing, and more. Jasper achieves considerable performance and fairness, 
+and attempts to address the high network-latency variance in the cloud through custom techniques such as hedging. 
+However, there is room for improvement by optimizing in-host latency via confronting the issue of inconsistent VM performance in the cloud.
 
-Moreover, LemonDrop \cite{sachidananda2022scheduling} tackles the real issue of 
-inconsistent VM performance within identical instance configurations in the cloud. 
-LemonDrop was developed to select and schedule a subset of VMs optimized for a given application's latency needs, by quickly 
-detecting under-performing VMs (\textit{Lemons or Stragglers}).
-It does so by framing the selection and scheduling of VMs as a Quadratic Assignment Problem (QAP), where 
-traffic flow between facilities, each assigned to a location, is to be minimized. 
-LemonDrop treats services within an application as facilities and the VMs themselves as the locations. 
+LemonDrop \cite{sachidananda2022scheduling} tackles this very problem of discrepant VM behavior 
+within identical instance configurations in the cloud. LemonDrop selects and schedules 
+a subset of VMs optimized for an application's latency needs, by quickly detecting under-performing ones (\textit{Lemons or Stragglers}).
+It frames the selection and scheduling of VMs as a Quadratic Assignment Problem (QAP), minimizing requests among VMs
+by reconfiguring their relative placement and dropping individual ones completely. 
+To accomplish this, LemonDrop uses knowledge of an application's request patterns and real-time intra-VM latency to obtain its proposed configuration.
 
-Straggler VMs have the potential to drastically affect Jasper's overall system performance.
-Inspired by LemonDrop's VM selection method, the proposed work here aims to develop a simpler heuristic that 
-can achieve reasonably good results adapted to the smaller problem set of a multicast tree. 
-Therefore, significant improvements could be brought to Jasper's deployment and performance as a 
-modern solution for financial exchanges in the cloud.
+% LemonDrop \cite{sachidananda2022scheduling} tackles this very problem of inconsistent VM performance 
+% within identical instance configurations in the cloud. LemonDrop was developed to select and schedule 
+% a subset of VMs optimized for a given application's latency needs, by quickly detecting under-performing VMs (\textit{Lemons or Stragglers}).
+% It does so by framing the selection and scheduling of VMs as a Quadratic Assignment Problem (QAP), where 
+% traffic flow between facilities, each assigned to a location, is to be minimized. 
+% LemonDrop treats services within an application as facilities and the VMs themselves as the locations. 
+
+Stragglers can likely affect Jasper's overall system performance drastically.
+This proposed work aims to develop a simpler heuristic than LemonDrop's, that achieves reasonably good results 
+adapted to the smaller problem set of a multicast tree. 
+We believe that due to the known high latency variance in the cloud, LemonDrop's approach of using all-to-all latency measurements
+is an overly-complex solution that may capture an unrealistic snapshot of the cluster's behavior.
+
+% Therefore, significant improvements could be brought to Jasper's deployment and performance as a 
+% modern solution for financial exchanges in the cloud.
 
 \section{Objectives}
+Develop a VM Selection Heuristic for tree-like networks in the cloud.
 \begin{enumerate}
-    \item Develop a VM Selection Heuristic for tree-like networks in the Cloud.
+    \item Develop Server-Client Manager application.
+    \begin{enumerate}
+        \item Server: Connects to all client nodes and applies requests onto them:
+        \begin{enumerate}
+            \item Launch a process and store it's PID.
+            \item Report data on a previously ran process.
+            \item Kill a previously ran process.
+        \end{enumerate}
+        \item Client: Waits on Server's connection and reacts to requests.
+    \end{enumerate}
+    \item Apply Testbench through Server-Client Manager:
+    \begin{enumerate}
+        \item Server allocate a pool of `N` VMs in the cloud and stores initial configuration.
+        \item Server is able to command client nodes to run, terminate and report on:
+        \begin{enumerate}
+            \item Jasper
+            \item Intra-VM OWD Latency Measurements
+            \item LemonDrop
+        \end{enumerate}
+        \item Server can change change cluter configuration via killing and relaunching processes.
+    \end{enumerate}
+    \item Develop Heuristic:
+    \begin{enumerate}
+        \item Recreate tree by iterativally:
+        \begin{enumerate}
+            \item Benchmark intra-VM latency and choose best node among the pool.
+            \item Place/Assign node to the next available slot in the tree.
+        \end{enumerate}
+    \end{enumerate}
 \end{enumerate}
 
 \section{Experimental Setup}
 Cloud stack deployment, node benchmarking and heuristic development/formulation would be done 
 via Google Cloud Platform (GCP) credits provided by Dr.Sivaraman's and his team at Systems@NYU.
-
-\begin{enumerate}
-    \item Allocate a pool of VMs on the cloud.
-    \item Iterativally:
-    \begin{enumerate}
-        \item Benchmark intra-VM latency and choose best node among the pool.
-        \item Place/Assign node to the next available slot in the tree.
-    \end{enumerate}
-    \item Conduct Jasper-runs on final tree configuration.
-    \item Compare to vanilla Jasper deployment.
-\end{enumerate}
 
 \bibliographystyle{IEEEtran}
 \bibliography{references}    

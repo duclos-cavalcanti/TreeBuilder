@@ -86,10 +86,8 @@ can also work without this input, however with it there are significant enhancem
 - Shown to significantly reduce median and tail latencies in benchmark applications.
 - Offering improvements in performance and fairness.
 
-
-### Learn
+## Study
 - [ ] VM Co-Location? Is it a necessary variable for Jasper?
 - [ ] "In-Network-Time"? What is the Hadamard Product of the Matrices expressing?
 - [ ] Understand 3.2.1 Entirely: QAP Framing and Solving
     - [ ] Hadamard Product, Trace, Permutation P
-
