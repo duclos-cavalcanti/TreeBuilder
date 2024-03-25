@@ -45,14 +45,15 @@ addressing the lack of cloud-native mechanisms for such.
 To achieve this, Jasper employs an overlay multicast tree, leveraging clock synchronization, kernel-bypass techniques, 
 and more.
 However, there are opportunities for enhancement by confronting the issue of inconsistent VM performance 
-within identical instances. LemonDrop \cite{sachidananda2022scheduling} tackles this problem,
-selecting and scheduling a subset of VMs optimized for an application's latency needs by detecting under-performing VMs. 
+within identical instances. LemonDrop \cite{sachidananda2022scheduling} tackles this problem.
+It selects and schedules a subset of VMs optimized for an application's latency needs by 
+detecting under-performing VMs. 
 % It does so by using an application's request pattern and real-time intra-VM OWD latency measurements to 
 % frame the problem as a relaxed Quadratic Assignment Problem (QAP). 
-Jasper's performance can drastically be affected by under-performing VMs.
+% Jasper's performance can potentially be improved by employing a VM selection method.
 Yet, we believe that LemonDrop's approach of using all-to-all latency measurements and an optimization routine 
-for the framed QAP is an overly complex solution and may be disproportionally robust 
-for Jasper's use-case of a multicast-tree. 
+for the there framed Quadratic Assignment Problem (QAP) is an overly complex solution. 
+It may be disproportionally robust and  unscalable for Jasper's use case of a multicast-tree.
 % Moreover, it may capture an unrealistic snapshot of the cluster's behavior due to 
 % the known high latency variance in the cloud.
 Finally, the proposed work aims to develop an even simpler heuristic, that achieves reasonably good results 
@@ -76,14 +77,15 @@ Develop a VM selection heuristic for tree-like networks in the cloud.
     \end{enumerate}
     \item Employ Testbench via Server-Client Manager:
     \begin{enumerate}
-        \item Server allocates a pool of \textbf{N} VMs, runs and terminates Jasper on initial configuration.
-        \item Server applies \textbf{heuristic} to develop a new tree configuration by iteratively:
+        \item Allocate \textbf{N} VMs, Server runs and terminates Jasper on initial configuration.
+        \item Apply \textbf{Heuristic}:
+        \item Server chooses \textbf{K} (parameter) VMs to form a pool and iteratively:
             \begin{enumerate}
-                \item Running/Obtaining reports on intra-VM latency among nodes in the pool.
-                \item Selecting/Assigning best node to the next available slot in the tree.
-                \item Removing selected node from option-pool.
+                \item Runs/Obtains reports on intra-VM latency among nodes in the pool.
+                \item Selects/Assings best node to the next available slot in the tree.
+                \item Removes selected node from pool.
             \end{enumerate}
-        \item Server re-deploys new configuration.
+        \item Server produces new configuration and re-deploys the application.
     \end{enumerate}
 \end{enumerate}
 
