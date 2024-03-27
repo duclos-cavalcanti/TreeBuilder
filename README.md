@@ -6,38 +6,23 @@
 
 <!-- __Abstract:__ _Not defined yet._ -->
 
-_Master Thesis_ work co-advised by [Dr.Anirudh Sivaraman](https://anirudhsk.github.io/) and [PhD. Muhammad Haseeeb](https://haseeblums.github.io/) from [Systems@NYU](https://news.cs.nyu.edu/), as
-well as supervised by [PhD. Navidreza Asadi](https://nrasadi.github.io/) and the [Chair of Communication Networks](https://www.ce.cit.tum.de/en/lkn/home/) at [TUM](https://www.cit.tum.de/en/cit/home/). 
-This contribution builds upon on [Jasper: Scalable and Fair Multicast for Financial Exchanges in the Cloud](https://arxiv.org/abs/2402.09527.) and extends it to include a heuristic for better VM 
-selection in the context of Jasper's tree-like network structure.
+_Master Thesis_ work co-advised by: 
+- [Dr.Anirudh Sivaraman](https://anirudhsk.github.io/) and [PhD. Muhammad Haseeeb](https://haseeblums.github.io/) from [Systems@NYU](https://news.cs.nyu.edu/).
+- [PhD. Navidreza Asadi](https://nrasadi.github.io/) and the [Chair of Communication Networks](https://www.ce.cit.tum.de/en/lkn/home/) at [TUM](https://www.cit.tum.de/en/cit/home/). 
 
 ## Introduction
 
-Financial exchanges have shown interest in migrating their current infrastructure 
-to the public cloud. The benefits are agreed upon by both the industry and 
-academia, promising a more scalable, robust, and cost-efficient infrastructure. 
-However, in contrast to the exchange's on-premise data centers, the public cloud does not 
-currently offer native mechanisms for fair and performant data delivery. 
-Exchanges need to disseminate market data to market participants (MPs) both fast and 
-virtually simultaneously to not create unfair advantages among MPs.
-
-[Jasper](https://arxiv.org/abs/2402.09527.), addressed this by presenting a scalable and fair multicast 
-for financial exchanges in the cloud. It does so via the employment of an overlay multicast tree and leveraging 
-up-to-date advancements in clock synchronization, kernel by-passing, and hedging to simultaneously 
-achieve considerable performance and fairness. Jasper offers a commendable alternative, 
-outperforming a previous system CloudEx and Amazon's commercial multicast solution.
-
-Moreover, [LemonDrop](https://searchworks.stanford.edu/view/14423035) tackles the real issue of 
-inconsistent VM performance within identical instance configurations in the cloud. 
-LemonDrop was developed to select and schedule a subset of VMs optimized for a given application's latency needs, by quickly 
-detecting under-performing VMs (_Lemons or Stragglers_).
-It does so by framing the selection and scheduling of VMs as a Quadratic Assignment Problem (QAP), where 
-traffic flow between facilities, each assigned to a location, is to be minimized. 
-LemonDrop treats services within an application as facilities and the VMs themselves as the locations. 
-
-Straggler VMs have the potential to drastically affect Jasper's overall system performance.
-Inspired by LemonDrop's VM selection method, this work aims to develop a simpler heuristic that 
-can achieve reasonably good results adapted to the smaller problem set of a multicast tree. 
+Financial exchanges consider a migration to the cloud for scalability, robustness, and cost-efficiency.
+[Jasper](https://arxiv.org/abs/2402.09527) presents a scalable and fair multicast solution for cloud-based exchanges, 
+addressing the lack of cloud-native mechanisms for such. 
+To achieve this, Jasper employs an overlay multicast tree, leveraging clock synchronization, kernel-bypass techniques, 
+and more.
+However, there are opportunities for enhancement by confronting the issue of inconsistent VM performance 
+within identical instances. [LemonDrop](https://searchworks.stanford.edu/view/14423035) tackles this problem, detecting under-performing VMs in a cluster and selecting a subset of VMs optimized for a given application's latency needs.
+Yet, we believe that LemonDrop's approach of using time-expensive all-to-all latency measurements and an optimization routine 
+for the framed Quadratic Assignment Problem (QAP) is overly complex. 
+The proposed work aims to develop a simpler and scalable heuristic, that achieves reasonably good results
+within Jasper's time constraints.
 
 - [Project Kickoff](https://docs.google.com/presentation/d/1XlgH70a5laUlEAKua7f3ALofkX98AMYdCSO5etTrlyw/edit?usp=sharing) 
 - [Project Proposal](docs/assets/Kickoff.pdf)

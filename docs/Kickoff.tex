@@ -45,22 +45,22 @@ addressing the lack of cloud-native mechanisms for such.
 To achieve this, Jasper employs an overlay multicast tree, leveraging clock synchronization, kernel-bypass techniques, 
 and more.
 However, there are opportunities for enhancement by confronting the issue of inconsistent VM performance 
-within identical instances. LemonDrop \cite{sachidananda2022scheduling} tackles this problem.
-It selects and schedules a subset of VMs optimized for an application's latency needs by 
-detecting under-performing VMs. 
+within identical instances. LemonDrop \cite{sachidananda2022scheduling} tackles this problem, detecting under-performing VMs in a cluster 
+and selecting a subset of VMs optimized for a given application's latency needs.
 % It does so by using an application's request pattern and real-time intra-VM OWD latency measurements to 
 % frame the problem as a relaxed Quadratic Assignment Problem (QAP). 
 % Jasper's performance can potentially be improved by employing a VM selection method.
-Yet, we believe that LemonDrop's approach of using all-to-all latency measurements and an optimization routine 
-for the there framed Quadratic Assignment Problem (QAP) is an overly complex solution. 
-It may be disproportionally robust and  unscalable for Jasper's use case of a multicast-tree.
+Yet, we believe that LemonDrop's approach of using time-expensive all-to-all latency measurements and an optimization routine 
+for the framed Quadratic Assignment Problem (QAP) is overly complex. 
+% for the there framed Quadratic Assignment Problem (QAP) is an overly complex solution. 
+% It is disproportionally robust and  unscalable for Jasper's use case of a multicast-tree.
 % Moreover, it may capture an unrealistic snapshot of the cluster's behavior due to 
 % the known high latency variance in the cloud.
-Finally, the proposed work aims to develop an even simpler heuristic, that achieves reasonably good results 
-adapted to the current smaller problem set.
+The proposed work aims to develop a simpler and scalable heuristic, that achieves reasonably good results
+within Jasper's time constraints.
 
 \section{Objectives}
-Develop a VM selection heuristic for tree-like networks in the cloud.
+Develop a VM selection heuristic for Financial Exchanges in the cloud.
 \begin{enumerate}
     \item Implement a Server-Client Manager application:
     \begin{enumerate}
@@ -75,25 +75,26 @@ Develop a VM selection heuristic for tree-like networks in the cloud.
         \end{enumerate}
         \item Client: Waits on Server's connection and requests.
     \end{enumerate}
-    \item Employ Testbench via Server-Client Manager:
+    \item Develop Testbench Framework via Server-Client Manager:
     \begin{enumerate}
-        \item Allocate \textbf{N} VMs, Server runs and terminates Jasper on initial configuration.
-        \item Apply \textbf{Heuristic}:
-        \item Server chooses \textbf{K} (parameter) VMs to form a pool and iteratively:
-            \begin{enumerate}
-                \item Runs/Obtains reports on intra-VM latency among nodes in the pool.
-                \item Selects/Assings best node to the next available slot in the tree.
-                \item Removes selected node from pool.
-            \end{enumerate}
-        \item Server produces new configuration and re-deploys the application.
+        \item Server allocates \textbf{N} VMs, then runs and terminates Jasper on initial configuration.
+        \item Server applies \textbf{Heuristic} to produce new tree configuration.
+        \item Server re-deploys Jasper on new configuration.
     \end{enumerate}
+    \item Heuristic: Choose \textbf{K} VMs, apply selection method for \textbf{F} nodes, assign them to next layer.
+        \begin{enumerate}
+            \item \textbf{K} VMs Selection: Initially random, we intend on expanding.
+            \item \textbf{F} VMs Selection: Analyzing reports on intra-VM OWD latency among the \textbf{K} nodes.
+        \end{enumerate}
 \end{enumerate}
 
 \section{Experimental Setup}
 Cloud VM instances of \textit{c2d-highcpu-8} type would be deployed on Google Cloud's Platform. 
 Each machine offers 8 virtual AMD Milan CPU's, 16GB of Memory and 16Gbps of Network Bandwidth. 
 Results would be compared among a vanilla Jasper run, a heuristic-proposed 
-and a LemonDrop proposed configuration of Jasper, as well as done so across different tree sizes.
+and a LemonDrop proposed configuration of Jasper. Experiments would be run across 
+two pre-selected tree structures, chosen based on a realistic cloud exchange scenario 
+and Jasper's best fitting configurations for them.
 
 \bibliographystyle{IEEEtran}
 \bibliography{references}    
