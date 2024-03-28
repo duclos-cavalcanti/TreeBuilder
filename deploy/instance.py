@@ -1,3 +1,4 @@
+import os
 import yaml
 import datetime
 
@@ -87,6 +88,6 @@ class Instance():
                 }
             ]
         }
-        ret = f"stack_{ts}.yaml"
+        ret = f"build/stack_{ts}.yaml"
         with open(ret, "w") as stream: yaml.dump(data, stream)
         return ret

@@ -17,8 +17,8 @@ def template(name="vanilla"):
 
 def deploy(stack="duclos-dev"):
     config = template()
-    exit(0)
     command = f"gcloud deployment-manager -q deployments create {stack} --config {config}"
+    print(f"LAUNCHED: {config}")
     subprocess.run(command, shell=True)
     return
 
@@ -46,10 +46,8 @@ def main():
     args = parse()
 
     match args.action:
-        case "deploy":
-            deploy()
-        case "delete":
-            delete()
+        case "deploy": deploy()
+        case "delete": delete()
 
     return
 
