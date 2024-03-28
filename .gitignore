@@ -1,5 +1,7 @@
 *.tar*
 
+deploy/*.yaml
+
 *.log 
 *.aux
 *.bbl 
