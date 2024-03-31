@@ -70,6 +70,7 @@ This project is released under the BSD 3-Clause license. See [LICENSE](LICENSE).
 - [CloudEx](https://dl.acm.org/doi/10.1145/3458336.3465278)
     + [CloudEx: Presentation](https://stacresearch.com/GSL-Fall2020-tick-tock)
 - [LemonDrop](https://searchworks.stanford.edu/view/14423035)
+- [Straggler Problem](https://www.usenix.org/conference/hotos13/session/cipar)
 
 ---
 <p align="center">
