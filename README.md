@@ -1,14 +1,14 @@
 <h1 align="center">Master Thesis</h1>
 <p align="center">
-   VM Selection and Scheduling Heuristic for Financial Exchanges in the Cloud
+   VM Selection Heuristic for Financial Exchanges in the Cloud
 </p>
 <br>
 
 <!-- __Abstract:__ _Not defined yet._ -->
 
 _Master Thesis_ work co-advised by: 
-- [Dr.Anirudh Sivaraman](https://anirudhsk.github.io/) and [PhD. Muhammad Haseeeb](https://haseeblums.github.io/) from [Systems@NYU](https://news.cs.nyu.edu/).
-- [PhD. Navidreza Asadi](https://nrasadi.github.io/) and the [Chair of Communication Networks](https://www.ce.cit.tum.de/en/lkn/home/) at [TUM](https://www.cit.tum.de/en/cit/home/). 
+- [PhD. Muhammad Haseeeb](https://haseeblums.github.io/) and [Dr.Anirudh Sivaraman](https://anirudhsk.github.io/) from [Systems@NYU](https://news.cs.nyu.edu/).
+- [PhD. Navidreza Asadi](https://nrasadi.github.io/) and [Prof. Dr.-Ing. Wolfgang Kellerer](https://www.ce.cit.tum.de/en/lkn/team/staff/kellerer-wolfgang/) from  the [LKN](https://www.ce.cit.tum.de/en/lkn/home/) at TUM.
 
 ## Introduction
 
@@ -25,8 +25,6 @@ The proposed work aims to develop a simpler and scalable heuristic, that achieve
 within Jasper's time constraints.
 
 - [Project Kickoff](https://docs.google.com/presentation/d/1XlgH70a5laUlEAKua7f3ALofkX98AMYdCSO5etTrlyw/edit?usp=sharing) 
-- [Project Proposal](docs/assets/Kickoff.pdf)
-- [Project Wiki](https://github.com/duclos-cavalcanti/master-arbeit/wiki)
 
 ## 1. Setup and Installation
 
@@ -68,10 +66,9 @@ More on further setup, please see [the wiki](https://github.com/duclos-cavalcant
 This project is released under the BSD 3-Clause license. See [LICENSE](LICENSE).
 
 ## 4. References
-- [DPDK](https://www.dpdk.org/)
-- [eBPF](https://ebpf.io/)
-- [AWS](https://docs.aws.amazon.com/cli/?nc2=h_ql_doc_cli)
-- [GCP](https://cloud.google.com/)
+- [Jasper](https://arxiv.org/abs/2402.09527)
+- [CloudEx](https://dl.acm.org/doi/10.1145/3458336.3465278)
+- [LemonDrop](https://searchworks.stanford.edu/view/14423035)
 
 ---
 <p align="center">
