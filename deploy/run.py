@@ -27,6 +27,17 @@ def delete(stack="duclos-dev"):
     subprocess.run(command, shell=True)
     return
 
+def instance(args):
+    if (not args.name): 
+        raise ValueError("name argument was not passed to instance action!")
+
+    if (not args.command): 
+        raise ValueError("command argument was not passed to instance action!")
+
+    command = f"gcloud compute instances {args.command} {args.name} --zone 'us-east4-c' --project multicast1"
+    subprocess.run(command, shell=True)
+    print(f"SSH: gcloud compute ssh --zone 'us-east4-c' {args.name} --tunnel-through-iap --project 'multicast1'")
+
 def parse():
     arg_def = argparse.ArgumentParser(
         description='Script to automate GCP stack launch.',
@@ -36,8 +47,24 @@ def parse():
     arg_def.add_argument(
         "-a", "--action",
         type=str,
-        choices=["deploy", "delete"],
+        required=True,
+        choices=["deploy", "delete", "instance"],
         dest="action",
+    )
+
+    arg_def.add_argument(
+        "-c", "--command",
+        type=str,
+        required=False,
+        choices=["start", "reset", "suspend", "stop"],
+        dest="command",
+    )
+
+    arg_def.add_argument(
+        "-n", "--name",
+        type=str,
+        required=False,
+        dest="name",
     )
 
     return arg_def.parse_args()
@@ -46,8 +73,9 @@ def main():
     args = parse()
 
     match args.action:
-        case "deploy": deploy()
-        case "delete": delete()
+        case "deploy":  deploy()
+        case "delete":  delete()
+        case "instance": instance(args)
 
     return
 
