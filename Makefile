@@ -10,33 +10,29 @@ all: build
 help:
 	echo help
 
-.PHONY: build
-build:
-	docker build -t ubuntu-dpdk ./tools/docker/
+.PHONY: jasper
+jasper:
+	@$(MAKE) -C tools/docker
 
-.PHONY: dev
-dev:
-	docker run --rm \
-	--name dpdk-dev \
-	-v ${PWD}:/root/work \
-	-v ~/.config/nvim:/root/.config/nvim \
-	-v ~/.local/nvim:/root/.local/nvim \
-	-v ~/.gitconfig:/root/.gitconfig \
-	--detach-keys="ctrl-@" \
-	-it ubuntu-dpdk
+.PHONY: freeze
+freeze:
+	pip freeze > requirements.txt
 
-.PHONY: update
-update:
-	@git add module
-	@git commit -m "Updated submodule"
-	@git push origin main
+.PHONY: install
+install:
+	pip install -r requirements.txt
 
-.PHONY: deploy
-deploy:
-	@python3 deploy/main.py
+.PHONY: create
+create:
+	python3 -m venv .venv
+	echo "source ./venv/bin/activate"
+
+.PHONY: venv
+venv: create install
+	pip freeze > requirements.txt
 
 .PHONY: docs
-delete:
+docs:
 	@$(MAKE) -C docs
 
 .PHONY: clean
