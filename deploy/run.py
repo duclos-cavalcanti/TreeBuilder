@@ -1,7 +1,7 @@
 import subprocess
 import argparse
 
-import instance
+from . import gen
 
 def store(src, dst, origin=f"duclos-dev-storage"):
     command=f"gcloud storage cp {src} gs://{origin}/{dst}"
@@ -9,7 +9,7 @@ def store(src, dst, origin=f"duclos-dev-storage"):
     return
 
 def template(name="vanilla"):
-    i = instance.Instance()
+    i = gen.Instance()
     i.set_disk(disk="multicast-ebpf-zmq-grub-disk")
     i.set_machine(machine="c2d-highcpu-8")
     i.set_zone(zone="us-east4-c")
@@ -36,9 +36,11 @@ def instance(args):
 
     command = f"gcloud compute instances {args.command} {args.name} --zone 'us-east4-c' --project multicast1"
     subprocess.run(command, shell=True)
-    print(f"SSH: gcloud compute ssh --zone 'us-east4-c' {args.name} --tunnel-through-iap --project 'multicast1'")
 
-def parse():
+    if args.command == "start":
+        print(f"SSH: gcloud compute ssh --zone 'us-east4-c' {args.name} --tunnel-through-iap --project 'multicast1'")
+
+def parse(rem=None):
     arg_def = argparse.ArgumentParser(
         description='Script to automate GCP stack launch.',
         epilog='Example: main.py --action/-a pull -p <prefix>'
@@ -56,7 +58,7 @@ def parse():
         "-c", "--command",
         type=str,
         required=False,
-        choices=["start", "reset", "suspend", "stop"],
+        choices=["start", "reset", "suspend", "stop", "describe"],
         dest="command",
     )
 
@@ -67,10 +69,15 @@ def parse():
         dest="name",
     )
 
-    return arg_def.parse_args()
+    if not rem: args = arg_def.parse_args()
+    else: args = arg_def.parse_args(rem)
 
-def main():
-    args = parse()
+    return args
+
+def run(rem):
+    args = parse(rem)
+    # for arg, value in vars(args).items():
+    #         print(f"{arg}: {value}")
 
     match args.action:
         case "deploy":  deploy()
@@ -81,4 +88,4 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    run(rem=None)
