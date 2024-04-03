@@ -21,6 +21,7 @@ freeze:
 .PHONY: install
 install:
 	pip install -r requirements.txt
+	@# python3 -m pip install 'requests==2.18.4'
 
 .PHONY: create
 create:
