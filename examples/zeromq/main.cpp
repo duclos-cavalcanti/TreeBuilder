@@ -12,102 +12,114 @@
 #define PROXY       1
 #define RECEIVER    2
 
-int parse(int argc, char **argv) {
-    int opt, ret = 0;
-    while ( (opt = getopt (argc, argv, "r:h") ) != -1 ) {
+#define CLIENT_PORT 8081
+#define PROXY_PORT  8082
+#define RECV_PORT   8083
+
+struct State {
+    int role;
+    int n;
+};
+
+static State state = { 0 };
+
+void usage(const char* str, int e) {
+    fprintf(stdout, "%s\n", str);
+    exit(e);
+}
+
+void parse(int argc, char **argv) {
+    int opt = 0;
+    char usage_str[100] = { 0 };
+
+    sprintf(usage_str, "Usage: %s [-r [client,server]] [-h]", argv[0]);
+
+    while ( (opt = getopt (argc, argv, "r:n:h") ) != -1 ) {
         switch (opt) {
         case 'h':
-            fprintf(stdout, "Usage: %s [-r [client,server]] [-h]\n", argv[0]);
-            exit(EXIT_SUCCESS);
+            usage(usage_str, EXIT_SUCCESS);
+            break;
+
+        case 'n':
+            state.n = std::stoi(optarg);
             break;
 
         case 'r':
-            if (strcmp(optarg, "client") == 0) {
-                ret = CLIENT;
-            } else if (strcmp(optarg, "proxy") == 0) {
-                ret = PROXY;
-            } else if (strcmp(optarg, "receiver") == 0) {
-                ret = RECEIVER;
+            if (std::string{optarg} == "client") {
+                state.role = CLIENT;
+            } else if (std::string{optarg} == "proxy") {
+                state.role = PROXY;
+            } else if (std::string{optarg} == "receiver") {
+                state.role = RECEIVER;
             } else {
-                goto err;
+                usage(usage_str, EXIT_FAILURE);
             }
             break;
 
         default:
-err:
-            fprintf(stderr, "Usage: %s [-r [client,server]] [-h]\n", argv[0]);
-            exit(EXIT_FAILURE);
+            usage(usage_str, EXIT_FAILURE);
             break;
         }
     }
 
     if (optind > argc) {
-        fprintf(stderr, "Usage: %s [-r [client,server]] [-p IP_ADDRESS] [-h]\n", argv[0]);
-        exit(EXIT_FAILURE);
+        usage(usage_str, EXIT_FAILURE);
     }
-
-    return ret;
 }
 
 int client() {
-    printf("Client\n");
-    {
-        std::string PROTOCOL{"tcp"};
-        std::string IP{"localhost"};
-        std::string PORT{"8081"};
-        ZMQSocket Client(PROTOCOL, IP, PORT, zmq::socket_type::client, "CLIENT");
-    }
+    std::string PROTOCOL{"tcp"};
+    std::string IP{"localhost"};
+    std::string PORT{std::to_string(CLIENT_PORT)};
+
+    ZMQSocket Client(PROTOCOL, IP, PORT, zmq::socket_type::client, "CLIENT");
 
     return 0;
 }
 
 int proxy() {
-    printf("Proxy\n");
-    {
-        std::string PROTOCOL{"tcp"};
-        std::string IP{"localhost"};
-        std::string PORT{"8081"};
+    std::string PROTOCOL{"tcp"};
+    std::string IP{"localhost"};
+    std::string PORT{"8081"};
 
-        ZMQSocket Proxy(PROTOCOL, IP, PORT, zmq::socket_type::server, "PROXY");
-        Proxy.bind();
+    ZMQSocket Proxy(PROTOCOL, IP, PORT, zmq::socket_type::server, "PROXY");
+    Proxy.bind();
 
-        uint32_t client_id = 0;
-        uint32_t receiver_id = 0;
+    uint32_t client_id = 0;
+    uint32_t receiver_id = 0;
 
-        while(1) {
-            auto msg = Proxy.recv();
-            auto id = msg.routing_id();
+    while(1) {
+       auto msg = Proxy.recv();
+       auto id = msg.routing_id();
 
-            if (msg.str() == "CLIENT REQ") {
-                Proxy.log({"RECV: CLIENT REQ"});
-                client_id = id;
-            }
-        }
-
+       if (msg.str() == "CLIENT REQ") {
+           Proxy.log({"RECV: CLIENT REQ"});
+           client_id = id;
+       }
     }
+
     return 0;
 }
 
 
 int receiver() {
-    printf("Receiver\n");
-    {
-        std::string PROTOCOL{"tcp"};
-        std::string IP{"localhost"};
-        std::string PORT{"8081"};
-        ZMQSocket Receiver(PROTOCOL, IP, PORT, zmq::socket_type::client, "RECEIVER");
-        Receiver.connect();
-    }
+    std::string PROTOCOL{"tcp"};
+    std::string IP{"localhost"};
+    std::string PORT{"8081"};
+
+    ZMQSocket Receiver(PROTOCOL, IP, PORT, zmq::socket_type::client, "RECEIVER");
+    Receiver.connect();
+
     return 0;
 }
 
 int main(int argc, char **argv) {
 
-    int role = parse(argc, argv);
+    parse(argc, argv);
 
-    if (role == CLIENT)        client();
-    else if (role == PROXY)    proxy();
-    else                       receiver();
+    if (state.role == CLIENT)       client();
+    else if (state.role == PROXY)   proxy();
+    else                            receiver();
 
 	return 0;
 }
