@@ -25,6 +25,7 @@ The proposed work aims to develop a simpler and scalable heuristic, that achieve
 within Jasper's time constraints.
 
 - [Project Kickoff](https://docs.google.com/presentation/d/1XlgH70a5laUlEAKua7f3ALofkX98AMYdCSO5etTrlyw/edit?usp=sharing) 
+- [Project Wiki](https://github.com/duclos-cavalcanti/master-arbeit/wiki/).
 
 ## 1. Setup and Installation
 
