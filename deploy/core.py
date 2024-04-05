@@ -1,65 +1,46 @@
+import os
 import subprocess
 import argparse
 
-from . import gen
+from python_terraform import Terraform
 
-def store(src, dst, origin=f"duclos-dev-storage"):
-    command=f"gcloud storage cp {src} gs://{origin}/{dst}"
-    subprocess.run(command, shell=True)
+def deploy(args):
     return
 
-def template(name="vanilla"):
-    i = gen.Instance()
-    i.set_disk(disk="multicast-ebpf-zmq-grub-disk")
-    i.set_machine(machine="c2d-highcpu-8")
-    i.set_zone(zone="us-east4-c")
-    return i.generate(name)
-
-def deploy(stack="duclos-dev"):
-    config = template()
-    command = f"gcloud deployment-manager -q deployments create {stack} --config {config}"
-    print(f"LAUNCHED: {config}")
-    subprocess.run(command, shell=True)
+def delete(args):
     return
 
-def delete(stack="duclos-dev"):
-    command = f"gcloud deployment-manager -q deployments delete {stack}"
-    subprocess.run(command, shell=True)
+def create(args):
+    wdir = os.path.join(os.getcwd(), "terra", args.mode)
+    if not os.path.isdir(wdir): 
+        raise RuntimeError(f"Not a directory: {wdir}")
+
+    tf = Terraform(working_dir=wdir)
+    if tf.init() != 0:
+        raise RuntimeError(f"Terraform initialization of {dir} failed!")
+
     return
-
-def instance(args):
-    if (not args.name): 
-        raise ValueError("name argument was not passed to instance action!")
-
-    if (not args.command): 
-        raise ValueError("command argument was not passed to instance action!")
-
-    command = f"gcloud compute instances {args.command} {args.name} --zone 'us-east4-c' --project multicast1"
-    subprocess.run(command, shell=True)
-
-    if args.command == "start":
-        print(f"SSH: gcloud compute ssh --zone 'us-east4-c' {args.name} --tunnel-through-iap --project 'multicast1'")
 
 def parse(rem=None):
     arg_def = argparse.ArgumentParser(
-        description='Script to automate GCP stack launch.',
-        epilog='Example: main.py --action/-a pull -p <prefix>'
+        description='Module to automate terraform stack management.',
+        epilog='Example: core.py -a create -m docker'
     )
 
     arg_def.add_argument(
         "-a", "--action",
         type=str,
         required=True,
-        choices=["deploy", "delete", "instance"],
+        choices=["create", "deploy", "delete"],
         dest="action",
     )
 
     arg_def.add_argument(
-        "-c", "--command",
+        "-m", "--mode",
         type=str,
-        required=False,
-        choices=["start", "reset", "suspend", "stop", "describe"],
-        dest="command",
+        required=True,
+        choices=["gcp", "docker"],
+        dest="mode",
     )
 
     arg_def.add_argument(
@@ -74,18 +55,17 @@ def parse(rem=None):
 
     return args
 
-def run(rem):
+def main(rem):
     args = parse(rem)
-    # for arg, value in vars(args).items():
-    #         print(f"{arg}: {value}")
+    # for arg, value in vars(args).items(): print(f"{arg}: {value}")
 
     match args.action:
-        case "deploy":  deploy()
-        case "delete":  delete()
-        case "instance": instance(args)
+        case "create":  create(args)
+        case "deploy":  deploy(args)
+        case "delete":  delete(args)
 
     return
 
 
 if __name__ == "__main__":
-    run(rem=None)
+    main(rem=None)

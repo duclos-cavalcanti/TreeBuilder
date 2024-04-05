@@ -1,4 +1,4 @@
-from .core import run
+from .core import main as run
 
 __all__ = ['run']
 
