@@ -84,5 +84,5 @@ add_custom_target("reset"
     COMMAND rm -rf ./lib/dpdk/* ./lib/iouring/* ./lib/zeromq/*
 )
 
-include(debug)
-include(examples)
+# include(debug)
+# include(examples)
