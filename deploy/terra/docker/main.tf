@@ -10,16 +10,16 @@ terraform {
 provider "docker" {}
 
 resource "docker_image" "ubuntu" {
-  name         = "ubuntu_image"
-  keep_locally = false
+    name = "ubuntu-ma"
+    keep_locally = false
 }
 
-resource "docker_container" "nginx" {
-  name  = "base"
-  image = docker_image.ubuntu_image.image_id
-  ports {
-    internal = 80
-    external = 8000
-  }
-  command = ["/bin/bash", "-c", "apt-get update && apt-get install -y cmake"]
+resource "docker_container" "ubuntu" {
+    name  = var.name
+    image = docker_image.ubuntu.image_id
+    ports {
+        internal = 80
+        external = var.exposed_port
+    }
+    command = var.commands
 }

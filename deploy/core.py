@@ -1,24 +1,37 @@
 import os
-import subprocess
 import argparse
 
+from .utils import execute
 from python_terraform import Terraform
+
+def build():
+    wdir = os.path.join(os.getcwd(), "deploy", "terra", "packer")
+    if not os.path.isdir(wdir): 
+        raise RuntimeError(f"Not a directory: {wdir}")
+
+    execute("packer init .", wdir=wdir)
+    execute("packer validate .", wdir=wdir)
+    execute("packer build .", wdir=wdir, verbose=True)
+
+def create(args):
+    infra = args.image
+    wdir = os.path.join(os.getcwd(), "deploy", "terra", infra)
+    if not os.path.isdir(wdir): 
+        raise RuntimeError(f"Not a directory: {wdir}")
+
+    plan = f"{wdir}/{infra}.out"
+    tf = Terraform(working_dir=wdir)
+    if tf.init() != 0:
+        raise RuntimeError(f"Terraform initialization of {dir} failed!")
+    
+    tf.plan(out=plan)
+    tf.apply(plan)
+    tf.output()
 
 def deploy(args):
     return
 
 def delete(args):
-    return
-
-def create(args):
-    wdir = os.path.join(os.getcwd(), "terra", args.mode)
-    if not os.path.isdir(wdir): 
-        raise RuntimeError(f"Not a directory: {wdir}")
-
-    tf = Terraform(working_dir=wdir)
-    if tf.init() != 0:
-        raise RuntimeError(f"Terraform initialization of {dir} failed!")
-
     return
 
 def parse(rem=None):
@@ -31,16 +44,16 @@ def parse(rem=None):
         "-a", "--action",
         type=str,
         required=True,
-        choices=["create", "deploy", "delete"],
+        choices=["build", "create", "deploy", "delete"],
         dest="action",
     )
 
     arg_def.add_argument(
-        "-m", "--mode",
+        "-i", "--infra",
         type=str,
         required=True,
-        choices=["gcp", "docker"],
-        dest="mode",
+        choices=["gcp", "docker", "packer"],
+        dest="infra",
     )
 
     arg_def.add_argument(
@@ -60,6 +73,7 @@ def main(rem):
     # for arg, value in vars(args).items(): print(f"{arg}: {value}")
 
     match args.action:
+        case "build":   build()
         case "create":  create(args)
         case "deploy":  deploy(args)
         case "delete":  delete(args)
