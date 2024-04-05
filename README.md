@@ -31,8 +31,8 @@ within Jasper's time constraints.
 The general project worflow consists of three parts. The creation and deployment of images on a given cloud provider _(or locally)_,
 managing these running images _(instances)_, and finally individual programs that are to be run on any given instance.
 To be able to create/deploy/manage images on a given cloud provider, we use [Terraform](https://developer.hashicorp.com/terraform). Currently 
-the project is mostly focused on [Google Cloud's Platform](https://cloud.google.com/?hl=en). To communicate across nodes on a cluster, this work 
-also leverages [ZeroMQ](https://zeromq.org/) both via _python_ and _c++_ bindings.
+the project is mostly focused on [Google Cloud's Platform](https://cloud.google.com/?hl=en) and optionally [Dockers](https://docs.docker.com/engine/install/ubuntu/)
+for local development. To communicate across nodes on a cluster, this work also leverages [ZeroMQ](https://zeromq.org/) both via _python_ and _c++_ bindings.
 
 1. Clone project.
    ```bash
