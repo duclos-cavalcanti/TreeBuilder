@@ -25,31 +25,24 @@ The proposed work aims to develop a simpler and scalable heuristic, that achieve
 within Jasper's time constraints.
 
 - [Project Kickoff](https://docs.google.com/presentation/d/1XlgH70a5laUlEAKua7f3ALofkX98AMYdCSO5etTrlyw/edit?usp=sharing) 
-- [Project Wiki](https://github.com/duclos-cavalcanti/master-arbeit/wiki/).
+- [Project Wiki](https://github.com/duclos-cavalcanti/master-arbeit/wiki/)
 
 ## 1. Setup and Installation
+The general project worflow consists of three parts. The creation and deployment of images on a given cloud provider _(or locally)_,
+managing these running images _(instances)_, and finally individual programs that are to be run on any given instance.
+To be able to create/deploy/manage images on a given cloud provider, we use [Terraform](https://developer.hashicorp.com/terraform). Currently 
+the project is mostly focused on [Google Cloud's Platform](https://cloud.google.com/?hl=en). To communicate across nodes on a cluster, this work 
+also leverages [ZeroMQ](https://zeromq.org/) both via _python_ and _c++_ bindings.
 
-1. Clone the repo
+1. Clone project.
    ```bash
-   git clone --recursive https://github.com/duclos-cavalcanti/msc-thesis.git
+   git clone --recursive https://github.com/duclos-cavalcanti/master-arbeit.git
     # recursive flag needed to include submodule
    ```
 
-2. Install Dependencies _([Ubuntu 22.04 Jammy machine](https://releases.ubuntu.com/jammy/))_
-    - Build Tools
-   ```bash
-    sudo apt install meson cmake ninja build-essential git pkg-config
-    sudo apt install libprotobuf-c-dev libprotobuf-dev protobuf-compiler protobuf-codegen
-    sudo apt-get install linux-image-$(uname -r) -yq
-    sudo apt-get install linux-headers-$(uname -r) -yq
-    pip install pyelftools meson
-   ```
-
-    - Network Tools
-   ```bash
-   sudo apt install ethtool net-tools inetutils-traceroute tcpdump
-   ```
-More on further setup, please see [the wiki](https://github.com/duclos-cavalcanti/master-arbeit/wiki/Setup).
+2. Install Dependencies. 
+    - _Currently based on [Ubuntu 22.04 Jammy](https://releases.ubuntu.com/jammy/)_
+    - See _[wiki](https://github.com/duclos-cavalcanti/master-arbeit/wiki/Setup)_ for detailed setup.
 
 ## 2. Usage
 
