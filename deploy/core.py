@@ -1,7 +1,7 @@
 import os
 import argparse
 
-from .utils import execute
+from .utils import execute,lexecute
 from python_terraform import Terraform
 
 def build():
@@ -11,7 +11,7 @@ def build():
 
     execute("packer init .", wdir=wdir)
     execute("packer validate .", wdir=wdir)
-    execute("packer build .", wdir=wdir, verbose=True)
+    lexecute("packer build .", wdir=wdir, verbose=True)
 
 def create(args):
     infra = args.image

@@ -11,7 +11,7 @@ def parse():
         "-m", "--mode",
         type=str,
         required=True,
-        choices=["run", "analysis"],
+        choices=["deploy", "analysis"],
         dest="mode",
     )
 
@@ -22,7 +22,7 @@ def main():
     args, rem = parse()
 
     match args.mode:
-        case "run":
+        case "deploy":
             deploy.run(rem)
 
         case _:
