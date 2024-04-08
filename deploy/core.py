@@ -1,16 +1,51 @@
 import os
+import shutil
 import argparse
 
+# import ipdb
+# ipdb.set_trace()
+
 from .utils import execute,lexecute
+from .utils import read_hcl, write_hcl
 from python_terraform import Terraform
+
+def get_ts(f1:str, f2:str):
+    if not os.path.isfile(f1):
+        raise RuntimeError(f"Not a file: {f1}")
+
+    if not os.path.isfile(f2):
+        raise RuntimeError(f"Not a file: {f2}")
+    
+    mtime_f1 = os.path.getmtime(f1)
+    mtime_f2 = os.path.getmtime(f2)
+    
+    return mtime_f1, mtime_f2
+
+def preamble(dst:str):
+    if dst == "packer":
+        src = os.path.join(os.getcwd(), "deploy", "terra", "commands.hcl")
+        dst = os.path.join(os.getcwd(), "deploy", "terra", "packer" , "commands.pkr.hcl")
+    elif dst == "gcp":
+        src = os.path.join(os.getcwd(), "deploy", "terra", "commands.hcl")
+        dst = os.path.join(os.getcwd(), "deploy", "terra", "gcp" , "commands.tf")
+    else:
+        raise NotImplementedError()
+
+    m1, m2 = get_ts(src, dst)
+    if m1 > m2: # commands.hcl has been changed recently
+        print(f"UPDATING: {src} -> {dst}")
+        shutil.copy(src, dst)
+
+    return
 
 def build():
     wdir = os.path.join(os.getcwd(), "deploy", "terra", "packer")
     if not os.path.isdir(wdir): 
         raise RuntimeError(f"Not a directory: {wdir}")
 
-    execute("packer init .", wdir=wdir)
-    execute("packer validate .", wdir=wdir)
+    preamble("packer")
+    lexecute("packer init .", wdir=wdir)
+    lexecute("packer validate .", wdir=wdir)
     lexecute("packer build .", wdir=wdir, verbose=True)
 
 def create(args):
