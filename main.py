@@ -8,11 +8,11 @@ def parse():
     )
 
     arg_def.add_argument(
-        "-m", "--mode",
+        "-m", "--module",
         type=str,
         required=True,
         choices=["deploy", "analysis"],
-        dest="mode",
+        dest="module",
     )
 
     return arg_def.parse_known_args()
@@ -21,12 +21,12 @@ def parse():
 def main():
     args, rem = parse()
 
-    match args.mode:
+    match args.module:
         case "deploy":
             deploy.run(rem)
 
         case _:
-            raise NotImplementedError(f"Mode {args.mode} doesn't have a corresponding function!")
+            raise NotImplementedError(f"Mode {args.module} doesn't have a corresponding function!")
 
     return
 
