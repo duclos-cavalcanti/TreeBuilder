@@ -21,7 +21,7 @@ def get_ts(f1:str, f2:str):
     
     return mtime_f1, mtime_f2
 
-def preamble(dst:str):
+def update(dst:str):
     if dst == "packer":
         src = os.path.join(os.getcwd(), "deploy", "terra", "commands.hcl")
         dst = os.path.join(os.getcwd(), "deploy", "terra", "packer" , "commands.pkr.hcl")
@@ -43,25 +43,38 @@ def build():
     if not os.path.isdir(wdir): 
         raise RuntimeError(f"Not a directory: {wdir}")
 
-    preamble("packer")
+    update("packer")
     lexecute("packer init .", wdir=wdir)
     lexecute("packer validate .", wdir=wdir)
     lexecute("packer build .", wdir=wdir, verbose=True)
 
 def create(args):
-    infra = args.image
+    infra = args.infra
     wdir = os.path.join(os.getcwd(), "deploy", "terra", infra)
     if not os.path.isdir(wdir): 
         raise RuntimeError(f"Not a directory: {wdir}")
 
-    plan = f"{wdir}/{infra}.out"
     tf = Terraform(working_dir=wdir)
-    if tf.init() != 0:
-        raise RuntimeError(f"Terraform initialization of {dir} failed!")
-    
-    tf.plan(out=plan)
-    tf.apply(plan)
-    tf.output()
+    var = {
+        'name' :        "client",
+        'pwd':          os.getcwd(),
+        'entry':        os.path.join(os.getcwd(), "deploy", "terra", "docker", "entry.sh"),
+        'exposed_port': 8082,
+    }
+
+    ret, stdout, stderr = tf.init()
+    if ret != 0:
+        print(stderr)
+        err = f"[{ret}] Terraform initialization of {wdir} failed!"
+        raise RuntimeError(err)
+
+    ret, stdout, stderr = tf.apply(skip_plan=True, var=var)
+    if ret != 0:
+        print(stderr)
+        err = f"[{ret}] Terraform apply failed!"
+        raise RuntimeError(err)
+
+    return
 
 def deploy(args):
     return

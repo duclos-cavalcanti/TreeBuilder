@@ -9,17 +9,28 @@ terraform {
 
 provider "docker" {}
 
-resource "docker_image" "ubuntu" {
-    name = "ubuntu-ma"
-    keep_locally = false
-}
-
 resource "docker_container" "ubuntu" {
     name  = var.name
-    image = docker_image.ubuntu.image_id
+    image = "ubuntu-ma:ubuntu-jammy"
+
     ports {
         internal = 80
         external = var.exposed_port
     }
-    command = var.commands
+
+    # volumes {
+    #     host_path      = var.pwd
+    #     container_path = "/work"
+    # }
+
+    volumes {
+        host_path      = var.entry
+        container_path = "/entry.sh"
+    }
+
+    entrypoint = ["/bin/bash", "/entry.sh"]
+
+    rm = true
+    tty = true
+    stdin_open = true
 }
