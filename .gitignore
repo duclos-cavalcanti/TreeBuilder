@@ -21,3 +21,8 @@ __pycache__/*
 
 .cache/
 .cache/*
+
+*.tfstate*
+*.terraform/
+*.terraform/*
+*.terraform.*
