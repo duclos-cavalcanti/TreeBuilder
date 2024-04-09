@@ -18,10 +18,10 @@ resource "docker_container" "ubuntu" {
         external = var.exposed_port
     }
 
-    # volumes {
-    #     host_path      = var.pwd
-    #     container_path = "/work"
-    # }
+    volumes {
+        host_path      = var.pwd
+        container_path = "/work/project"
+    }
 
     volumes {
         host_path      = var.entry
