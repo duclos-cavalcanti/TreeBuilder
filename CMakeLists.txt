@@ -10,9 +10,20 @@ find_package(Git REQUIRED)
 find_package(PkgConfig REQUIRED)
 find_package(Protobuf REQUIRED)
 
+pkg_search_module(PROTOBUF  REQUIRED protobuf)
+pkg_check_modules(LIBZMQ    REQUIRED libzmq)
+pkg_check_modules(CPPZMQ    REQUIRED cppzmq)
+
+if(NOT PROTOBUF_FOUND)
+    message(FATAL "PROTOBUF WAS NOT FOUND BY PKG-CONFIG.")
+endif()
+
+if(NOT CPPZMQ_FOUND)
+    message(FATAL "CPPZMQ WAS NOT FOUND BY PKG-CONFIG.")
+endif()
+
 # include(dpdk)
 # include(iouring)
-include(zeromq)
 include(proto)
 
 set(DEBUG_FLAGS "-g")
@@ -21,22 +32,6 @@ set(WARN_FLAGS "-Wall")
 set(GCC_COMPILE_FLAGS   "${DEBUG_FLAGS} ${OPT_FLAGS} ${WARN_FLAGS}")
 set(CMAKE_C_FLAGS       "${CMAKE_C_FLAGS} ${GCC_COMPILE_FLAGS} ${DPDK_CFLAGS}")
 set(CMAKE_CXX_FLAGS     "${CMAKE_CXX_FLAGS} ${GCC_COMPILE_FLAGS}")
-
-if(NOT PROTOBUF_FOUND)
-    message(WARNING "PROTOBUF WAS NOT FOUND BY PKG-CONFIG.")
-endif()
-
-if(NOT DPDK_FOUND)
-    message(WARNING "DPDK WAS NOT FOUND BY PKG-CONFIG.")
-endif()
-
-if(NOT LIBURING_FOUND)
-    message(WARNING "LIBURING WAS NOT FOUND BY PKG-CONFIG.")
-endif()
-
-if(NOT CPPZMQ_FOUND)
-    message(WARNING "CPPZMQ WAS NOT FOUND BY PKG-CONFIG.")
-endif()
 
 set(LIBRARY_INCLUDES    ${DPDK_INCLUDE_DIRS}    ${LIBURING_INCLUDE_DIRS})
 set(LIBRARY_DIRS        ${DPDK_LIBRARY_DIRS}    ${LIBURING_LIBRARY_DIRS})
@@ -59,10 +54,6 @@ set_property(DIRECTORY PROPERTY ADDITIONAL_CLEAN_FILES
     "${PROJECT_SOURCE_DIR}/build/Makefile"
     "${PROJECT_SOURCE_DIR}/build/cmake_install.cmake"
     "${PROJECT_SOURCE_DIR}/build/lib"
-    "${PROJECT_SOURCE_DIR}/build/dpdk-prefix"
-    "${PROJECT_SOURCE_DIR}/build/liburing-prefix"
-    "${PROJECT_SOURCE_DIR}/build/zeroMQ-prefix"
-    "${PROJECT_SOURCE_DIR}/build/cppzmq-prefix"
     # "${PROJECT_SOURCE_DIR}/build/compile_commands.json"
 )
 

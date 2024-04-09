@@ -1,11 +1,8 @@
-pkg_search_module(PROTOBUF REQUIRED protobuf)
-
 set(PROTO_BIN   protobin)
 set(PROTO_FILES ${PROJECT_SOURCE_DIR}/lib/proto/message.proto)
 set(PROTO_LIBRARY_DIR ${PROJECT_SOURCE_DIR}/lib/proto)
 
-protobuf_generate_cpp(PROTO_SRCS PROTO_HDRS ${PROTO_FILES})
-
+# protobuf_generate_cpp(PROTO_SRCS PROTO_HDRS ${PROTO_FILES})
 # message(STATUS "PROTO_SRCS: ${PROTO_SRCS}")
 # message(STATUS "PROTO_HDRS: ${PROTO_HDRS}")
 # message(STATUS "PROTOBUF_INCLUDE_DIRS = ${PROTOBUF_INCLUDE_DIRS}")
