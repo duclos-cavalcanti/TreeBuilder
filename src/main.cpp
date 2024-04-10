@@ -8,16 +8,17 @@
 
 #include "ZMQSocket.hpp"
 
-#define REQUEST_PORT    8083
-#define REPLY_PORT      8081
+#define SEND_PORT    8081
+#define RECV_PORT    8082
 
 void usage(const char* str, int e) {
     fprintf(stdout, "%s\n", str);
     exit(e);
 }
 
-void parse(int argc, char **argv) {
+int parse(int argc, char **argv) {
     int opt = 0;
+    int ret = 0;
     char usage_str[100] = { 0 };
 
     sprintf(usage_str, "Usage: %s [-r [client,server]] [-h]", argv[0]);
@@ -29,13 +30,9 @@ void parse(int argc, char **argv) {
             break;
 
         case 'r':
-            if (std::string{optarg} == "client") {
-                
-            } else if (std::string{optarg} == "proxy") {
-
-            } else {
-                usage(usage_str, EXIT_FAILURE);
-            }
+            if (std::string{optarg} == "sender") ret = 1;
+            else if (std::string{optarg} == "receiver") ret = 2;
+            else usage(usage_str, EXIT_FAILURE);
             break;
 
         default:
@@ -47,31 +44,49 @@ void parse(int argc, char **argv) {
     if (optind > argc) {
         usage(usage_str, EXIT_FAILURE);
     }
+
+    return ret;
 }
 
 int sender() {
-    std::string PROTOCOL{"udp"};
-    std::string IP{"localhost"};
-    std::string PORT{std::to_string(REQUEST_PORT)};
-
-    ZMQSocket Client(PROTOCOL, IP, PORT, zmq::socket_type::req, "SENDER");
+    ZMQSocket Sender(std::string {"udp"}, 
+                     std::string{"localhost"}, 
+                     std::to_string(RECV_PORT), 
+                     zmq::socket_type::radio, 
+                     "SENDER");
+    Sender.connect();
+    for (int i = 0; i != 10; i++) {
+        zmq::message_t request (5);
+        memcpy (request.data (), "Hello", 5);
+        Sender.send(request);
+        sleep(1);
+    }
 
     return 0;
 }
 
 int receiver() {
-    std::string PROTOCOL{"udp"};
-    std::string IP{"localhost"};
-    std::string PORT{"8081"};
+    ZMQSocket Receiver(std::string {"udp"}, 
+                       std::string{"localhost"}, 
+                       std::to_string(RECV_PORT), 
+                       zmq::socket_type::dish, 
+                       "RECEIVER");
+    Receiver.bind();
 
-    ZMQSocket Receiver(PROTOCOL, IP, PORT, zmq::socket_type::rep, "RECEIVER");
-    Receiver.connect();
+    while(true) {
+        zmq::message_t request;
+        Receiver.recv(request);
+    }
 
     return 0;
 }
 
 int main(int argc, char **argv) {
-    parse(argc, argv);
+    int role = parse(argc, argv);
+
+    if (role == 1) sender();
+    else if (role == 2) receiver();
+    else return -2;
 
 	return 0;
 }
