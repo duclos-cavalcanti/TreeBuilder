@@ -45,11 +45,11 @@ compress:
 		 --exclude=.gitmodules \
 		 --exclude=examples \
 		 --exclude=lib \
+		 --exclude=build \
 		 --exclude=.cache \
 		 --exclude=deploy \
 		 --exclude=analysis \
 		 --exclude-vcs-ignores \
-		 -P build \
 		 -zcvf ./project.tar.gz .
 
 .PHONY: build
