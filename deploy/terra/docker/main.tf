@@ -14,13 +14,8 @@ resource "docker_container" "ubuntu" {
     image = "ubuntu-ma:ubuntu-jammy"
 
     ports {
-        internal = 80
+        internal = var.exposed_port
         external = var.exposed_port
-    }
-
-    volumes {
-        host_path      = var.pwd
-        container_path = "/work/project"
     }
 
     volumes {

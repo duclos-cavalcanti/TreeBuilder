@@ -12,12 +12,23 @@ source "docker" "ubuntu" {
   commit = true
 }
 
+variable "file" {
+    description = "Path to project folder bundle that is copied over to the image"
+    type        = string
+    default     = "path"
+}
+
 build {
     name    = "ubuntu-ma"
 
     sources = [
       "source.docker.ubuntu"
     ]
+
+    provisioner "file" {
+        destination = "/home/"
+        source      = var.file
+    }
 
     provisioner "shell" {
         inline = var.commands
