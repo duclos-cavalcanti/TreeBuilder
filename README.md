@@ -112,7 +112,7 @@ The general project worflow consists of three parts:
 
 </table> 
 
-See _[Setup](https://github.com/duclos-cavalcanti/master-arbeit/wiki/Start)_ on the wiki.
+See _[Setup](https://github.com/duclos-cavalcanti/master-arbeit/wiki/Getting-Started)_ on the wiki.
 
 ##  Usage
 See _[Getting Started](https://github.com/duclos-cavalcanti/master-arbeit/wiki/Start)_ on the wiki.
