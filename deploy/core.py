@@ -9,46 +9,29 @@ from .utils import execute,lexecute
 from .utils import read_hcl, write_hcl
 from python_terraform import Terraform
 
-def get_ts(f1:str, f2:str):
-    if not os.path.isfile(f1):
-        raise RuntimeError(f"Not a file: {f1}")
+def build(args):
+    pwd = os.getcwd()
+    file = f"{pwd}/project.tar.gz"
+    if not os.path.exists(file): 
+        raise RuntimeError("No compressed project file!")
 
-    if not os.path.isfile(f2):
-        raise RuntimeError(f"Not a file: {f2}")
-    
-    mtime_f1 = os.path.getmtime(f1)
-    mtime_f2 = os.path.getmtime(f2)
-    
-    return mtime_f1, mtime_f2
+    infra = args.infra
+    if infra == "docker":
+        wdir = os.path.join(os.getcwd(), "deploy", "terra", "packer")
+        if not os.path.isdir(wdir): 
+            raise RuntimeError(f"Not a directory: {wdir}")
 
-def update(dst:str):
-    if dst == "packer":
         src = os.path.join(os.getcwd(), "deploy", "terra", "commands.hcl")
         dst = os.path.join(os.getcwd(), "deploy", "terra", "packer" , "commands.pkr.hcl")
-    elif dst == "gcp":
-        src = os.path.join(os.getcwd(), "deploy", "terra", "commands.hcl")
-        dst = os.path.join(os.getcwd(), "deploy", "terra", "gcp" , "commands.tf")
+        shutil.copy(src, dst)
+
+        lexecute(f"packer init .", wdir=wdir)
+        lexecute(f"packer validate -var file={file} .", wdir=wdir)
+        lexecute(f"packer build -var file={file} . ", wdir=wdir, verbose=True)
     else:
         raise NotImplementedError()
 
-    m1, m2 = get_ts(src, dst)
-    if m1 > m2: # commands.hcl has been changed recently
-        print(f"UPDATING: {src} -> {dst}")
-        shutil.copy(src, dst)
-
-    return
-
-def build():
-    wdir = os.path.join(os.getcwd(), "deploy", "terra", "packer")
-    if not os.path.isdir(wdir): 
-        raise RuntimeError(f"Not a directory: {wdir}")
-
-    update("packer")
-    lexecute("packer init .", wdir=wdir)
-    lexecute("packer validate .", wdir=wdir)
-    lexecute("packer build .", wdir=wdir, verbose=True)
-
-def create(args):
+def deploy(args):
     infra = args.infra
     wdir = os.path.join(os.getcwd(), "deploy", "terra", infra)
     if not os.path.isdir(wdir): 
@@ -56,7 +39,7 @@ def create(args):
 
     tf = Terraform(working_dir=wdir)
     var = {
-        'name' :        "client",
+        'name' :        "test",
         'pwd':          os.getcwd(),
         'entry':        os.path.join(os.getcwd(), "deploy", "terra", "docker", "entry.sh"),
         'exposed_port': 8082,
@@ -76,9 +59,6 @@ def create(args):
 
     return
 
-def deploy(args):
-    return
-
 def delete(args):
     return
 
@@ -92,7 +72,7 @@ def parse(rem=None):
         "-a", "--action",
         type=str,
         required=True,
-        choices=["build", "create", "deploy", "delete"],
+        choices=["build", "deploy", "delete"],
         dest="action",
     )
 
@@ -100,7 +80,7 @@ def parse(rem=None):
         "-i", "--infra",
         type=str,
         required=True,
-        choices=["gcp", "docker", "packer"],
+        choices=["docker", "gcp"],
         dest="infra",
     )
 
@@ -121,8 +101,7 @@ def main(rem):
     # for arg, value in vars(args).items(): print(f"{arg}: {value}")
 
     match args.action:
-        case "build":   build()
-        case "create":  create(args)
+        case "build":   build(args)
         case "deploy":  deploy(args)
         case "delete":  delete(args)
 

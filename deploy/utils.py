@@ -1,8 +1,16 @@
 import sys
 import os
+import re
 import subprocess
 import hcl
 import json
+
+def get_ts(f:str):
+    if not os.path.isfile(f):
+        raise RuntimeError(f"Not a file: {f}")
+    
+    ts = os.path.getmtime(f)
+    return ts
 
 def read_hcl(f:str):
     data = None
@@ -13,20 +21,23 @@ def write_hcl(f:str, data):
     with open(f, 'w') as fp: 
         json.dump(data, fp)
 
+
 def lexecute(command:str, wdir=None, verbose=False):
-    arr = command.split()
-    p = subprocess.Popen(arr, 
+    command = re.sub(r'[\s\n]+', ' ', command)
+    p = subprocess.Popen(command.split(), 
                          stdout=subprocess.PIPE, 
                          stderr=subprocess.PIPE, 
                          cwd=wdir)
+                         
     if verbose:
+        print(f"{command}")
         for line in p.stdout: 
             print(line.decode('utf-8'), end='')
 
     p.wait()
 
     if p.returncode != 0: 
-        print(f"Error[{p.returncode}]:", p.stderr.read().decode('utf-8'))
+        raise RuntimeError(f"Error[{p.returncode}]: {p.stderr.read().decode('utf-8')}")
 
 def execute(command:str, wdir=None, verbose=False):
     ret, out, err = try_execute(command, wdir)
