@@ -27,39 +27,100 @@ within Jasper's time constraints.
 - [Project Kickoff](https://docs.google.com/presentation/d/1XlgH70a5laUlEAKua7f3ALofkX98AMYdCSO5etTrlyw/edit?usp=sharing) 
 - [Project Wiki](https://github.com/duclos-cavalcanti/master-arbeit/wiki/)
 
-## 1. Setup and Installation
-The general project worflow consists of three parts. The creation and deployment of images on a given cloud provider _(or locally)_,
-managing these running images _(instances)_, and finally individual programs that are to be run on any given instance.
-To be able to create/deploy/manage images on a given cloud provider, we use [Terraform](https://developer.hashicorp.com/terraform). Currently 
-the project is mostly focused on [Google Cloud's Platform](https://cloud.google.com/?hl=en) and optionally [Dockers](https://docs.docker.com/engine/install/ubuntu/)
-for local development. To communicate across nodes on a cluster, this work also leverages [ZeroMQ](https://zeromq.org/) both via _python_ and _c++_ bindings.
+```bash
+git clone --recursive https://github.com/duclos-cavalcanti/master-arbeit.git
+```
 
-1. Clone project.
-   ```bash
-   git clone --recursive https://github.com/duclos-cavalcanti/master-arbeit.git
-    # recursive flag needed to include submodule
-   ```
+## Setup and Installation
+The general project worflow consists of three parts:
+1. Creation and Deployment of images on a given cloud provider _(or locally via dockers)_,
+2. Managing Instances _(deployed images)_  
+3. Running individual programs on any given instance.
 
-2. Install Dependencies. 
-    - _Currently based on [Ubuntu 22.04 Jammy](https://releases.ubuntu.com/jammy/)_
-    - See _[wiki](https://github.com/duclos-cavalcanti/master-arbeit/wiki/Setup)_ for detailed setup.
+<table div align="center">
+<tr> <th>Category</th> <th>Tool(s)</th> </tr>
 
-## 2. Usage
+<tr>
+    <td>
+        Build
+    <td> 
+        <a href="https://cmake.org/">
+        CMake
+        </a>,
+        <a href="https://mesonbuild.com/">
+        Meson
+        </a>,
+        <a href="https://gitlab.freedesktop.org/pkg-config/pkg-config">
+        Pkg-Config
+        </a>
+    </td> 
+</tr>
+<tr>
+    <td>
+        Containers
+    <td> 
+        <a href="https://docs.docker.com/engine/install/ubuntu/">
+        Docker
+        </a>,
+        <a href="https://developer.hashicorp.com/packer/tutorials/docker-get-started/get-started-install-cli">
+        Packer
+        </a>
+    </td> 
+</tr>
+<tr>
+    <td>
+        Cloud
+    <td> 
+        <a href="https://developer.hashicorp.com/terraform/docs">
+        Terraform
+        </a>,
+        <a href="https://cloud.google.com/">
+        GCP
+        </a>,
+        <a href="https://aws.amazon.com/">
+        AWS
+        </a>
+    </td> 
+</tr>
+<tr>
+    <td>
+        Libraries
+    <td> 
+        <a href="https://www.dpdk.org/">
+        DPDK
+        </a>,
+        <a href="https://zeromq.org/">
+        ZeroMQ
+        </a>,
+        <a href="https://protobuf.dev/">
+        Protobufs
+        </a>
+    </td> 
+</tr>
+<tr>
+    <td>
+        Python
+    <td> 
+        <a href="https://www.dpdk.org/">
+        pyzmq
+        </a>,
+        <a href="https://boto3.amazonaws.com/v1/documentation/api/latest/reference/services/s3.html">
+        boto3
+        </a>
+    </td> 
+</tr>
 
-1. Build
-    ```bash 
-    make build
-    ```
+</table> 
 
-2. Run
-    ```bash 
-    make run
-    ```
+See _[Setup](https://github.com/duclos-cavalcanti/master-arbeit/wiki/Start)_ on the wiki.
 
-## 3. License
+##  Usage
+See _[Getting Started](https://github.com/duclos-cavalcanti/master-arbeit/wiki/Start)_ on the wiki.
+
+## License
 This project is released under the BSD 3-Clause license. See [LICENSE](LICENSE).
 
-## 4. References
+## References
 - [Jasper](https://arxiv.org/abs/2402.09527)
 - [CloudEx](https://dl.acm.org/doi/10.1145/3458336.3465278)
 - [LemonDrop](https://searchworks.stanford.edu/view/14423035)
