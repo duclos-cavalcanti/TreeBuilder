@@ -6,6 +6,10 @@ ifeq (, $(shell which docker))
 $(error Docker not found)
 endif
 
+ifeq (, $(shell which terraform))
+$(error Terraform not found)
+endif
+
 all: build
 
 .PHONY: help
@@ -44,31 +48,33 @@ zip:
 		 -zcvf ./project.tar.gz .
 	@cp ./project.tar.gz ./deploy/terra/docker
 
-.PHONY: rm
-rm:
-	$(if $(shell docker images --format "{{.Repository}}" | grep ubuntu-ma-instance), docker rmi $(shell docker images ubuntu-ma-instance --format "{{.ID}}"), )
-
-.PHONY: base
-base:
+.PHONY: docker-base
+docker-base:
 	$(if $(shell docker images --format "{{.Repository}}" | grep ubuntu-ma-base), , docker build . -t ubuntu-ma-base:jammy)
 
-.PHONY: build
-build: base zip
+.PHONY: docker-rm
+docker-rm:
+	$(if $(shell docker images --format "{{.Repository}}" | grep ubuntu-ma-instance), docker rmi $(shell docker images ubuntu-ma-instance --format "{{.ID}}"), )
+
+.PHONY: docker-build
+docker-build: docker-base
 	$(if $(shell docker images --format "{{.Repository}}" | grep ubuntu-ma-instance), , docker build deploy/terra/docker -t ubuntu-ma-instance:jammy --build-arg BUNDLE=project.tar.gz)
 
 .PHONY: docker
-docker: build
+docker: zip docker-build
 	python3 main.py -m deploy -a deploy -i docker
 
-.PHONY: jasper
-jasper:
-	@$(MAKE) -C tools/jasper
+.PHONY: destroy
+destroy:
+	@cd deploy/terra/docker && terraform destroy -auto-approve
 
 .PHONY: docs
 docs:
 	@$(MAKE) -C docs
 
-.PHONY:
-clean:
-	@cd deploy/terra/docker && terraform destroy -auto-approve
-	@$(MAKE) -C .  rm
+.PHONY: clean
+clean: destroy docker-rm
+
+.PHONY: nuke
+nuke: destroy docker-rm
+	$(if $(shell docker images --format "{{.Repository}}" | grep ubuntu-ma-base), docker rmi $(shell docker images ubuntu-ma-base --format "{{.ID}}"), )
