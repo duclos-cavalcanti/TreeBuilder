@@ -4,7 +4,9 @@ FROM ubuntu:jammy
 
 # cmake, git, make, python and utils
 RUN apt-get update  -yq
-RUN apt-get install -yq curl wget cmake build-essential python3 python3-pip git vim
+RUN apt-get install -yq curl wget cmake build-essential python3 python3-pip git vim gdb
+# network utils
+RUN apt-get install -yq telnet ethtool net-tools netcat inetutils-traceroute tcpdump inetutils-ping
 
 # google's protobuf
 RUN apt-get install -yq libprotobuf-c-dev libprotobuf-dev protobuf-compiler protobuf-codegen
