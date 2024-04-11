@@ -7,25 +7,34 @@ terraform {
   }
 }
 
+variable "names" {
+  description = "List of container names"
+  type        = list(string)
+  default     = ["receiver", "sender", "manager"]
+}
+
+variable "exposed_ports" {
+  description = "List of port numbers on host machine"
+  type        = list(number)
+  default     = [8081, 8082, 8083]
+}
+
 provider "docker" {}
 
 resource "docker_container" "ubuntu" {
-    name  = var.name
-    image = "ubuntu-ma:ubuntu-jammy"
+  count = length(var.names)
 
-    ports {
-        internal = var.exposed_port
-        external = var.exposed_port
-    }
+  name  = var.names[count.index]
+  image = "ubuntu-ma-instance:jammy"
 
-    volumes {
-        host_path      = var.entry
-        container_path = "/entry.sh"
-    }
+  ports {
+    internal = var.exposed_ports[count.index]
+    external = var.exposed_ports[count.index]
+  }
 
-    entrypoint = ["/bin/bash", "/entry.sh"]
+  entrypoint = ["/bin/bash", "/entry.sh", var.names[count.index]]
 
-    rm = true
-    tty = true
-    stdin_open = true
+  rm         = true
+  tty        = true
+  stdin_open = true
 }
