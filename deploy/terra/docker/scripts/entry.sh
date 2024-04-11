@@ -1,6 +1,7 @@
 #!/bin/bash -xe
 
 role="$1"
+export ROLE="$role"
 
 pushd /work/project
     mkdir build 
@@ -9,6 +10,10 @@ pushd /work/project
         make 
     popd
     echo "-- ROLE: $role --"
-    ./bin/project -r ${role}
+    if [ "${role}" == "manager" ]; then 
+        echo "Running Manager..."
+    else 
+        echo ./bin/project -r ${role}
+    fi
     bash
 popd
