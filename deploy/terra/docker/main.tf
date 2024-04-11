@@ -30,6 +30,7 @@ resource "docker_container" "ubuntu" {
   ports {
     internal = var.exposed_ports[count.index]
     external = var.exposed_ports[count.index]
+    protocol = "tcp"
   }
 
   entrypoint = ["/bin/bash", "/entry.sh", var.names[count.index]]
