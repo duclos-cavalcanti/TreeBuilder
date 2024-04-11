@@ -2,18 +2,8 @@ PWD := $(shell pwd)
 UID := $(shell id -u)
 GID := $(shell id -g)
 
-DOCKER := ubuntu-ma
-
 ifeq (, $(shell which docker))
 $(error Docker not found)
-endif
-
-ifeq (, $(shell which packer))
-$(error Packer not found)
-endif
-
-ifeq (, $(shell which terraform))
-$(error Terraform not found)
 endif
 
 all: build
@@ -36,7 +26,8 @@ venv:
 	python3 -m venv .venv
 	echo "source ./venv/bin/activate"
 
-compress:
+.PHONY: zip
+zip:
 	@tar --exclude=jasper \
 		 --exclude=project.tar.gz \
 		 --exclude=.git \
@@ -51,26 +42,33 @@ compress:
 		 --exclude=analysis \
 		 --exclude-vcs-ignores \
 		 -zcvf ./project.tar.gz .
-
-.PHONY: build
-build:
-	python3 main.py -m deploy -a build -i docker
+	@cp ./project.tar.gz ./deploy/terra/docker
 
 .PHONY: rm
 rm:
-	@$(if $(shell docker images --format "{{.Repository}}" | grep ${DOCKER}), docker rmi $(shell docker images ${DOCKER} --format "{{.ID}}"), $(info Nothing to be done.))
-	
+	$(if $(shell docker images --format "{{.Repository}}" | grep ubuntu-ma-instance), docker rmi $(shell docker images ubuntu-ma-instance --format "{{.ID}}"), )
+
+.PHONY: base
+base:
+	$(if $(shell docker images --format "{{.Repository}}" | grep ubuntu-ma-base), , docker build . -t ubuntu-ma-base:jammy)
+
+.PHONY: build
+build: base zip
+	$(if $(shell docker images --format "{{.Repository}}" | grep ubuntu-ma-instance), , docker build deploy/terra/docker -t ubuntu-ma-instance:jammy --build-arg BUNDLE=project.tar.gz)
+
 .PHONY: docker
-docker: compress $(if $(shell docker images --format "{{.Repository}}" | grep ${DOCKER}), rm build, build)
+docker: build
+	python3 main.py -m deploy -a deploy -i docker
 
 .PHONY: jasper
 jasper:
-	@$(MAKE) -C tools/docker
+	@$(MAKE) -C tools/jasper
 
 .PHONY: docs
 docs:
 	@$(MAKE) -C docs
 
-.PHONY: clean
+.PHONY:
 clean:
-	@echo clean
+	@cd deploy/terra/docker && terraform destroy -auto-approve
+	@$(MAKE) -C .  rm

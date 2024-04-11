@@ -1,61 +1,24 @@
 import os
-import shutil
 import argparse
 
+# import shutil
 # import ipdb
 # ipdb.set_trace()
 
-from .utils import execute,lexecute
-from .utils import read_hcl, write_hcl
-from python_terraform import Terraform
+from .utils import execute, lexecute
 
 def build(args):
     pwd = os.getcwd()
     file = f"{pwd}/project.tar.gz"
-    if not os.path.exists(file): 
-        raise RuntimeError("No compressed project file!")
-
-    infra = args.infra
-    if infra == "docker":
-        wdir = os.path.join(os.getcwd(), "deploy", "terra", "packer")
-        if not os.path.isdir(wdir): 
-            raise RuntimeError(f"Not a directory: {wdir}")
-
-        src = os.path.join(os.getcwd(), "deploy", "terra", "commands.hcl")
-        dst = os.path.join(os.getcwd(), "deploy", "terra", "packer" , "commands.pkr.hcl")
-        shutil.copy(src, dst)
-
-        lexecute(f"packer init .", wdir=wdir)
-        lexecute(f"packer validate -var file={file} .", wdir=wdir)
-        lexecute(f"packer build -var file={file} . ", wdir=wdir, verbose=True)
-    else:
-        raise NotImplementedError()
+    if not os.path.exists(file): raise RuntimeError("No compressed project file!")
 
 def deploy(args):
     infra = args.infra
     wdir = os.path.join(os.getcwd(), "deploy", "terra", infra)
-    if not os.path.isdir(wdir): 
-        raise RuntimeError(f"Not a directory: {wdir}")
+    if not os.path.isdir(wdir): raise RuntimeError(f"Not a directory: {wdir}")
 
-    tf = Terraform(working_dir=wdir)
-    var = {
-        'name' :        "test",
-        'pwd':          os.getcwd(),
-        'entry':        os.path.join(os.getcwd(), "deploy", "terra", "docker", "entry.sh"),
-        'exposed_port': 8082,
-    }
-
-    ret, stdout, stderr = tf.init()
-    if ret != 0:
-        print(stderr)
-        err = f"[{ret}] Terraform initialization of {wdir} failed!"
-        raise RuntimeError(err)
-
-    ret, stdout, stderr = tf.apply(skip_plan=True, var=var)
-    if ret != 0:
-        print(stderr)
-        err = f"[{ret}] Terraform apply failed!"
-        raise RuntimeError(err)
+    lexecute(f"terraform init", wdir=wdir, verbose=True)
+    os.system(f"cd {wdir} && terraform apply -auto-approve")
 
     return
 
@@ -87,8 +50,17 @@ def parse(rem=None):
     arg_def.add_argument(
         "-n", "--name",
         type=str,
+        default="test",
         required=False,
         dest="name",
+    )
+
+    arg_def.add_argument(
+        "-p", "--port",
+        type=int,
+        default=8081,
+        required=False,
+        dest="port",
     )
 
     if not rem: args = arg_def.parse_args()

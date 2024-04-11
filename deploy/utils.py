@@ -37,7 +37,9 @@ def lexecute(command:str, wdir=None, verbose=False):
     p.wait()
 
     if p.returncode != 0: 
-        raise RuntimeError(f"Error[{p.returncode}]: {p.stderr.read().decode('utf-8')}")
+        err = p.stderr.read().decode('utf-8')
+        print(err, file=sys.stderr)
+        raise RuntimeError(f"Error[{p.returncode}]: {command}")
 
 def execute(command:str, wdir=None, verbose=False):
     ret, out, err = try_execute(command, wdir)
