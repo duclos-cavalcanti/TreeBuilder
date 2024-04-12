@@ -73,6 +73,7 @@ ZMQSocket::ZMQSocket(std::string PROTOCOL,
 
     this->ip        = IP;
     this->port      = PORT;
+    this->prot      = PROTOCOL;
     this->format    = std::string{PROTOCOL + "://" + IP + ":" + PORT};
 
     this->context   = zmq::context_t{CONTEXT};
@@ -82,19 +83,19 @@ ZMQSocket::ZMQSocket(std::string PROTOCOL,
 
 
 void ZMQSocket::connect(void) {
-    this->log({"ATTEMPT CONNECT IP=", this->ip, " PORT=", this->port});
+    this->log({"ATTEMPT CONNECT IP=", this->ip, " PORT=", this->port, " PROTOCOL=", this->prot});
     this->socket.connect(this->format);
     this->log({"CONNECTED IP=", this->ip, " PORT=", this->port});
 }
 
 void ZMQSocket::connect(std::string PROTOCOL, std::string IP, std::string PORT) {
-    this->log({"ATTEMPT CONNECT IP=", IP, " PORT=", PORT});
+    this->log({"ATTEMPT CONNECT IP=", IP, " PORT=", PORT, " PROTOCOL=", PROTOCOL});
     this->socket.connect(std::string{PROTOCOL + "://" + IP + ":" + PORT});
     this->log({"CONNECTED IP=", IP, " PORT=", PORT});
 }
 
 void ZMQSocket::bind(void) {
-    this->log({"ATTEMPT BIND IP=", this->ip, " PORT=", this->port});
+    this->log({"ATTEMPT BIND IP=", this->ip, " PORT=", this->port, " PROTOCOL=", this->prot});
     this->socket.bind(this->format);
     this->log({"BOUND IP=", this->ip, " PORT=", this->port});
 }

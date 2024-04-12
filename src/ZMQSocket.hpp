@@ -56,6 +56,7 @@ public:
 private:
     std::string         ip;
     std::string         port;
+    std::string         prot;
     std::string         format;
 
     zmq::context_t      context;

@@ -8,56 +8,51 @@
 
 #include "ZMQSocket.hpp"
 
+#define SEND_ROLE    2
+#define RECV_ROLE    2
 #define RECV_PORT    8081
 
-void usage(const char* str, int e) {
-    fprintf(stdout, "%s\n", str);
+
+void usage(int e) {
+    std::cout << "Usage: ./project [-r [client,server]] [-h]" << std::endl;
     exit(e);
 }
 
 int parse(int argc, char **argv) {
     int opt = 0;
     int ret = 0;
-    char usage_str[100] = { 0 };
-
-    sprintf(usage_str, "Usage: %s [-r [client,server]] [-h]", argv[0]);
     while ( (opt = getopt (argc, argv, "r:h") ) != -1 ) {
         switch (opt) {
         case 'h':
-            usage(usage_str, EXIT_SUCCESS);
+            usage(EXIT_SUCCESS);
             break;
 
         case 'r':
             if (std::string{optarg} == "sender") ret = 1;
             else if (std::string{optarg} == "receiver") ret = 2;
-            else usage(usage_str, EXIT_FAILURE);
+            else usage(EXIT_FAILURE);
             break;
 
         default:
-            usage(usage_str, EXIT_FAILURE);
+            usage(EXIT_FAILURE);
             break;
         }
     }
 
-    if (optind > argc) {
-        usage(usage_str, EXIT_FAILURE);
-    }
-
+    if (optind > argc) usage(EXIT_FAILURE);
     return ret;
 }
 
 int sender() {
     ZMQSocket Sender(std::string {"tcp"}, 
-                     std::string{"172.18.0.2"}, 
+                     std::string{"localhost"}, 
                      std::to_string(RECV_PORT), 
-                     zmq::socket_type::req, 
+                     zmq::socket_type::push, 
                      "SENDER");
     Sender.connect();
     for (int i = 0; i != 10; i++) {
-        zmq::message_t request {std::string{"Hello"}};
-        zmq::message_t reply;
+        zmq::message_t request {std::string{"Hello=" + std::to_string(i)}};
         Sender.send(request);
-        Sender.recv(reply);
         sleep(1);
     }
 
@@ -66,18 +61,16 @@ int sender() {
 
 int receiver() {
     ZMQSocket Receiver(std::string {"tcp"}, 
-                       std::string{"0.0.0.0"}, 
+                       std::string{"localhost"}, 
                        std::to_string(RECV_PORT), 
-                       zmq::socket_type::rep, 
+                       zmq::socket_type::pull, 
                        "RECEIVER");
     Receiver.bind();
 
     while(true) {
         zmq::message_t request;
-        zmq::message_t reply {std::string{"World"}};
         Receiver.recv(request);
-        std::cout << "Received: " << std::string(static_cast<char*>(request.data()), request.size()) << std::endl;
-        Receiver.send(reply);
+        std::cout << "Received: " << request.to_string() << std::endl;
     }
 
     return 0;
@@ -92,7 +85,7 @@ int main(int argc, char **argv) {
         receiver();
     } else {
         std::cout << "Unknown role: " << role << std::endl;
-        return -2;
+        exit(-2);
     }
 
 	return 0;
