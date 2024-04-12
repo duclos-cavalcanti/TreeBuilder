@@ -48,15 +48,14 @@ int parse(int argc, char **argv) {
 
 int sender() {
     ZMQSocket Sender(std::string {"tcp"}, 
-                     std::string{"receiver"}, 
+                     std::string{"172.18.0.2"}, 
                      std::to_string(RECV_PORT), 
                      zmq::socket_type::req, 
                      "SENDER");
     Sender.connect();
     for (int i = 0; i != 10; i++) {
-        zmq::message_t request (5);
+        zmq::message_t request {std::string{"Hello"}};
         zmq::message_t reply;
-        memcpy (request.data (), "Hello", 5);
         Sender.send(request);
         Sender.recv(reply);
         sleep(1);
@@ -75,10 +74,9 @@ int receiver() {
 
     while(true) {
         zmq::message_t request;
-        zmq::message_t reply(5);
+        zmq::message_t reply {std::string{"World"}};
         Receiver.recv(request);
         std::cout << "Received: " << std::string(static_cast<char*>(request.data()), request.size()) << std::endl;
-        memcpy(reply.data(), "World", 5);
         Receiver.send(reply);
     }
 

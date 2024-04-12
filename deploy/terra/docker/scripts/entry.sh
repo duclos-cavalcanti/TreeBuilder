@@ -13,7 +13,8 @@ pushd /work/project
     if [ "${role}" == "manager" ]; then 
         echo "Running Manager..."
     else 
-        echo ./bin/project -r ${role}
+        echo "Running Project[$role]..."
+        ./bin/project -r ${role} &
     fi
     bash
 popd
