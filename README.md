@@ -62,9 +62,6 @@ The general project worflow consists of three parts:
         <a href="https://docs.docker.com/engine/install/ubuntu/">
         Docker
         </a>,
-        <a href="https://developer.hashicorp.com/packer/tutorials/docker-get-started/get-started-install-cli">
-        Packer
-        </a>
     </td> 
 </tr>
 <tr>
