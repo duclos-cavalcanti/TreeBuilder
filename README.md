@@ -62,6 +62,9 @@ The general project worflow consists of three parts:
         <a href="https://docs.docker.com/engine/install/ubuntu/">
         Docker
         </a>,
+        <a href="https://developer.hashicorp.com/vagrant/install">
+        Vagrant
+        </a>,
     </td> 
 </tr>
 <tr>
