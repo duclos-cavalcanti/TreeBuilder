@@ -32,7 +32,7 @@ resource "docker_container" "ubuntu" {
 
     network_mode = "host"
 
-    entrypoint = ["/bin/bash", "/entry.sh", var.names[count.index], "8081"]
+    entrypoint = ["/bin/bash", "/entry.sh", var.names[count.index], "localhost", "8081"]
 
     rm         = true
     tty        = true

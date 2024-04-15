@@ -32,19 +32,21 @@ class Client():
         self.socket.send_string(string)
 
 def server(args):
-    M = Manager(ip="localhost", port=args.port) 
+    M = Manager(ip=args.addr, port=args.port) 
     M.bind()
+    print(f"Bound to {args.addr}:{args.port}")
 
     while(True):
         data = M.recv()
-        reply = "Bye"
+        reply = f"ACK: {data}"
         print(f"Received: {data}")
         M.send(reply) 
         print(f"Sent: {reply}")
 
 def client(args):
-    C = Client(ip="localhost", port=args.port) 
+    C = Client(ip=args.addr, port=args.port) 
     C.connect()
+    print(f"Connected to {args.addr}:{args.port}")
     i = 0
     while(True):
         data = f"Hello from {args.name} | {i}"
@@ -70,6 +72,13 @@ def parse(rem=None):
         default="server",
         choices=["server", "client"],
         dest="action",
+    )
+
+    arg_def.add_argument(
+        "-i", "--ip",
+        type=str,
+        required=True,
+        dest="addr",
     )
 
     arg_def.add_argument(
