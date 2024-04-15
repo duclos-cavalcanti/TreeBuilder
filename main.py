@@ -1,5 +1,6 @@
 import argparse
 import deploy
+import manager
 
 def parse():
     arg_def = argparse.ArgumentParser(
@@ -11,7 +12,7 @@ def parse():
         "-m", "--module",
         type=str,
         required=True,
-        choices=["deploy", "analysis"],
+        choices=["manager", "deploy", "analysis"],
         dest="module",
     )
 
@@ -24,6 +25,9 @@ def main():
     match args.module:
         case "deploy":
             deploy.run(rem)
+
+        case "manager":
+            manager.run(rem)
 
         case _:
             raise NotImplementedError(f"Mode {args.module} doesn't have a corresponding function!")

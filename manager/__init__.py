@@ -1,7 +1,7 @@
-from .core import Manager
+from .core import main as run
 
 __all__ = [
-    'Manager'
+    'run'
 ]
 
 

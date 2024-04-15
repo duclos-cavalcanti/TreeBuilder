@@ -7,11 +7,6 @@ import argparse
 
 from .utils import execute, lexecute
 
-def build(args):
-    pwd = os.getcwd()
-    file = f"{pwd}/project.tar.gz"
-    if not os.path.exists(file): raise RuntimeError("No compressed project file!")
-
 def deploy(args):
     infra = args.infra
     wdir = os.path.join(os.getcwd(), "deploy", "terra", infra)
@@ -34,7 +29,8 @@ def parse(rem=None):
     arg_def.add_argument(
         "-a", "--action",
         type=str,
-        required=True,
+        required=False,
+        default="deploy",
         choices=["build", "deploy", "delete"],
         dest="action",
     )
@@ -55,14 +51,6 @@ def parse(rem=None):
         dest="name",
     )
 
-    arg_def.add_argument(
-        "-p", "--port",
-        type=int,
-        default=8081,
-        required=False,
-        dest="port",
-    )
-
     if not rem: args = arg_def.parse_args()
     else: args = arg_def.parse_args(rem)
 
@@ -70,10 +58,8 @@ def parse(rem=None):
 
 def main(rem):
     args = parse(rem)
-    # for arg, value in vars(args).items(): print(f"{arg}: {value}")
 
     match args.action:
-        case "build":   build(args)
         case "deploy":  deploy(args)
         case "delete":  delete(args)
 

@@ -2,8 +2,8 @@ import sys
 import os
 import re
 import subprocess
-import hcl
 import json
+# import hcl
 
 def get_ts(f:str):
     if not os.path.isfile(f):
@@ -12,14 +12,14 @@ def get_ts(f:str):
     ts = os.path.getmtime(f)
     return ts
 
-def read_hcl(f:str):
-    data = None
-    with open(f, 'r') as fp: data = hcl.load(fp)
-    return data
-
-def write_hcl(f:str, data):
-    with open(f, 'w') as fp: 
-        json.dump(data, fp)
+# def read_hcl(f:str):
+#     data = None
+#     with open(f, 'r') as fp: data = hcl.load(fp)
+#     return data
+# 
+# def write_hcl(f:str, data):
+#     with open(f, 'w') as fp: 
+#         json.dump(data, fp)
 
 
 def lexecute(command:str, wdir=None, verbose=False):

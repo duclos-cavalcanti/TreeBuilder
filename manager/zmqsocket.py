@@ -32,5 +32,9 @@ class ReplySocket(Socket):
         self.socket.bind(self.format)
 
 class RequestSocket(Socket):
-    def __init__(self):
+    def __init__(self, protocol:str, ip:str, port:str):
+        self.format = f"{protocol}://{ip}:{port}"
         super().__init__(zmq.REQ)
+
+    def connect(self):
+        self.socket.connect(self.format)

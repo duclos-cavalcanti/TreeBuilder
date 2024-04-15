@@ -16,6 +16,10 @@ all: build
 help:
 	echo help
 
+.PHONY: docs
+docs:
+	@$(MAKE) -C docs
+
 .PHONY: freeze
 freeze:
 	pip freeze > requirements.txt
@@ -30,8 +34,14 @@ venv:
 	python3 -m venv .venv
 	echo "source ./venv/bin/activate"
 
-.PHONY: zip
-zip:
+.PHONY: proto
+proto:
+	protoc --python_out="./manager" src/proto/message.proto
+	mv manager/src/proto/*.py manager
+	rm -rf manager/src
+
+.PHONY: bundle
+bundle:
 	@tar --exclude=jasper \
 		 --exclude=project.tar.gz \
 		 --exclude=.git \
@@ -42,39 +52,23 @@ zip:
 		 --exclude=lib \
 		 --exclude=build \
 		 --exclude=.cache \
-		 --exclude=deploy \
+		 --exclude=terra \
 		 --exclude=analysis \
 		 --exclude-vcs-ignores \
-		 -zcvf ./project.tar.gz .
-	@cp ./project.tar.gz ./deploy/terra/docker
+		 -zcvf ./deploy/terra/docker/project.tar.gz .
 
-.PHONY: docker-base
-docker-base:
-	$(if $(shell docker images --format "{{.Repository}}" | grep ubuntu-ma-base), , docker build . -t ubuntu-ma-base:jammy)
-
-.PHONY: docker-rm
-docker-rm:
-	$(if $(shell docker images --format "{{.Repository}}" | grep ubuntu-ma-instance), docker rmi $(shell docker images ubuntu-ma-instance --format "{{.ID}}"), )
-
-.PHONY: docker-build
-docker-build: docker-base
-	$(if $(shell docker images --format "{{.Repository}}" | grep ubuntu-ma-instance), , docker build deploy/terra/docker -t ubuntu-ma-instance:jammy --build-arg BUNDLE=project.tar.gz)
+.PHONY: build
+build:
+	@docker build . -t ubuntu-base:jammy
 
 .PHONY: docker
-docker: zip docker-build
-	python3 main.py -m deploy -a deploy -i docker
-
-.PHONY: destroy
-destroy:
-	@cd deploy/terra/docker && terraform destroy -auto-approve
-
-.PHONY: docs
-docs:
-	@$(MAKE) -C docs
+docker: build bundle proto
+	cd deploy/terra/docker/ && terraform init
+	cd deploy/terra/docker/ && terraform apply -auto-approve
 
 .PHONY: clean
-clean: destroy docker-rm
+clean:
+	@cd deploy/terra/docker && terraform destroy -auto-approve
 
-.PHONY: nuke
-nuke: destroy docker-rm
-	$(if $(shell docker images --format "{{.Repository}}" | grep ubuntu-ma-base), docker rmi $(shell docker images ubuntu-ma-base --format "{{.ID}}"), )
+reset: 
+	@docker rmi ubuntu-base:jammy
