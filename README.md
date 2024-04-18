@@ -57,14 +57,20 @@ The general project worflow consists of three parts:
 </tr>
 <tr>
     <td>
-        Containers
+        Containers / Virtualization
     <td> 
         <a href="https://docs.docker.com/engine/install/ubuntu/">
         Docker
         </a>,
+        <a href="https://developer.hashicorp.com/packer/docs?ajs_aid=402f72bb-ce20-40b3-8bcb-ef538f141337&product_intent=packer">
+        Packer
+        </a>,
         <a href="https://developer.hashicorp.com/vagrant/install">
         Vagrant
         </a>,
+        <a href="https://www.virtualbox.org/">
+        VirtualBox
+        </a>
     </td> 
 </tr>
 <tr>
