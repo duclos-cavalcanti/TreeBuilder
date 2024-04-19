@@ -62,5 +62,4 @@ add_custom_target("debug"
     COMMAND gdb -tui -x ./GDBCOMMANDS --args ./bin/${PROJECT_NAME}
 )
 
-# include(examples)
 # include(debug)
