@@ -100,6 +100,11 @@ void ZMQSocket::bind(void) {
     this->log({"BOUND IP=", this->ip, " PORT=", this->port});
 }
 
+void ZMQSocket::join(std::string group) {
+    // this->socket.join(group.c_str());
+    this->log({"JOINED=", group});
+}
+
 int ZMQSocket::send(zmq::message_t& msg, zmq::send_flags flags) {
     auto res = this->socket.send(msg, flags);
     if (res.has_value()) {

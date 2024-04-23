@@ -37,6 +37,7 @@ public:
     void connect(void);
     void connect(std::string PROTOCOL, std::string IP, std::string PORT);
     void bind(void);
+    void join(std::string);
 
     int send(zmq::message_t& msg, zmq::send_flags flags=zmq::send_flags::none);
 
