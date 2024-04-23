@@ -16,24 +16,6 @@ all: build
 help:
 	echo help
 
-.PHONY: docs
-docs:
-	@$(MAKE) -C docs
-
-.PHONY: freeze
-freeze:
-	pip freeze > requirements.txt
-
-.PHONY: install
-install:
-	pip install -r requirements.txt
-	@# python3 -m pip install 'requests==2.18.4'
-
-.PHONY: venv
-venv:
-	python3 -m venv .venv
-	echo "source ./venv/bin/activate"
-
 .PHONY: proto
 proto:
 	protoc --python_out="./manager" src/proto/message.proto
