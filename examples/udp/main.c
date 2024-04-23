@@ -12,10 +12,11 @@
 #include <netinet/ip.h>
 #include <arpa/inet.h>
 
-#define PORT 8080
+#define PORT 9090
 #define CLIENT 0
 #define SERVER 1
 
+static int      port = PORT;
 static char*    srv_ip = NULL;
 static struct   sockaddr_in srv, cli;
 static int      sockfd;
@@ -26,7 +27,7 @@ void handler(int sig) {
 
 int parse(int argc, char **argv) {
     int opt, ret = 0;
-    while ( (opt = getopt (argc, argv, "r:p:h") ) != -1 ) {
+    while ( (opt = getopt (argc, argv, "r:i:h") ) != -1 ) {
         switch (opt) {
         case 'h':
             ret = EXIT_SUCCESS;
@@ -44,13 +45,13 @@ int parse(int argc, char **argv) {
             }
             break;
 
-        case 'p':
+        case 'i':
             srv_ip = optarg;
             break;
 
         default:
 exit:
-            fprintf(stderr, "Usage: %s [-r [client,server]] [-p IP_ADDRESS] [-h]\n", argv[0]);
+            fprintf(stderr, "Usage: %s [-r [client,server]] [-i IP_ADDRESS] [-h]\n", argv[0]);
             exit(ret);
             break;
         }
@@ -93,7 +94,7 @@ int server() {
         }
 
         puts("TX DATA");
-    } while(0);
+    } while(1);
 
     puts("-- CLOSED --");
     close(sockfd);
@@ -120,7 +121,7 @@ int client() {
         }
 
         printf("RX DATA: %s | IP: %s | PORT: %i | LEN: %d\n", buf, inet_ntoa(srv.sin_addr), ntohs(srv.sin_port), len);
-    } while(0);
+    } while(1);
 
     puts("-- CLOSED --");
     close(sockfd);
@@ -139,11 +140,12 @@ int main(int argc, char **argv) {
         fprintf(stderr, "Failed to create socket\n");
         exit(EXIT_FAILURE);
     }
+
     memset(&srv, 0, sizeof(srv));
     memset(&cli, 0, sizeof(cli));
 
     srv.sin_family       = AF_INET;
-    srv.sin_port         = htons(PORT);
+    srv.sin_port         = htons(port);
     srv.sin_addr.s_addr  = inet_addr( (srv_ip) ? srv_ip : "127.0.0.1");
 
     if (role == CLIENT) client();

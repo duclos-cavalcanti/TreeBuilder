@@ -20,10 +20,16 @@
 
 static char errstr[100] = { 0 };
 
-static const struct rte_eth_conf port_conf_default = {};
+static const struct rte_eth_conf port_conf_default = {
+    .rxmode = {.max_lro_pkt_size = RTE_ETHER_MAX_LEN},
+    .txmode = {
+        .offloads = RTE_ETH_TX_OFFLOAD_IPV4_CKSUM,
+    },
+};
+
 struct rte_mempool *mbuf_pool;
 
-int run() {
+int run(int portid) {
     long unsigned int cnt = 0;
     struct rte_mbuf *bufs[BURST_SIZE];
 
@@ -38,7 +44,7 @@ int run() {
 
             if (eth_hdr->ether_type == rte_be_to_cpu_16(RTE_ETHER_TYPE_IPV4)) {
                 if (ipv4_hdr->next_proto_id == IPPROTO_UDP) {
-                    printf("Received: %u bytes | %d\n", rte_be_to_cpu_16(udp_hdr->dgram_len), cnt++);
+                    printf("Received: %u bytes | %ld\n", rte_be_to_cpu_16(udp_hdr->dgram_len), cnt++);
                 }
             }
 
@@ -58,6 +64,18 @@ int main(int argc, char **argv) {
 		rte_exit(EXIT_FAILURE, "Error: EAL Initialization\n");
     }
 
+    // Memory Pool Creation
+    mbuf_pool = rte_pktmbuf_pool_create("MBUF_POOL", 
+                                        NUM_MBUFS,
+                                        MBUF_CACHE_SIZE, 
+                                        0, 
+                                        RTE_MBUF_DEFAULT_BUF_SIZE,
+                                        rte_socket_id());
+
+    if (mbuf_pool == NULL) {
+        rte_exit(EXIT_FAILURE, "Error: MBUF POOL Creation\n");
+    }
+
     // Port Availability
     unsigned int nb_ports = rte_eth_dev_count_avail();
 	if (nb_ports == 0) {
@@ -71,18 +89,7 @@ int main(int argc, char **argv) {
         rte_exit(EXIT_FAILURE, "Error: Ethernet Device Configuration\n");
     }
 
-    // Memory Pool Creation
-    mbuf_pool = rte_pktmbuf_pool_create("MBUF_POOL", 
-                                        NUM_MBUFS,
-                                        MBUF_CACHE_SIZE, 
-                                        0, 
-                                        RTE_MBUF_DEFAULT_BUF_SIZE,
-                                        rte_socket_id());
-    if (mbuf_pool == NULL) {
-        rte_exit(EXIT_FAILURE, "Error: MBUF POOL Creation\n");
-    }
-
-    // RX QUEUE Setup
+    // Eth RX QUEUE Setup
     ret = rte_eth_rx_queue_setup(portid, 0, RX_RING_SIZE, rte_eth_dev_socket_id(portid), NULL, mbuf_pool);
     if (ret < 0) {
         rte_exit(EXIT_FAILURE, "Error: RX QUEUE Setup\n");
