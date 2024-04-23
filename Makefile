@@ -57,6 +57,10 @@ bundle:
 		 --exclude-vcs-ignores \
 		 -zcvf ./deploy/terra/docker/project.tar.gz .
 
+.PHONY: examples
+examples:
+	@tar --exclude=bin -zcvf ./examples.tar.gz ./examples
+
 .PHONY: build
 build:
 	@docker build . -t ubuntu-base:jammy
