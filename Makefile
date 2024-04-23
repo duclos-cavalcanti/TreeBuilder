@@ -2,28 +2,14 @@ PWD := $(shell pwd)
 UID := $(shell id -u)
 GID := $(shell id -g)
 
-ifeq (, $(shell which docker))
-$(error Docker not found)
-endif
+.PHONY: exs tar docker vagrant clean
+all:
 
-ifeq (, $(shell which terraform))
-$(error Terraform not found)
-endif
+exs:
+	@tar --exclude=bin \
+		 -zcvf ./examples.tar.gz ./examples
 
-all: build
-
-.PHONY: help
-help:
-	echo help
-
-.PHONY: proto
-proto:
-	protoc --python_out="./manager" src/proto/message.proto
-	mv manager/src/proto/*.py manager
-	rm -rf manager/src
-
-.PHONY: bundle
-bundle:
+tar:
 	@tar --exclude=jasper \
 		 --exclude=project.tar.gz \
 		 --exclude=.git \
@@ -35,26 +21,24 @@ bundle:
 		 --exclude=build \
 		 --exclude=.cache \
 		 --exclude=terra \
+		 --exclude=infra \
 		 --exclude=analysis \
 		 --exclude-vcs-ignores \
-		 -zcvf ./deploy/terra/docker/project.tar.gz .
+		 -zcvf project.tar.gz .
 
-.PHONY: examples
-examples:
-	@tar --exclude=bin -zcvf ./examples.tar.gz ./examples
+docker-base:
+	$(MAKE) -C ./infra/packer/ docker
 
-.PHONY: build
-build:
-	@docker build . -t ubuntu-base:jammy
+docker: docker-base tar
+	@cp -v project.tar.gz ./infra/terra/docker/extract
+	$(MAKE) -C ./infra/terra/ docker
 
-.PHONY: docker
-docker: build bundle proto
-	cd deploy/terra/docker/ && terraform init
-	cd deploy/terra/docker/ && terraform apply -auto-approve
+vagrant-base:
+	$(MAKE) -C ./infra/packer/ vagrant
 
-.PHONY: clean
+vagrant:
+	$(MAKE) -C ./infra/terra/ docker
+
 clean:
-	@cd deploy/terra/docker && terraform destroy -auto-approve
+	$(MAKE) -C ./infra/terra/ clean
 
-reset: 
-	@docker rmi ubuntu-base:jammy
