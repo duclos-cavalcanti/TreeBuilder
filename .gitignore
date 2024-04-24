@@ -32,3 +32,6 @@ extract/*
 
 output-box/
 output-box/*
+
+.vagrant/
+.vagrant/*
