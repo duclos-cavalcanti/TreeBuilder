@@ -26,12 +26,6 @@ build {
         inline = var.commands
     }
 
-    post-processor "artifice" {
-        files = [
-          "ubuntu-base.box",
-        ]
-    }
-
     post-processor "vagrant" {
         keep_input_artifact = true
         provider_override   = "virtualbox"
