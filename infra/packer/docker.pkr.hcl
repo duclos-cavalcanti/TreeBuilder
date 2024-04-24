@@ -22,6 +22,12 @@ build {
     sources = ["source.docker.ubuntu"]
 
     provisioner "shell" {
+        inline = [ 
+            "apt-get update && apt-get install -y sudo"
+        ]
+    }
+
+    provisioner "shell" {
         inline = var.commands
     }
 
