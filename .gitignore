@@ -29,3 +29,6 @@ __pycache__/*
 
 extract/
 extract/*
+
+output-box/
+output-box/*
