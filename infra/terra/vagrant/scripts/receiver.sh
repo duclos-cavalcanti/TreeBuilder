@@ -6,12 +6,12 @@ port="$3"
 
 export ROLE="$role"
 
-TAR="/work/project.tar.gz"
+TAR="/work/extract/project.tar.gz"
 mkdir /work/project
 tar -xzf ${TAR} -C /work/project
 
-pushd /work/project
-    echo "-- ROLE: $role --"
-    python3 main.py -m manager -a client -i ${addr} -p ${port} -n ${role} &
-    bash
-popd
+# pushd /work/project
+#     echo "-- ROLE: $role --"
+#     python3 main.py -m manager -a client -i ${addr} -p ${port} -n ${role} &
+#     bash
+# popd

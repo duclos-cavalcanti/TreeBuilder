@@ -1,0 +1,35 @@
+Vagrant.configure("2") do |config|
+    config.vm.box = "ubuntu-base"
+
+    config.vm.define "manager" do |m|
+        m.vm.network "private_network", mac: "080020000001", ip: "192.168.56.101"
+        m.vm.synced_folder "./extract", "/work/extract", create: true
+        m.vm.provision "shell", path: "./scripts/manager.sh"
+        m.vm.provider "virtualbox" do |vb|
+            vb.gui = false
+            vb.memory = "1024"
+        end
+    end
+
+    config.vm.define "sender" do |s|
+        s.vm.network "private_network", mac: "080020000002",ip: "192.168.56.102"
+        s.vm.synced_folder "./extract", "/work/extract", create: true
+        s.vm.provision "shell", path: "./scripts/sender.sh"
+        s.vm.provider "virtualbox" do |vb|
+            vb.gui = false
+            vb.memory = "1024"
+            # vb.customize ["modifyvm", :id, "--cpus", "2"]
+            # vb.customize ["modifyvm", :id, "--cpuexecutioncap", "50"]
+        end
+    end
+
+    config.vm.define "receiver" do |r|
+        r.vm.network "private_network", mac: "080020000003",ip: "192.168.56.103"
+        r.vm.synced_folder "./extract", "/work/extract", create: true
+        r.vm.provision "shell", path: "./scripts/receiver.sh"
+        r.vm.provider "virtualbox" do |vb|
+            vb.gui = false
+            vb.memory = "1024"
+        end
+    end
+end
