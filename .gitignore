@@ -26,3 +26,6 @@ __pycache__/*
 *.terraform/
 *.terraform/*
 *.terraform.*
+
+extract/
+extract/*
