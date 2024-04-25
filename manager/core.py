@@ -1,62 +1,15 @@
-from .zmqsocket import ReplySocket, RequestSocket
+from .classes import Manager, Client, LOG_LEVEL
 
 import argparse
 import time
 
-class Manager():
-    def __init__(self, ip:str, port:str):
-        self.socket = ReplySocket(protocol="tcp", ip="*", port=port)
-
-    def bind(self):
-        self.socket.bind()
-    
-    def recv(self):
-        data = self.socket.recv_string()
-        return data
-
-    def send(self, string:str):
-        self.socket.send_string(string)
-
-class Client():
-    def __init__(self, ip:str, port:str):
-        self.socket = RequestSocket(protocol="tcp", ip=ip, port=port)
-
-    def connect(self):
-        self.socket.connect()
-
-    def recv(self):
-        data = self.socket.recv_string()
-        return data
-
-    def send(self, string:str):
-        self.socket.send_string(string)
-
-def server(args):
-    M = Manager(ip=args.addr, port=args.port) 
-    M.bind()
-    print(f"Bound to {args.addr}:{args.port}")
-
-    while(True):
-        data = M.recv()
-        reply = f"ACK: {data}"
-        print(f"Received: {data}")
-        M.send(reply) 
-        print(f"Sent: {reply}")
+def manager(args):
+    M = Manager(ip=args.addr, port=args.port, LOG_LEVEL=LOG_LEVEL.DEBUG) 
+    M.run()
 
 def client(args):
-    C = Client(ip=args.addr, port=args.port) 
-    C.connect()
-    print(f"Connected to {args.addr}:{args.port}")
-    i = 0
-    while(True):
-        data = f"Hello from {args.name} | {i}"
-        C.send(data)
-        print(f"Sent: {data}")
-        reply = C.recv()
-        print(f"Received: {reply}")
-        time.sleep(1)
-        i += 1
-
+    C = Client(ip=args.addr, port=args.port, LOG_LEVEL=LOG_LEVEL.DEBUG) 
+    C.run()
     
 
 def parse(rem=None):
@@ -105,7 +58,7 @@ def main(rem):
     args = parse(rem)
 
     match args.action:
-        case "server":  server(args)
+        case "server":  manager(args)
         case "client":  client(args)
 
     return
