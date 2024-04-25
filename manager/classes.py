@@ -1,4 +1,4 @@
-from .zmqsocket import Message, ReplySocket, RequestSocket, LOG_LEVEL
+from .zmqsocket import Message, MessageType, ReplySocket, RequestSocket, LOG_LEVEL
 
 import time
 
@@ -17,24 +17,16 @@ class Manager(Node):
 
         try:
             i = 0
-            last = 0
             while(True):
                 m = S.recv_message()
-                print(f"\tID: {m.id}")
-                print(f"\tTS: {m.ts}")
-                print(f"\tTS_DIFF: {m.ts - last}")
-                print(f"\tDATA: {m.data}")
-
-                last = m.ts
-
                 r = Message()
-                S.set_message(r, m.id, "ACK")
+                S.set_message(r, MessageType.ACK, m.id, "NONE")
                 S.send_message(r)
+
         except KeyboardInterrupt:
             print("\n-------------------")
             print("Manually Cancelled!")
-        finally:
-            S.close()
+        S.close()
 
 
 
@@ -51,17 +43,15 @@ class Client(Node):
             i = 0
             while(True):
                 m = Message()
-                S.set_message(m, i, "DATA")
+                S.set_message(m, MessageType.REPORT, i, "DATA")
                 S.send_message(m)
-
-                r = S.recv_message()
+                _ = S.recv_message()
                 time.sleep(1)
                 i += 1
         except KeyboardInterrupt:
             print("\n-------------------")
             print("Manually Cancelled!")
-        finally:
-            S.close()
+        S.close()
 
 
 

@@ -3,7 +3,7 @@ import time
 import sys
 
 from enum import Enum
-from .message_pb2 import Message
+from .message_pb2 import Message, MessageType
 
 class LOG_LEVEL(Enum):
     NONE = 1 
@@ -55,17 +55,26 @@ class Socket():
 
     def recv_message(self) -> Message:
         m = Message()
-        m.ParseFromString(self.recv())
+        m.ParseFromString(self.socket.recv())
+        string  = "RECV => {\n" + \
+                  f"    ID:   {m.id}\n" + \
+                  f"    TS:   {m.ts}\n" + \
+                  f"    TYPE: {MessageType.Name(m.type)}\n" + \
+                  f"    DATA: {m.data}\n}}"
+        self.log(f"{string}")
         return m
 
     def send_message(self, m:Message):
         data = m.SerializeToString()
-        return self.send(data)
+        ret = self.socket.send(data)
+        self.log(f"SENT")
+        return ret
 
-    def set_message(self, m:Message, id:int, data:str):
+    def set_message(self, m:Message, t:MessageType, id:int, data:str):
         ts = int(time.time_ns() / 1_000)
         m.id    = id
         m.ts    = ts
+        m.type  = t
         m.data  = data
 
 class ReplySocket(Socket):
