@@ -27,21 +27,15 @@ compress() {
 clean() {
     local terradir="infra/terra"
     pushd $terradir
-        pushd "vagrant"
-            if [ -d ".terraform" ]; then 
-                if [ -n "$(terraform state list)" ]; then 
-                    terraform destroy -auto-approve
+        for d in "vagrant" "docker" "gcp"; do 
+            pushd ${d}
+                if [ -d ".terraform" ]; then 
+                    if [ -n "$(terraform state list)" ]; then 
+                        terraform destroy -auto-approve
+                    fi
                 fi
-            fi
-        popd
-
-        pushd "docker"
-            if [ -d ".terraform" ]; then 
-                if [ -n "$(terraform state list)" ]; then 
-                    terraform destroy -auto-approve
-                fi
-            fi
-        popd
+            popd
+        done
     popd
     exit 0
 }
@@ -56,6 +50,8 @@ deploy() {
         test -z "${isdockerbuilt}" && echo "Docker hasn't been built."   && exit 1
     elif [ "$infra" == "vagrant" ]; then 
         test -z "${isvagrantbuilt}" && echo "Vagrant hasn't been built." && exit 1
+    elif [ "$infra" == "gcp" ]; then 
+        echo ""
     else 
         echo "Unsupported infrastructure: ${infra}"
         usage 
