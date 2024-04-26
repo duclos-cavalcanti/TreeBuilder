@@ -18,17 +18,17 @@ ifeq (, $(shell which terraform))
 $(error terraform not found)
 endif
 
-.PHONY: manager client docker vagrant clean
+.PHONY: manager worker docker vagrant clean
 all:
 
 proto:
 	cd manager && protoc --python_out . message.proto
 
 manager:
-	python3 main.py -m manager -a server -i localhost -p 9090
+	python3 main.py -m manager -a manager -i localhost -p 9090
 
-client:
-	python3 main.py -m manager -a client -i localhost -p 9090
+worker:
+	python3 main.py -m manager -a worker -i localhost -p 9090
 
 docker:
 	@./run.sh --build docker
@@ -37,6 +37,9 @@ docker:
 vagrant:
 	@./run.sh --build  vagrant
 	@./run.sh --deploy vagrant
+
+gcp:
+	@./run.sh --deploy gcp
 
 clean:
 	@./run.sh --clean
