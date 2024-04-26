@@ -56,12 +56,7 @@ class Socket():
     def recv_message(self) -> Message:
         m = Message()
         m.ParseFromString(self.socket.recv())
-        string  = "RECV => {\n" + \
-                  f"    ID:   {m.id}\n" + \
-                  f"    TS:   {m.ts}\n" + \
-                  f"    TYPE: {MessageType.Name(m.type)}\n" + \
-                  f"    DATA: {m.data}\n}}"
-        self.log(f"{string}")
+        self.log(f"RECV => {self.message_to_str(m)}")
         return m
 
     def send_message(self, m:Message):
@@ -76,6 +71,14 @@ class Socket():
         m.ts    = ts
         m.type  = t
         m.data  = data
+
+    def message_to_str(self, m:Message):
+        string =  "{\n" + \
+                  f"    ID:   {m.id}\n" + \
+                  f"    TS:   {m.ts}\n" + \
+                  f"    TYPE: {MessageType.Name(m.type)}\n" + \
+                  f"    DATA: {m.data}\n}}"
+        return string
 
 class ReplySocket(Socket):
     def __init__(self, protocol:str, ip:str, port:str, LOG_LEVEL:LOG_LEVEL):

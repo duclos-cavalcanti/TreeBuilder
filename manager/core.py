@@ -1,4 +1,4 @@
-from .classes import Manager, Client, LOG_LEVEL
+from .classes import Manager, Worker, LOG_LEVEL
 
 import argparse
 import time
@@ -7,9 +7,9 @@ def manager(args):
     M = Manager(ip=args.addr, port=args.port, LOG_LEVEL=LOG_LEVEL.DEBUG) 
     M.run()
 
-def client(args):
-    C = Client(ip=args.addr, port=args.port, LOG_LEVEL=LOG_LEVEL.DEBUG) 
-    C.run()
+def worker(args):
+    W = Worker(ip=args.addr, port=args.port, LOG_LEVEL=LOG_LEVEL.DEBUG) 
+    W.run()
     
 
 def parse(rem=None):
@@ -22,8 +22,8 @@ def parse(rem=None):
         "-a", "--action",
         type=str,
         required=False,
-        default="server",
-        choices=["server", "client"],
+        default="manager",
+        choices=["manager", "worker"],
         dest="action",
     )
 
@@ -58,8 +58,8 @@ def main(rem):
     args = parse(rem)
 
     match args.action:
-        case "server":  manager(args)
-        case "client":  client(args)
+        case "manager": manager(args)
+        case "worker":  worker(args)
 
     return
 

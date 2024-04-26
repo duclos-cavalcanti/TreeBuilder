@@ -30,7 +30,7 @@ class Manager(Node):
 
 
 
-class Client(Node):
+class Worker(Node):
     def __init__(self, ip:str, port:str, LOG_LEVEL=LOG_LEVEL.NONE):
         super().__init__()
         self.socket = RequestSocket(protocol="tcp", ip=ip, port=port, LOG_LEVEL=LOG_LEVEL)
