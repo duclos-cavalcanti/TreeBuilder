@@ -6,6 +6,20 @@ class Node():
     def __init__(self):
         pass
 
+    def set_message(self, m:Message, t:MessageType, id:int, data:str):
+        ts = int(time.time_ns() / 1_000)
+        m.id    = id
+        m.ts    = ts
+        m.type  = t
+        m.data  = data
+
+    def print_message(self, m:Message):
+        print(f"{{")
+        print(f"    ID: {m.id}")
+        print(f"    TS: {m.ts}")
+        print(f"    TYPE: {MessageType.Name(m.type)}")
+        print(f"    DATA: {m.data}\n}}")
+
 class Manager(Node):
     def __init__(self, ip:str, port:str, LOG_LEVEL=LOG_LEVEL.NONE):
         super().__init__()
@@ -18,9 +32,10 @@ class Manager(Node):
         try:
             i = 0
             while(True):
-                m = S.recv_message()
                 r = Message()
-                S.set_message(r, MessageType.ACK, m.id, "NONE")
+                m = S.recv_message()
+                self.print_message(m)
+                self.set_message(r, MessageType.ACK, m.id, "NONE")
                 S.send_message(r)
 
         except KeyboardInterrupt:
@@ -43,9 +58,10 @@ class Worker(Node):
             i = 0
             while(True):
                 m = Message()
-                S.set_message(m, MessageType.REPORT, i, "DATA")
+                self.set_message(m, MessageType.REPORT, i, "DATA")
                 S.send_message(m)
-                _ = S.recv_message()
+                r = S.recv_message()
+                self.print_message(r)
                 time.sleep(1)
                 i += 1
         except KeyboardInterrupt:
