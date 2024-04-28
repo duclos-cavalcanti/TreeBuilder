@@ -2,7 +2,7 @@
 
 usage() {
     echo "${0} [-h|--help] [-r|--remove <infra>] [-b|--build <infra>] [-d|--deploy <infra>] [-c|--clean <infra>]"
-    echo "infra: {docker, vagrant, gcp}"
+    echo "infra: {docker, vagrant, gcp, test}"
 }
 
 compress() {
@@ -27,8 +27,9 @@ compress() {
 clean() {
     local terradir="infra/terra"
     pushd $terradir
-        for d in "vagrant" "docker" "gcp"; do 
+        for d in "vagrant" "docker" "gcp" "test"; do 
             pushd ${d}
+            echo "CLEANING: ${d^^}"
                 if [ -d ".terraform" ]; then 
                     if [ -n "$(terraform state list)" ]; then 
                         terraform destroy -auto-approve
@@ -52,6 +53,8 @@ deploy() {
         test -z "${isvagrantbuilt}" && echo "Vagrant hasn't been built." && exit 1
     elif [ "$infra" == "gcp" ]; then 
         echo ""
+    elif [ "$infra" == "test" ]; then 
+        echo
     else 
         echo "Unsupported infrastructure: ${infra}"
         usage 
@@ -96,6 +99,8 @@ build() {
         test -n "${isdockerbuilt}" && echo "Docker built." && exit 0
     elif [ "$infra" == "vagrant" ]; then 
         test -n "${isvagrantbuilt}" && echo "Vagrant built." && exit 0
+    elif [ "$infra" == "gcp" ]; then 
+        echo
     else 
         echo "Unsupported infrastructure: ${infra}"
         usage 
@@ -103,7 +108,7 @@ build() {
     fi
     
     pushd $packerdir
-	packer build -var-file=./variables.pkr.hcl ${infra}.pkr.hcl
+	packer build -force -var-file=./variables.pkr.hcl ${infra}.pkr.hcl
     popd
     exit 0
 }

@@ -18,7 +18,7 @@ ifeq (, $(shell which terraform))
 $(error terraform not found)
 endif
 
-.PHONY: manager worker docker vagrant clean
+.PHONY: proto manager worker docker vagrant gcp image test clean
 all:
 
 proto:
@@ -40,6 +40,12 @@ vagrant:
 
 gcp:
 	@./run.sh --deploy gcp
+
+image:
+	@./run.sh --build gcp
+
+test:
+	@./run.sh --deploy test
 
 clean:
 	@./run.sh --clean
