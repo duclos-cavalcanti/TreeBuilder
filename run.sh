@@ -26,18 +26,18 @@ compress() {
 
 clean() {
     local terradir="infra/terra"
-    pushd $terradir
+    pushd $terradir > /dev/null
         for d in "vagrant" "docker" "gcp" "test"; do 
-            pushd ${d}
+            pushd ${d} > /dev/null
             echo "CLEANING: ${d^^}"
                 if [ -d ".terraform" ]; then 
                     if [ -n "$(terraform state list)" ]; then 
                         terraform destroy -auto-approve
                     fi
                 fi
-            popd
+            popd > /dev/null
         done
-    popd
+    popd > /dev/null
     exit 0
 }
 

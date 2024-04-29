@@ -18,7 +18,7 @@ ifeq (, $(shell which terraform))
 $(error terraform not found)
 endif
 
-.PHONY: proto manager worker docker vagrant gcp image test clean
+.PHONY: proto manager worker docker vagrant gcp image test clean rm
 all:
 
 proto:
@@ -41,14 +41,11 @@ vagrant:
 gcp:
 	@./run.sh --deploy gcp
 
-image:
-	@./run.sh --build gcp
-
-test:
-	@./run.sh --deploy test
-
 clean:
 	@./run.sh --clean
 	@find . -path ./jasper -prune -type f -name "*.tar.gz" -print0 | xargs -0 -I {} rm -v {}
+	
+rm: clean
+	@./run.sh --remove docker
 	
 
