@@ -3,6 +3,7 @@ commands = [
     "sudo add-apt-repository universe && sudo add-apt-repository multiverse",
     "sudo apt-get update -yq",
     "sudo apt-get install -yq curl wget cmake build-essential python3 python3-pip git vim gdb",
+    "sudo DEBIAN_FRONTEND=noninteractive apt-get install -yq python3-zmq python3-protobuf python3-yaml python3-ipython python3-ipdb",
     "sudo apt-get install -yq telnet ethtool net-tools netcat inetutils-traceroute tcpdump inetutils-ping iproute2",
     "sudo apt-get install -yq libprotobuf-c-dev libprotobuf-dev protobuf-compiler",
     "sudo apt-get install -yq libbpf-dev",
@@ -27,6 +28,5 @@ commands = [
     # "cd /work && sudo tar xvf dpdk-23.07.tar.xz",
     # "cd /work/dpdk-23.07 && sudo meson setup build && sudo ninja -C build install",
     # "export RTE_SDK=/work/dpdk-23.07",
-    "sudo apt-get install -yq python3-zmq python3-protobuf",
     "sudo ldconfig",
 ]

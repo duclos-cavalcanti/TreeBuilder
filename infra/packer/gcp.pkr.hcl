@@ -33,6 +33,9 @@ build {
     ]
 
     provisioner "shell" {
+        environment_vars = [
+            "DEBIAN_FRONTEND=noninteractive",
+        ]
         inline = var.commands
     }
 }
