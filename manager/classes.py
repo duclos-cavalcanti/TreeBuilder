@@ -3,6 +3,7 @@ from .utils     import read_yaml
 
 import os
 import time
+import random
 
 class Node():
     def __init__(self):
@@ -29,25 +30,31 @@ class Node():
         raise RuntimeError(f"{s}")
 
 class Manager(Node):
-    def __init__(self, ip:str, port:str, LOG_LEVEL=LOG_LEVEL.NONE):
+    def __init__(self, config:str, ip:str, port:str, LOG_LEVEL=LOG_LEVEL.NONE):
         super().__init__()
         self.socket = RequestSocket(protocol="tcp", ip=ip, port=port, LOG_LEVEL=LOG_LEVEL)
-
-    def read_config(self, path:str=""):
-        if not path:
-            path = os.path.join(os.getcwd(), "manager", "scripts", "default.yaml")
-        self.config     = read_yaml(path)
+        if not config: config = os.path.join(os.getcwd(), "manager", "scripts", "default.yaml")
+        self.config     = read_yaml(config)
         self.addrs      = self.config["addrs"]
         self.workers    = self.addrs[1:]
+        self.pool       = self.workers
         self.K          = self.config["hyperparameter"]
         self.n_nodes    = int(self.config["nodes"])
         self.steps      = self.config["steps"]
+
+    def print_pool(self):
+        print("POOL: {")
+        for i,p in enumerate(self.pool):
+            print(f"\t{i} => {p}")
+        print("}")
+
+    def print_step(self, s:dict):
+        print(f"-- STEP[{s['i']}]: {s['action']} => COMPLETE --")
 
     def fetch_step(self):
         if len(self.steps) == 0: return None
         s = self.steps[0]
         self.steps = self.steps[1:]
-        self.tick += 1
         s["i"] = self.tick
         return s
 
@@ -69,10 +76,38 @@ class Manager(Node):
             self.socket.send_message(self.set_message(Message(), MessageType.CONNECT, id, data))
             ok, r = self.socket.expect_message(MessageType.ACK, id, data)
             if not ok: self.err_message(r, f"EXPECTED MSG: ACK | {id}")
+
+        for addr in targets:
+            ip = addr.split(":")[0]
+            port = addr.split(":")[1]
             self.socket.disconnect("tcp", ip, port)
             print(f"DISCONNECTED => {ip}:{port}")
 
-        print(f"-- STEP[{step['i']}]: CONNECT => COMPLETE --")
+        self.print_step(step)
+
+    def select(self):
+        pool = self.pool
+        size = len(pool)
+        idx = random.randint(0, size - 1)
+        return idx
+
+    def root(self, step):
+        idx = self.select()
+        self.root = self.pool[idx]
+        self.pool.pop(idx)
+        print(f"CHOSEN: {idx} => {self.root}")
+        self.print_pool()
+        addr = self.root
+        ip = addr.split(":")[0]
+        port = addr.split(":")[1]
+        self.socket.connect("tcp", ip, port)
+        print(f"CONNECTED => {ip}:{port}")
+        id = self.tick 
+        data = "PARENT"
+        self.socket.send_message(self.set_message(Message(), MessageType.COMMAND, id, data))
+        ok, r = self.socket.expect_message(MessageType.ACK, id, data)
+        if not ok: self.err_message(r, f"EXPECTED MSG: ACK | {id}")
+        self.print_step(step)
 
     def noop(self, step):
         i = 0
@@ -81,20 +116,20 @@ class Manager(Node):
             time.sleep(1)
             print("SLEEPING...")
             i += 1
-        print(f"-- STEP[{step['i']}]: SLEEP => COMPLETE --")
+        self.print_step(step)
 
-    def run(self, config_path:str=""):
-        self.read_config(config_path)
+    def run(self):
         S = self.socket
-
         try:
             while(True):
                 step = self.fetch_step()
                 if not step: break
                 match step["action"]:
                     case "CONNECT": self.connect(step)
+                    case "ROOT":    self.root(step)
                     case "SLEEP":   self.noop(step)
                     case _:         raise NotImplementedError(f"ERR STEP[{step.i}]: {step.action}")
+                self.tick += 1
 
             print("FINISHED!")
         except KeyboardInterrupt:
@@ -114,15 +149,20 @@ class Worker(Node):
         data = f"{self.socket.ip}:{self.socket.port}"
         self.socket.send_message(self.set_message(Message(), MessageType.ACK, id, data))
 
+    def ack_command(self, m:Message):
+        id = m.id
+        data = m.data
+        self.socket.send_message(self.set_message(Message(), MessageType.ACK, id, data))
+
     def run(self):
         self.socket.bind("tcp", "*", self.socket.port)
-
         try:
             while(True):
                 m = self.socket.recv_message()
                 self.print_message(m)
                 match m.type:
                     case MessageType.CONNECT: self.ack_connect(m)
+                    case MessageType.COMMAND: self.ack_command(m)
                     case _:                   
                         id = m.id
                         t = MessageType.Name(MessageType.ACK)

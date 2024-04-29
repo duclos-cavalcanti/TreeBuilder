@@ -1,14 +1,20 @@
 name: DEFAULT
 infra: docker
 hyperparameter: 0.5
-nodes: 3
+nodes: 6
 addrs:
   - "localhost:9091"
   - "localhost:9092"
   - "localhost:9093"
+  - "localhost:9094"
+  - "localhost:9095"
+  - "localhost:9096"
 steps:
   - action: "CONNECT"
     description: "Establish connection with worker nodes."
+    val: 0
+  - action: "ROOT"
+    description: "Choose root node among worker nodes."
     val: 0
   - action: "SLEEP"
     description: "No operation."
