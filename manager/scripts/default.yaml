@@ -1,0 +1,15 @@
+name: DEFAULT
+infra: docker
+hyperparameter: 0.5
+nodes: 3
+addrs:
+  - "localhost:9091"
+  - "localhost:9092"
+  - "localhost:9093"
+steps:
+  - action: "CONNECT"
+    description: "Establish connection with worker nodes."
+    val: 0
+  - action: "SLEEP"
+    description: "No operation."
+    val: 20

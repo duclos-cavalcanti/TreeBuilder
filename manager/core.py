@@ -4,7 +4,7 @@ import argparse
 import time
 
 def manager(args):
-    M = Manager(ip=args.addr, port=args.port, LOG_LEVEL=LOG_LEVEL.DEBUG) 
+    M = Manager(ip=args.addr, port=args.port) 
     M.run()
 
 def worker(args):
@@ -43,7 +43,7 @@ def parse(rem=None):
     )
 
     arg_def.add_argument(
-        "-n", "--name",
+        "-s", "--script",
         type=str,
         required=False,
         dest="name",

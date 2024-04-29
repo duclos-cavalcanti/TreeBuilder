@@ -16,7 +16,6 @@ class Socket():
         self.protocol = protocol 
         self.ip = ip 
         self.port = port
-        self.format = f"{protocol}://{ip}:{port}"
         self.context = zmq.Context()
         self.socket  = self.context.socket(type)
 
@@ -24,13 +23,15 @@ class Socket():
         if (self.LOG_LEVEL == LOG_LEVEL.NONE): return 
         print(f"{string}")
 
-    def bind(self):
-        self.socket.bind(self.format)
+    def bind(self, protocol:str, ip:str, port:str):
+        format = f"{protocol}://{ip}:{port}"
+        self.socket.bind(format)
         self.log(f"BOUND => {self.ip}:{self.port}")
 
-    def connect(self):
-        self.socket.connect(self.format)
-        self.log(f"CONNECTED => {self.ip}:{self.port}")
+    def connect(self, protocol:str, ip:str, port:str):
+        format = f"{protocol}://{ip}:{port}"
+        self.socket.connect(format)
+        self.log(f"CONNECTED => {ip}:{port}")
 
     def close(self):
         self.socket.close()
@@ -63,17 +64,22 @@ class Socket():
         ret = self.send(data)
         return ret
 
+    def expect_message(self, t:MessageType, id:int, data:str) -> bool:
+        m = self.recv_message()
+        if m.type == t and m.id == id and m.data == data: return True, m
+        return False, m
+
 class ReplySocket(Socket):
     def __init__(self, protocol:str, ip:str, port:str, LOG_LEVEL:LOG_LEVEL):
         super().__init__(protocol, ip, port, zmq.REP, LOG_LEVEL)
 
-    def bind(self):
-        super().bind()
+    def bind(self, *args, **kwargs):
+        super().bind(*args, **kwargs)
 
 
 class RequestSocket(Socket):
     def __init__(self, protocol:str, ip:str, port:str, LOG_LEVEL:LOG_LEVEL):
         super().__init__(protocol, ip, port, zmq.REQ, LOG_LEVEL)
 
-    def connect(self):
-        super().connect()
+    def connect(self, *args, **kwargs):
+        super().connect(*args, **kwargs)
