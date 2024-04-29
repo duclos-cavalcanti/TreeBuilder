@@ -10,13 +10,19 @@ terraform {
 variable "names" {
     description = "List of container names"
     type        = list(string)
-    default     = ["manager", "receiver", "sender"]
+    default     = ["manager", "worker1", "worker2"]
+}
+
+variable "ports" {
+    description = "List of ports"
+    type        = list(string)
+    default     = ["9091", "9092", "9093"]
 }
 
 variable "entryscripts" {
     description = "List of container's entryscripts"
     type        = list(string)
-    default     = ["/manager.sh", "/receiver.sh", "/sender.sh"]
+    default     = ["manager.sh", "worker.sh", "worker.sh"]
 }
 
 variable "pwd" {
@@ -44,8 +50,8 @@ resource "docker_container" "ubuntu" {
     }
 
     upload {
-        file = var.entryscripts[count.index]
-        source = "${var.pwd}/scripts/${var.names[count.index]}.sh"
+        file = "/${var.entryscripts[count.index]}"
+        source = "${var.pwd}/scripts/${var.entryscripts[count.index]}"
         executable = true
     }
 
@@ -57,7 +63,7 @@ resource "docker_container" "ubuntu" {
 
     network_mode = "host"
 
-    entrypoint = ["/bin/bash", var.entryscripts[count.index], var.names[count.index], "localhost", "8081"]
+    entrypoint = ["/bin/bash", "/${var.entryscripts[count.index]}", var.names[count.index], "localhost", var.ports[count.index], count.index]
 
     rm         = true
     tty        = true
