@@ -63,10 +63,14 @@ class Manager(Node):
 
         for addr in targets:
             id = self.tick
-            data = f"{addr.split(':')[0]}:{addr.split(':')[1]}"
+            ip = addr.split(":")[0]
+            port = addr.split(":")[1]
+            data = f"{ip}:{port}"
             self.socket.send_message(self.set_message(Message(), MessageType.CONNECT, id, data))
             ok, r = self.socket.expect_message(MessageType.ACK, id, data)
             if not ok: self.err_message(r, f"EXPECTED MSG: ACK | {id}")
+            self.socket.disconnect("tcp", ip, port)
+            print(f"DISCONNECTED => {ip}:{port}")
 
         print(f"-- STEP[{step['i']}]: CONNECT => COMPLETE --")
 

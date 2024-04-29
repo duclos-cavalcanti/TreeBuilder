@@ -33,6 +33,11 @@ class Socket():
         self.socket.connect(format)
         self.log(f"CONNECTED => {ip}:{port}")
 
+    def disconnect(self, protocol:str, ip:str, port:str):
+        format = f"{protocol}://{ip}:{port}"
+        self.socket.disconnect(format)
+        self.log(f"DISCONNECTED => {ip}:{port}")
+
     def close(self):
         self.socket.close()
         self.log(f"CLOSED => {self.ip}:{self.port}")
