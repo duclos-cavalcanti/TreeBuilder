@@ -160,15 +160,16 @@ class Worker(Node):
         super().__init__(name, ip, port, zmq.REP, LOG_LEVEL)
 
     def parent(self, children:list, f:int):
-        print("PARENT")
         pnode = Node(f"{self.name}::PARENT", self.ip, "8081", zmq.REQ, self.LOG_LEVEL)
-        for c in children:
+        for addr in children:
+            print(f"{addr}")
             id = self.tick
-            data = [f"{c}"]
-            pnode.connect(c)
+            data = [f"{addr}"]
+            pnode.connect(addr)
             pnode.send_message(id, MessageType.CONNECT, f=MessageFlag.NONE, data=data)
             pnode.expect_message(id, MessageType.ACK, MessageFlag.NONE, data)
-            pnode.disconnect(c)
+            pnode.disconnect(addr)
+            print(f"ESTABLISHED => {addr}")
         pnode.socket.close()
 
     def connectACK(self, m:Message):
