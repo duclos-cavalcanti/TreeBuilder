@@ -81,7 +81,7 @@ resource "docker_container" "workers" {
 
     network_mode = "host"
 
-    entrypoint = ["/bin/bash", "/worker.sh", "worker", "localhost", var.ports[count.index], count.index]
+    entrypoint = ["/bin/bash", "/worker.sh", "worker${count.index}", "localhost", var.ports[count.index], count.index]
 
     rm         = true
     tty        = true

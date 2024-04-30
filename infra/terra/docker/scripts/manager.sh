@@ -13,7 +13,7 @@ tar -xzf ${TAR} -C /work/project
 
 pushd /work/project
     echo "-- ROLE: $role --"
-    python3 main.py -m manager -a manager -i ${addr} -p ${port}
+    python3 main.py -m manager -a manager -n ${role}  -i ${addr} -p ${port}
     # PID=$!
     # echo "PID: ${PID}"
     bash
