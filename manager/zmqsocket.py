@@ -1,9 +1,8 @@
 import zmq
-import time
 import sys
 
 from enum import Enum
-from .message_pb2 import Message, MessageType
+from .message_pb2 import Message, MessageType, MessageFlag
 
 class LOG_LEVEL(Enum):
     NONE = 1 
@@ -11,17 +10,19 @@ class LOG_LEVEL(Enum):
     ERROR = 3
 
 class Socket():
-    def __init__(self, protocol:str, ip:str, port:str, type, LOG_LEVEL:LOG_LEVEL):
-        self.LOG_LEVEL = LOG_LEVEL
+    def __init__(self, name:str, protocol:str, ip:str, port:str, type, LOG_LEVEL:LOG_LEVEL):
+        self.name = name
         self.protocol = protocol 
         self.ip = ip 
         self.port = port
         self.context = zmq.Context()
         self.socket  = self.context.socket(type)
+        self.i = 0
+        self.LOG_LEVEL = LOG_LEVEL
 
     def log(self, string:str):
         if (self.LOG_LEVEL == LOG_LEVEL.NONE): return 
-        print(f"{string}")
+        print(f"{self.name}::{string}")
 
     def bind(self, protocol:str, ip:str, port:str):
         format = f"{protocol}://{ip}:{port}"
@@ -45,12 +46,12 @@ class Socket():
     def recv(self, *args, **kwargs):
         ret = self.socket.recv(*args, **kwargs)
         sz = sys.getsizeof(ret)
-        self.log(f"RECV => {sz}")
+        self.log(f"RECV[{self.i}] => {sz}")
         return ret
 
     def send(self, *args, **kwargs):
         ret = self.socket.send(*args, **kwargs)
-        self.log(f"SENT")
+        self.log(f"SENT[{self.i}]")
         return ret
 
     def recv_string(self, *args, **kwargs):
@@ -69,22 +70,26 @@ class Socket():
         ret = self.send(data)
         return ret
 
-    def expect_message(self, t:MessageType, id:int, data:str) -> bool:
-        m = self.recv_message()
-        if m.type == t and m.id == id and m.data == data: return True, m
-        return False, m
-
 class ReplySocket(Socket):
-    def __init__(self, protocol:str, ip:str, port:str, LOG_LEVEL:LOG_LEVEL):
-        super().__init__(protocol, ip, port, zmq.REP, LOG_LEVEL)
+    def __init__(self, name:str, protocol:str, ip:str, port:str, LOG_LEVEL:LOG_LEVEL):
+        super().__init__(name, protocol, ip, port, zmq.REP, LOG_LEVEL)
 
     def bind(self, *args, **kwargs):
         super().bind(*args, **kwargs)
 
+    def send(self, *args, **kwargs):
+        super().send(*args, **kwargs)
+        self.i += 1
+
 
 class RequestSocket(Socket):
-    def __init__(self, protocol:str, ip:str, port:str, LOG_LEVEL:LOG_LEVEL):
-        super().__init__(protocol, ip, port, zmq.REQ, LOG_LEVEL)
+    def __init__(self, name:str, protocol:str, ip:str, port:str, LOG_LEVEL:LOG_LEVEL):
+        super().__init__(name, protocol, ip, port, zmq.REQ, LOG_LEVEL)
 
     def connect(self, *args, **kwargs):
         super().connect(*args, **kwargs)
+
+    def recv(self, *args, **kwargs):
+        ret = super().recv(*args, **kwargs)
+        self.i += 1
+        return ret

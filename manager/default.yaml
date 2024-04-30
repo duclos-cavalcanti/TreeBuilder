@@ -16,6 +16,3 @@ steps:
   - action: "ROOT"
     description: "Choose root node among worker nodes."
     val: 0
-  - action: "SLEEP"
-    description: "No operation."
-    val: 20

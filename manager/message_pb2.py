@@ -20,7 +20,7 @@ DESCRIPTOR = _descriptor.FileDescriptor(
   syntax='proto3',
   serialized_options=None,
   create_key=_descriptor._internal_create_key,
-  serialized_pb=b'\n\rmessage.proto\"K\n\x07Message\x12\n\n\x02id\x18\x01 \x01(\x05\x12\n\n\x02ts\x18\x02 \x01(\x03\x12\x1a\n\x04type\x18\x03 \x01(\x0e\x32\x0c.MessageType\x12\x0c\n\x04\x64\x61ta\x18\x04 \x01(\t*E\n\x0bMessageType\x12\x07\n\x03\x41\x43K\x10\x00\x12\x0b\n\x07\x43ONNECT\x10\x01\x12\x0b\n\x07\x43OMMAND\x10\x02\x12\n\n\x06REPORT\x10\x03\x12\x07\n\x03\x45RR\x10\x04\x62\x06proto3'
+  serialized_pb=b'\n\rmessage.proto\"g\n\x07Message\x12\n\n\x02id\x18\x01 \x01(\x05\x12\n\n\x02ts\x18\x02 \x01(\x03\x12\x1a\n\x04type\x18\x03 \x01(\x0e\x32\x0c.MessageType\x12\x1a\n\x04\x66lag\x18\x04 \x01(\x0e\x32\x0c.MessageFlag\x12\x0c\n\x04\x64\x61ta\x18\x05 \x03(\t*<\n\x0bMessageType\x12\x07\n\x03\x41\x43K\x10\x00\x12\x0b\n\x07\x43ONNECT\x10\x01\x12\x0b\n\x07\x43OMMAND\x10\x02\x12\n\n\x06REPORT\x10\x03*.\n\x0bMessageFlag\x12\x08\n\x04NONE\x10\x00\x12\n\n\x06PARENT\x10\x01\x12\t\n\x05\x43HILD\x10\x02\x62\x06proto3'
 )
 
 _MESSAGETYPE = _descriptor.EnumDescriptor(
@@ -50,25 +50,53 @@ _MESSAGETYPE = _descriptor.EnumDescriptor(
       serialized_options=None,
       type=None,
       create_key=_descriptor._internal_create_key),
+  ],
+  containing_type=None,
+  serialized_options=None,
+  serialized_start=122,
+  serialized_end=182,
+)
+_sym_db.RegisterEnumDescriptor(_MESSAGETYPE)
+
+MessageType = enum_type_wrapper.EnumTypeWrapper(_MESSAGETYPE)
+_MESSAGEFLAG = _descriptor.EnumDescriptor(
+  name='MessageFlag',
+  full_name='MessageFlag',
+  filename=None,
+  file=DESCRIPTOR,
+  create_key=_descriptor._internal_create_key,
+  values=[
     _descriptor.EnumValueDescriptor(
-      name='ERR', index=4, number=4,
+      name='NONE', index=0, number=0,
+      serialized_options=None,
+      type=None,
+      create_key=_descriptor._internal_create_key),
+    _descriptor.EnumValueDescriptor(
+      name='PARENT', index=1, number=1,
+      serialized_options=None,
+      type=None,
+      create_key=_descriptor._internal_create_key),
+    _descriptor.EnumValueDescriptor(
+      name='CHILD', index=2, number=2,
       serialized_options=None,
       type=None,
       create_key=_descriptor._internal_create_key),
   ],
   containing_type=None,
   serialized_options=None,
-  serialized_start=94,
-  serialized_end=163,
+  serialized_start=184,
+  serialized_end=230,
 )
-_sym_db.RegisterEnumDescriptor(_MESSAGETYPE)
+_sym_db.RegisterEnumDescriptor(_MESSAGEFLAG)
 
-MessageType = enum_type_wrapper.EnumTypeWrapper(_MESSAGETYPE)
+MessageFlag = enum_type_wrapper.EnumTypeWrapper(_MESSAGEFLAG)
 ACK = 0
 CONNECT = 1
 COMMAND = 2
 REPORT = 3
-ERR = 4
+NONE = 0
+PARENT = 1
+CHILD = 2
 
 
 
@@ -102,9 +130,16 @@ _MESSAGE = _descriptor.Descriptor(
       is_extension=False, extension_scope=None,
       serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
     _descriptor.FieldDescriptor(
-      name='data', full_name='Message.data', index=3,
-      number=4, type=9, cpp_type=9, label=1,
-      has_default_value=False, default_value=b"".decode('utf-8'),
+      name='flag', full_name='Message.flag', index=3,
+      number=4, type=14, cpp_type=8, label=1,
+      has_default_value=False, default_value=0,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+    _descriptor.FieldDescriptor(
+      name='data', full_name='Message.data', index=4,
+      number=5, type=9, cpp_type=9, label=3,
+      has_default_value=False, default_value=[],
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
@@ -121,12 +156,14 @@ _MESSAGE = _descriptor.Descriptor(
   oneofs=[
   ],
   serialized_start=17,
-  serialized_end=92,
+  serialized_end=120,
 )
 
 _MESSAGE.fields_by_name['type'].enum_type = _MESSAGETYPE
+_MESSAGE.fields_by_name['flag'].enum_type = _MESSAGEFLAG
 DESCRIPTOR.message_types_by_name['Message'] = _MESSAGE
 DESCRIPTOR.enum_types_by_name['MessageType'] = _MESSAGETYPE
+DESCRIPTOR.enum_types_by_name['MessageFlag'] = _MESSAGEFLAG
 _sym_db.RegisterFileDescriptor(DESCRIPTOR)
 
 Message = _reflection.GeneratedProtocolMessageType('Message', (_message.Message,), {

@@ -5,12 +5,18 @@ enum MessageType {
     CONNECT = 1;
     COMMAND = 2;
     REPORT = 3;
-    ERR = 4;
+}
+
+enum MessageFlag {
+    NONE = 0;
+    PARENT = 1;
+    CHILD = 2;
 }
 
 message Message {
     int32 id = 1;
     int64 ts = 2;
     MessageType type = 3;
-    string data = 4;
+    MessageFlag flag = 4;
+    repeated string data = 5;
 }

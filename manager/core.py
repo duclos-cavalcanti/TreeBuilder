@@ -4,13 +4,12 @@ import argparse
 import time
 
 def manager(args):
-    M = Manager(config=args.script, ip=args.addr, port=args.port) 
+    M = Manager(args.name, ip=args.addr, port=args.port, LOG_LEVEL=LOG_LEVEL.NONE) 
     M.run()
 
 def worker(args):
-    W = Worker(ip=args.addr, port=args.port, LOG_LEVEL=LOG_LEVEL.DEBUG) 
+    W = Worker(args.name, ip=args.addr, port=args.port, LOG_LEVEL=LOG_LEVEL.NONE) 
     W.run()
-    
 
 def parse(rem=None):
     arg_def = argparse.ArgumentParser(
@@ -48,6 +47,14 @@ def parse(rem=None):
         default="",
         required=False,
         dest="script",
+    )
+
+    arg_def.add_argument(
+        "-n", "--name",
+        type=str,
+        default="",
+        required=True,
+        dest="name",
     )
 
     if not rem: args = arg_def.parse_args()
