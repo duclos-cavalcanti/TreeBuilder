@@ -7,12 +7,6 @@ terraform {
     }
 }
 
-provider "google" {
-    project = "multicast1"
-    region  = "us-east4"
-    zone    = "us-east4-a"
-}
-
 resource "google_storage_bucket" "bucket" {
     name     = var.bucket
     location = "us-east4"
@@ -61,7 +55,7 @@ resource "google_compute_instance" "custom_instance" {
 
     metadata = {
         "enable-oslogin" = "TRUE"
-        "startup-script" = templatefile("./scripts/start.sh", {
+        "startup-script" = templatefile("${var.pwd}/modules/test/scripts/start.sh", {
             ROLE         = "TEST",
             CLOUD        = "GCP",
             BUCKET       = var.bucket
