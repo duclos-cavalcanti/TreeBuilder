@@ -23,6 +23,7 @@ all:
 
 proto:
 	cd manager && protoc --python_out . message.proto
+	cd src/utils && protoc --cpp_out . message.proto
 
 manager:
 	python3 main.py -m manager -a manager -i localhost -p 9090
