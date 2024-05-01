@@ -27,12 +27,12 @@ compress() {
 clean() {
     local terradir="infra/terra"
     pushd $terradir > /dev/null
-        for d in "vagrant" "docker" "gcp" "test"; do 
+        for d in "vagrant" "docker" "gcp"; do 
             pushd ${d} > /dev/null
             echo "CLEANING: ${d^^}"
                 if [ -d ".terraform" ]; then 
                     if [ -n "$(terraform state list)" ]; then 
-                        terraform destroy -auto-approve
+                        terraform destroy -auto-approve -var pwd=$(pwd)
                     fi
                 fi
             popd > /dev/null
@@ -43,6 +43,7 @@ clean() {
 
 deploy() {
     local infra="$1"
+    local mode="$2"
     local terradir="infra/terra"
     local isdockerbuilt="$(docker images -q ubuntu-base:jammy)"
     local isvagrantbuilt="$(vagrant box list | grep ubuntu-base)"
@@ -53,8 +54,6 @@ deploy() {
         test -z "${isvagrantbuilt}" && echo "Vagrant hasn't been built." && exit 1
     elif [ "$infra" == "gcp" ]; then 
         echo ""
-    elif [ "$infra" == "test" ]; then 
-        echo
     else 
         echo "Unsupported infrastructure: ${infra}"
         usage 
@@ -64,7 +63,7 @@ deploy() {
     compress "$terradir/${infra}/extract"
     pushd $terradir/${infra}
         terraform init
-        terraform apply -auto-approve -var pwd=$(pwd)
+        terraform apply -auto-approve -var pwd=$(pwd) -var mode=${mode}
     popd
     exit 0
 }
@@ -114,37 +113,42 @@ build() {
 }
 
 main() {
-    while true; do
+    action=""
+    infra=""
+    mode=""
+    while [ $# -gt 0 ]; do
     case "$1" in
         -h | --help)
             usage 
             exit 0
             ;;
 
-        -b | --build)
-            arg="$2"
+        -m | --mode)
+            mode="$2"
             shift 2
-            build ${arg}
-            break
+            ;;
+
+        -b | --build)
+            action="build"
+            infra="$2"
+            shift 2
             ;;
 
         -r | --remove)
-            arg="$2"
+            action="remove"
+            infra="$2"
             shift 2
-            remove ${arg}
-            break
             ;;
 
         -c | --clean)
-            clean
-            break
+            action="clean"
+            shift 1
             ;;
 
         -d | --deploy)
-            arg="$2"
+            action="deploy"
+            infra="$2"
             shift 2
-            deploy ${arg}
-            break
             ;;
         *)
             usage 
@@ -152,6 +156,9 @@ main() {
             ;;
     esac
     done
+
+    echo "ACTION=$action INFRA=$infra MODE=$mode"
+    $action $infra $mode
 }
 
 main $@

@@ -18,18 +18,16 @@ ifeq (, $(shell which terraform))
 $(error terraform not found)
 endif
 
-.PHONY: proto manager worker docker vagrant gcp image test clean rm
+.PHONY: proto udp docker vagrant gcp image clean rm
 all:
 
 proto:
 	cd manager && protoc --python_out . message.proto
 	cd src/utils && protoc --cpp_out . message.proto
 
-manager:
-	python3 main.py -m manager -a manager -i localhost -p 9090
-
-worker:
-	python3 main.py -m manager -a worker -i localhost -p 9090
+udp:
+	@./run.sh --build docker
+	@./run.sh --deploy docker --mode udp
 
 docker:
 	@./run.sh --build docker
@@ -39,8 +37,11 @@ vagrant:
 	@./run.sh --build  vagrant
 	@./run.sh --deploy vagrant
 
+image:
+	@./run.sh --build gcp
+
 gcp:
-	@./run.sh --deploy gcp
+	@./run.sh --deploy gcp --mode default
 
 clean:
 	@./run.sh --clean
