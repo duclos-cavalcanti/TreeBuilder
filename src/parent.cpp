@@ -6,12 +6,10 @@
 #include <string.h>
 #include <unistd.h>
 
-#define SEND_ROLE    2
-#define RECV_ROLE    2
-#define RECV_PORT    8081
+#define PORT    8082
 
 void usage(int e) {
-    std::cout << "Usage: ./project [-r [client,server]] [-h]" << std::endl;
+    std::cout << "Usage: ./parent [-i [IP_ADDR, IP_ADDR, ...]] [-h]" << std::endl;
     exit(e);
 }
 

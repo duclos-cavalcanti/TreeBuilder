@@ -1,22 +1,15 @@
 syntax = "proto3";
 
 enum MessageType {
-    ACK = 0;
-    CONNECT = 1;
-    COMMAND = 2;
-    REPORT = 3;
-}
-
-enum MessageFlag {
-    NONE = 0;
-    PARENT = 1;
-    CHILD = 2;
+    START = 0;
+    ONGOING = 1;
+    END = 2;
 }
 
 message Message {
     int32 id = 1;
     int64 ts = 2;
     MessageType type = 3;
-    MessageFlag flag = 4;
-    repeated string data = 5;
+    int64 dur = 4;
+    int64 rate = 5;
 }
