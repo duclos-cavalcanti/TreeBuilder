@@ -10,8 +10,8 @@ find_package(Git REQUIRED)
 find_package(PkgConfig REQUIRED)
 find_package(Protobuf REQUIRED)
 
-pkg_search_module(PROTOBUF   REQUIRED protobuf)
-pkg_search_module(CPPZMQ    REQUIRED cppzmq)
+pkg_search_module(PROTOBUF REQUIRED protobuf)
+pkg_search_module(CPPZMQ REQUIRED cppzmq)
 
 if(NOT PROTOBUF_FOUND)
     message(FATAL_ERROR "PROTOBUF WAS NOT FOUND BY PKG-CONFIG.")
@@ -23,7 +23,8 @@ endif()
 
 # include(dpdk)
 # include(iouring)
-include(proto)
+# include(proto)
+# include(debug)
 
 set(DEBUG_FLAGS "-g")
 set(OPT_FLAGS "-O0")
@@ -31,15 +32,23 @@ set(WARN_FLAGS "-Wall")
 set(GCC_COMPILE_FLAGS   "${DEBUG_FLAGS} ${OPT_FLAGS} ${WARN_FLAGS}")
 set(CMAKE_CXX_FLAGS     ${CMAKE_CXX_FLAGS} ${GCC_COMPILE_FLAGS})
 
-file(GLOB SOURCES           "src/*.cpp")
+file(GLOB SOURCES           "src/utils/*.cpp")
 set(PROJECT_SOURCES         ${SOURCES} ${PROTO_SRCS} ${PROTO_HDRS})
-set(PROJECT_INCLUDES        ${PROJECT_SOURCE_DIR}/src/ ${CPPZMQ_INCLUDE_DIRS} ${PROTOBUF_INCLUDE_DIRS} ${PROJECT_SOURCE_DIR}/build)
+set(PROJECT_INCLUDES        ${PROJECT_SOURCE_DIR}/src/ ${CPPZMQ_INCLUDE_DIRS} ${PROTOBUF_INCLUDE_DIRS} )
 set(PROJECT_LIBRARIES       ${CPPZMQ_LIBRARIES} ${PROTOBUF_LIBRARIES})
 
+set(PARENT "parent")
+set(CHILD  "child")
+
 include_directories(${PROJECT_INCLUDES})
-add_executable(${PROJECT_NAME} ${PROJECT_SOURCES})
-target_compile_definitions(${PROJECT_NAME} PUBLIC ZMQ_BUILD_DRAFT_API=1)
-target_link_libraries(${PROJECT_NAME} PUBLIC ${PROJECT_LIBRARIES})
+add_executable(${PARENT} "${PROJECT_SOURCE_DIR}/src/parent.cpp" ${PROJECT_SOURCES})
+target_compile_definitions(${PARENT} PUBLIC ZMQ_BUILD_DRAFT_API=1)
+target_link_libraries(${PARENT} PUBLIC ${PROJECT_LIBRARIES})
+
+include_directories(${PROJECT_INCLUDES})
+add_executable(${CHILD} "${PROJECT_SOURCE_DIR}/src/child.cpp" ${PROJECT_SOURCES})
+target_compile_definitions(${CHILD} PUBLIC ZMQ_BUILD_DRAFT_API=1)
+target_link_libraries(${CHILD} PUBLIC ${PROJECT_LIBRARIES})
 
 set_property(DIRECTORY PROPERTY ADDITIONAL_CLEAN_FILES
     "${PROJECT_SOURCE_DIR}/build/CMakeFiles"
@@ -49,17 +58,3 @@ set_property(DIRECTORY PROPERTY ADDITIONAL_CLEAN_FILES
     "${PROJECT_SOURCE_DIR}/build/lib"
     # "${PROJECT_SOURCE_DIR}/build/compile_commands.json"
 )
-
-add_custom_target("run"
-    DEPENDS ${PROJECT_NAME}
-    WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
-    COMMAND ./bin/${PROJECT_NAME}
-)
-
-add_custom_target("debug"
-    DEPENDS ${PROJECT_NAME}
-    WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
-    COMMAND gdb -tui -x ./GDBCOMMANDS --args ./bin/${PROJECT_NAME}
-)
-
-# include(debug)
