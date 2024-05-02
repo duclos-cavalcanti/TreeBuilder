@@ -13,10 +13,16 @@ variable "pwd" {
     default     = "/path"
 }
 
+variable "addrs" {
+    description = "List of addrs"
+    type        = list(string)
+    default     = ["localhost:8084"]
+}
+
 variable "ports" {
     description = "List of ports"
     type        = list(string)
-    default     = ["8083"]
+    default     = ["8084"]
 }
 
 resource "docker_container" "parent" {
@@ -37,7 +43,7 @@ resource "docker_container" "parent" {
 
     network_mode = "host"
 
-    entrypoint = ["/bin/bash", "/parent.sh", "parent", "localhost", "9091"]
+    entrypoint = concat(["/bin/bash", "/parent.sh", "parent"], var.addrs)
 
     rm         = true
     tty        = true
@@ -63,7 +69,7 @@ resource "docker_container" "children" {
 
     network_mode = "host"
 
-    entrypoint = ["/bin/bash", "/child.sh", "child${count.index}", "localhost", var.ports[count.index], count.index]
+    entrypoint = ["/bin/bash", "/child.sh", "child${count.index}", "localhost", var.ports[count.index]]
 
     rm         = true
     tty        = true

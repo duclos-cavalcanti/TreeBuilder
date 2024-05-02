@@ -1,9 +1,10 @@
 #!/bin/bash -xe
 
-role="$1"
-addr="$2"
-port="$3"
-id="$4"
+echo "ARGS: $@"
+role="$1" 
+shift 1
+
+addrs="$@"
 
 export ROLE="$role"
 
@@ -14,8 +15,11 @@ tar -xzf ${TAR} -C /work/project
 mkdir /work/project/build
 pushd /work/project/build
     echo "-- ROLE: $role --"
-    ls
     cmake ..
     make
+    pushd /work/project/
+        echo ./bin/parent -a ${addrs} -r 10 -d 10
+        ./bin/parent -a ${addrs} -r 10 -d 10
+    popd
     bash
 popd
