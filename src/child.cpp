@@ -77,7 +77,9 @@ int child(void) {
 
     while(1) {
         n = recv_udp(sockfd, buf, sizeof(buf), &parentaddr);
-        if (n < sizeof(MsgUDP_t)) continue;
+        if (n < sizeof(MsgUDP_t)) {
+            continue;
+        }
 
         msg = reinterpret_cast<MsgUDP_t*>(buf);
 
@@ -86,6 +88,9 @@ int child(void) {
         } else if (msg->type == MsgType_t::END) {
             fprintf(stdout, "CHILD: STREAM END\n");
             break;
+        } else {
+            fprintf(stdout, "CHILD: STREAM ONGOING\n");
+
         }
 
         msg->print();

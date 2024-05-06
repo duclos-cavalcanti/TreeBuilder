@@ -3,6 +3,8 @@
 echo "ARGS: $@"
 role="$1" 
 shift 1
+rate=10
+dur=10
 
 addrs="$@"
 
@@ -18,8 +20,9 @@ pushd /work/project/build
     cmake ..
     make
     pushd /work/project/
-        echo ./bin/parent -a ${addrs} -r 10 -d 10
-        ./bin/parent -a ${addrs} -r 10 -d 10
+        command="./bin/parent -a ${addrs} -r ${rate} -d ${dur}"
+        echo ${command}
+        ${command}
         echo "RET: ${?}"
     popd
     bash

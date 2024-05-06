@@ -109,6 +109,11 @@ int parent(void) {
     for (int j = 0; j<lim; j++) {
         fprintf(stdout, "PARENT: STREAM START[%d] => IP=%s | PORT=%d \n", j, inet_ntoa(addrs[j].sin_addr), ntohs(addrs[j].sin_port));
         n = send_udp(&m, sockfd, &addrs[j], sizeof(addrs[j]));
+
+        if ( n < 0 ) {
+            fprintf(stderr, "Failed to send\n");
+            exit(EXIT_FAILURE);
+        }
     }
 
     for (int64_t i = 0; i < total; i++) {
