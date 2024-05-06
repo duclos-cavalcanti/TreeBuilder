@@ -18,8 +18,8 @@ ifeq (, $(shell which terraform))
 $(error terraform not found)
 endif
 
-.PHONY: proto udp docker vagrant gcp image clean rm
-all:
+.PHONY: build proto udp docker vagrant gcp image clean rm
+all: build
 
 proto:
 	cd manager && protoc --python_out . message.proto
@@ -28,6 +28,10 @@ proto:
 udp:
 	@./run.sh --build docker
 	@./run.sh --deploy docker --mode udp
+
+build:
+	@cd build && cmake ..
+	@cd build && make
 
 docker:
 	@./run.sh --build docker
