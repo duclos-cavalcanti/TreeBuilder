@@ -19,6 +19,7 @@ pushd /work/project/build
     pushd /work/project/
         echo ./bin/child -i ${addr} -p ${port}
         ./bin/child -i ${addr} -p ${port}
+        echo "RET: ${?}"
     popd
     bash
 popd

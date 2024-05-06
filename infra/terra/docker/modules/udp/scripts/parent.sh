@@ -20,6 +20,7 @@ pushd /work/project/build
     pushd /work/project/
         echo ./bin/parent -a ${addrs} -r 10 -d 10
         ./bin/parent -a ${addrs} -r 10 -d 10
+        echo "RET: ${?}"
     popd
     bash
 popd

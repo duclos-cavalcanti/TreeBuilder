@@ -8,13 +8,7 @@
 #include <cstdlib>
 #include <unistd.h>
 
-#include <sys/socket.h>
-#include <sys/types.h>
-#include <netinet/in.h>
-#include <netinet/ip.h>
-#include <arpa/inet.h>
-
-#include "main.hpp"
+#include "common.hpp"
 
 std::vector<struct sockaddr_in> addrs;
 int rate = 0, duration = 0;
@@ -34,38 +28,17 @@ std::vector<std::string> split(const std::string& s, char delimiter) {
     }
 
     if (tokens.size() != 2) {
-        fprintf(stderr, "Expected addr of form 'ip:port'\n");
+        fprintf(stderr, "EXPECTED ADDR: 'IP:PORT' |  RECEIVED: %s\n", s.c_str());
         exit(EXIT_FAILURE);
     } else {
-        fprintf(stderr, "IP=%s |  PORT=%s\n", tokens[0].c_str(), tokens[1].c_str());
+        fprintf(stdout, "IP=%s;PORT=%s\n", tokens[0].c_str(), tokens[1].c_str());
     }
     
     return tokens;
 }
 
-int generate(std::vector<std::string>& str_addrs) {
-    std::string ip; 
-    int port;
-    for (const auto& s : str_addrs) {
-        auto parts = split(s, ':');
-        ip = parts[0];
-        port = atoi(parts[1].c_str());
-
-        struct sockaddr_in addr;
-        addr.sin_family = AF_INET,
-        addr.sin_port = htons(port),
-        addr.sin_addr.s_addr  = inet_addr(ip.c_str());
-
-        addrs.push_back(addr);
-    }
-
-
-    return 0;
-}
-
 int parse(int argc, char **argv) {
-    std::vector<std::string> addrs;
-    int opt = 0;
+    int opt = 0, opti = 0, i = 0;
     int ret = 0;
     while ( (opt = getopt (argc, argv, "ha:r:d:") ) != -1 ) {
         switch (opt) {
@@ -74,18 +47,33 @@ int parse(int argc, char **argv) {
             break;
 
         case 'a':
-            while (optind < argc && argv[optind][0] != '-') {
-                addrs.push_back(argv[optind]);
-                optind++;
+            opti = optind - 1;
+            while (optind < argc && argv[opti][0] != '-') {
+                fprintf(stdout, "ADDR[%d]: ", i++);
+
+                auto parts = split(std::string {argv[opti]}, ':');
+                std::string ip = parts[0];
+                int port = atoi(parts[1].c_str());
+
+                struct sockaddr_in addr;
+                addr.sin_family = AF_INET,
+                addr.sin_port = htons(port),
+                addr.sin_addr.s_addr  = inet_addr(ip == "localhost" ? "127.0.0.1" : ip.c_str());
+
+                addrs.push_back(addr);
+                opti++;
             }
+            optind = opti - 1;
             break;
 
         case 'r':
             rate = atoi(optarg);
+            fprintf(stdout, "RATE=%d\n", rate);
             break;
 
         case 'd':
             duration = atoi(optarg);
+            fprintf(stdout, "DURATION=%d\n", duration);
             break;
 
         default:
@@ -97,40 +85,46 @@ int parse(int argc, char **argv) {
     if (addrs.empty()) usage(EXIT_FAILURE);
     if (optind > argc) usage(EXIT_FAILURE);
 
-    generate(addrs);
-
     return ret;
 }
 
 int parent(void) {
-    std::vector<struct sockaddr_in> sockaddrs;
     int sockfd;
-    int sz = static_cast<int>(sizeof(MsgUDP_t));
-
     if ( (sockfd = socket(AF_INET, SOCK_DGRAM, 0)) < 0 ) {
         fprintf(stderr, "Failed to create socket\n");
         exit(EXIT_FAILURE);
     }
+    fprintf(stdout, "SOCKET BOUND\n");
 
-    int cnt = 0, n;
+    int cnt = 0, n, lim = addrs.size();
     auto total = (int64_t)rate * duration;
     auto now  = std::chrono::system_clock::now();
     auto step = std::chrono::duration<double>(1) / rate;
 
+    fprintf(stdout, "PARENT: PACKETS=%lu | DURATION=%d | RATE=%d\n", total, duration, rate);
+
+    MsgUDP_t m = MsgUDP();
+    m.type = MsgType_t::START;
+
+    for (int j = 0; j<lim; j++) {
+        fprintf(stdout, "PARENT: STREAM START[%d] => IP=%s | PORT=%d \n", j, inet_ntoa(addrs[j].sin_addr), ntohs(addrs[j].sin_port));
+        n = send_udp(&m, sockfd, &addrs[j], sizeof(addrs[j]));
+    }
+
     for (int64_t i = 0; i < total; i++) {
-        MsgUDP_t* msg = { 0 };
-        msg->id = (cnt++);
-        for (auto& addr : addrs) {
-            n = sendto(sockfd, msg, sz, 0, (struct sockaddr *)&addr, sizeof(addr));
-            if ( n < 0 ) {
-                fprintf(stderr, "Failed to send\n");
-                exit(EXIT_FAILURE);
-            }
+        MsgUDP_t m = MsgUDP();
+        m.id = (cnt++);
+        if (i == (total - 1)) m.type = MsgType_t::END;
+        else                  m.type = MsgType_t::ONGOING;
+
+        for (int j = 0; j<lim; j++) {
+            n = send_udp(&m, sockfd, &addrs[j], sizeof(addrs[j]));
         }
 
         std::this_thread::sleep_until(now + (step * i));
     }
 
+    fprintf(stdout, "PARENT: STREAM END\n");
     close(sockfd);
     return 0;
 
@@ -138,6 +132,7 @@ int parent(void) {
 
 int main(int argc, char **argv) {
     parse(argc, argv);
+    parent();
 
 	return 0;
 }

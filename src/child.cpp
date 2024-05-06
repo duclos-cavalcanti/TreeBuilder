@@ -11,7 +11,7 @@
 #include <netinet/ip.h>
 #include <arpa/inet.h>
 
-#include "main.hpp"
+#include "common.hpp"
 
 static char* IP = NULL;
 static char* PORT = NULL;
@@ -47,20 +47,20 @@ int parse(int argc, char **argv) {
     if ((!IP) || (!PORT)) usage(EXIT_FAILURE);
     if (optind > argc) usage(EXIT_FAILURE);
 
-    fprintf(stdout, "IP: %s | PORT: %s\n", IP, PORT);
+    fprintf(stdout, "IP: %s;PORT: %s\n", IP, PORT);
     return ret;
 }
 
 int child(void) {
-    int sockfd, port, n, len;
+    int sockfd, port, n;
+    static char buf[1000] = { 0 };
+    struct sockaddr_in sockaddr = { 0 }, parentaddr = { 0 };
+    std::string ip { IP };
     MsgUDP_t* msg;
-    int sz = static_cast<int>(sizeof(MsgUDP_t));
-    char buf[1000] = { 0 };
-    struct sockaddr_in sockaddr = { 0 }, _addr = { 0 };
 
     sockaddr.sin_family       = AF_INET;
     sockaddr.sin_port         = htons(port = atoi(PORT));
-    sockaddr.sin_addr.s_addr  = inet_addr(IP);
+    sockaddr.sin_addr.s_addr  = inet_addr(ip == "localhost" ? "127.0.0.1" : ip.c_str());
 
     if ( (sockfd = socket(AF_INET, SOCK_DGRAM, 0)) < 0 ) {
         fprintf(stderr, "Failed to create socket\n");
@@ -72,15 +72,22 @@ int child(void) {
         exit(EXIT_FAILURE);
     }
 
-    while(1) {
-        if ( (n = recvfrom(sockfd, buf, sizeof(buf), 0, (struct sockaddr*)&_addr, (socklen_t *) &len)) < 0 ) {
-            fprintf(stderr, "Failed to receive\n");
-            exit(EXIT_FAILURE);
-        }
+    fprintf(stdout, "CHILD: IP=%s | PORT=%d\n", IP, port);
+    fprintf(stdout, "CHILD: WAITING ON STREAM START...\n");
 
-        if (n < sz) continue;
+    while(1) {
+        n = recv_udp(sockfd, buf, sizeof(buf), &parentaddr);
+        if (n < sizeof(MsgUDP_t)) continue;
 
         msg = reinterpret_cast<MsgUDP_t*>(buf);
+
+        if (msg->type == MsgType_t::START) { 
+            fprintf(stdout, "CHILD: STREAM START => IP=%s | PORT=%i\n", inet_ntoa(parentaddr.sin_addr), ntohs(parentaddr.sin_port));
+        } else if (msg->type == MsgType_t::END) {
+            fprintf(stdout, "CHILD: STREAM END\n");
+            break;
+        }
+
         msg->print();
     }
 
