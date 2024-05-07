@@ -25,7 +25,7 @@ proto:
 	cd manager && protoc --python_out . message.proto
 	cd src/utils && protoc --cpp_out . message.proto
 
-udp:
+udp: build
 	@./run.sh --build docker
 	@./run.sh --deploy docker --mode udp
 
@@ -35,7 +35,7 @@ build:
 
 docker:
 	@./run.sh --build docker
-	@./run.sh --deploy docker
+	@./run.sh --deploy docker --mode manager
 
 vagrant:
 	@./run.sh --build  vagrant
