@@ -57,6 +57,7 @@ int parse(int argc, char **argv) {
 
 int child(void) {
     int sockfd, n, len, cnt = 0;
+    size_t sz = sizeof(MsgUDP_t);
     static char buf[1000] = { 0 };
     struct sockaddr_in sockaddr = { 0 }, senderaddr = { 0 };
     MsgUDP_t* msg;
@@ -80,7 +81,7 @@ int child(void) {
 
     while(1) {
         n = recvfrom(sockfd, buf, sizeof(buf), 0, (struct sockaddr*) &senderaddr, (socklen_t *) &len);
-        if (n < (int) sizeof(MsgUDP_t)) {
+        if (n < sz) {
             continue;
         }
 
@@ -100,7 +101,7 @@ int child(void) {
 
     while(1) {
         n = recvfrom(sockfd, buf, sizeof(buf), 0, (struct sockaddr*) &senderaddr, (socklen_t *) &len);
-        if (n < (int) sizeof(MsgUDP_t)) {
+        if (n < sz) {
             continue;
         }
 
