@@ -28,7 +28,7 @@ class Node():
         m.flag  = f
         if data: 
             for d in data: 
-                m.data.append(d)
+                m.data.append(str(d))
         return m
 
     def send_message(self, id:int, t:MessageType, f:MessageFlag=MessageFlag.NONE, data:list=[]):
@@ -85,6 +85,8 @@ class Manager(Node):
         self.config     = read_yaml(os.path.join(os.getcwd(), "manager", "default.yaml"))
         self.workers    = self.config["addrs"][1:]
         self.pool       = self.workers
+        self.rate       = self.config["rate"]
+        self.duration   = self.config["duration"]
         self.K          = self.config["hyperparameter"]
         self.N          = int(self.config["nodes"])
         self.steps      = self.config["steps"]
@@ -130,7 +132,9 @@ class Manager(Node):
         self.print_node(root, idx, "CHOSEN")
         self.print_addrs(self.pool, "POOL")
         id = self.tick 
-        data = [ "2" ]
+        data =  [ "2" ]
+        data += [ self.rate ]
+        data += [ self.duration ]
         data += self.pool
         self.connect(root)
         self.send_message(id, MessageType.COMMAND, f=MessageFlag.PARENT, data=data)
@@ -159,18 +163,29 @@ class Worker(Node):
     def __init__(self, name:str, ip:str, port:str, LOG_LEVEL=LOG_LEVEL.NONE):
         super().__init__(name, ip, port, zmq.REP, LOG_LEVEL)
 
-    def parent(self, children:list, f:int):
+    def parent(self, data:list):
+        sel   = int(data[0])
+        rate  = int(data[1])
+        dur   = int(data[2])
+        addrs = data[3:]
+        self.print_addrs(addrs, f"CHILDREN => SELECT {sel}")
         pnode = Node(f"{self.name}::PARENT", self.ip, "8081", zmq.REQ, self.LOG_LEVEL)
-        for addr in children:
-            print(f"{addr}")
+        for addr in addrs:
             id = self.tick
             data = [f"{addr}"]
             pnode.connect(addr)
             pnode.send_message(id, MessageType.CONNECT, f=MessageFlag.NONE, data=data)
             pnode.expect_message(id, MessageType.ACK, MessageFlag.NONE, data)
+            pnode.send_message(id, MessageType.COMMAND, f=MessageFlag.CHILD, data=data)
+            pnode.expect_message(id, MessageType.ACK, MessageFlag.CHILD, data)
+            print(f"ACKNOWLEDGED => {addr}=CHILD")
             pnode.disconnect(addr)
-            print(f"ESTABLISHED => {addr}")
         pnode.socket.close()
+        command = f"./bin/parent -a {addrs} -r {rate} -d {dur}"
+        print(f"RUNNING => {command}")
+
+    def child(self, command:str):
+        print(f"RUNNING => {command}")
 
     def connectACK(self, m:Message):
         self.print_message(m)
@@ -181,14 +196,22 @@ class Worker(Node):
     def commandACK(self, m:Message):
         self.print_message(m)
         if m.flag == MessageFlag.PARENT:
-            f = int(m.data[0])
-            children = m.data[1:]
-            self.print_addrs(children, f"CHILDREN => SELECT {f}")
-            self.parent(children, f)
+            self.parent(m.data)
+            id = m.id
+            data = []
+            self.send_message(id, MessageType.ACK, f=m.flag, data=data)
 
-        id = m.id
-        data = []
-        self.send_message(id, MessageType.ACK, f=m.flag, data=data)
+        elif m.flag == MessageFlag.CHILD:
+            command = f"./bin/child -i {self.ip} -p {int(self.socket.port) - 1000}"
+            id = m.id
+            data = [f"{command}"]
+            self.child(command)
+            self.send_message(id, MessageType.ACK, f=MessageFlag.CHILD, data=data)
+
+        else:
+            id = m.id
+            data = []
+            self.send_message(id, MessageType.ACK, f=m.flag, data=data)
 
     def run(self):
         self.socket.bind("tcp", self.socket.ip, self.socket.port)

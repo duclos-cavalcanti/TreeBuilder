@@ -1,6 +1,8 @@
 name: DEFAULT
 infra: docker
 hyperparameter: 0.5
+rate: 10 
+duration: 10
 nodes: 6
 addrs:
   - "localhost:9091"
