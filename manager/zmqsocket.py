@@ -2,7 +2,7 @@ import zmq
 import sys
 
 from enum import Enum
-from .message_pb2 import Message, MessageType, MessageFlag
+from .message_pb2 import Message
 
 class LOG_LEVEL(Enum):
     NONE = 1 
@@ -59,16 +59,6 @@ class Socket():
 
     def send_string(self, *args, **kwargs):
         return self.socket.send_string(*args, **kwargs)
-
-    def recv_message(self) -> Message:
-        m = Message()
-        m.ParseFromString(self.recv())
-        return m
-
-    def send_message(self, m:Message):
-        data = m.SerializeToString()
-        ret = self.send(data)
-        return ret
 
 class ReplySocket(Socket):
     def __init__(self, name:str, protocol:str, ip:str, port:str, LOG_LEVEL:LOG_LEVEL):
