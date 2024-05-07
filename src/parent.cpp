@@ -10,6 +10,8 @@
 
 #include "common.hpp"
 
+FILE* LOG=stdout;
+
 std::vector<struct sockaddr_in> addrs;
 int rate = 0, duration = 0;
 
@@ -30,15 +32,13 @@ std::vector<std::string> split(const std::string& s, char delimiter) {
     if (tokens.size() != 2) {
         fprintf(stderr, "EXPECTED ADDR: 'IP:PORT' |  RECEIVED: %s\n", s.c_str());
         exit(EXIT_FAILURE);
-    } else {
-        fprintf(stdout, "IP=%s;PORT=%s\n", tokens[0].c_str(), tokens[1].c_str());
     }
     
     return tokens;
 }
 
 int parse(int argc, char **argv) {
-    int opt = 0, opti = 0, i = 0;
+    int opt = 0, opti = 0;
     int ret = 0;
     while ( (opt = getopt (argc, argv, "ha:r:d:") ) != -1 ) {
         switch (opt) {
@@ -49,8 +49,6 @@ int parse(int argc, char **argv) {
         case 'a':
             opti = optind - 1;
             while (optind < argc && argv[opti][0] != '-') {
-                fprintf(stdout, "ADDR[%d]: ", i++);
-
                 auto parts = split(std::string {argv[opti]}, ':');
                 std::string ip = parts[0];
                 int port = atoi(parts[1].c_str());
@@ -68,12 +66,10 @@ int parse(int argc, char **argv) {
 
         case 'r':
             rate = atoi(optarg);
-            fprintf(stdout, "RATE=%d\n", rate);
             break;
 
         case 'd':
             duration = atoi(optarg);
-            fprintf(stdout, "DURATION=%d\n", duration);
             break;
 
         default:
@@ -90,46 +86,54 @@ int parse(int argc, char **argv) {
 
 int parent(void) {
     int sockfd;
+    int cnt = 0, n, total = addrs.size();
+    auto packets = (int64_t)rate * duration;
+
     if ( (sockfd = socket(AF_INET, SOCK_DGRAM, 0)) < 0 ) {
         fprintf(stderr, "Failed to create socket\n");
         exit(EXIT_FAILURE);
     }
-    fprintf(stdout, "SOCKET BOUND\n");
 
-    int cnt = 0, n, lim = addrs.size();
-    auto total = (int64_t)rate * duration;
-    auto now  = std::chrono::system_clock::now();
-    auto step = std::chrono::duration<double>(1) / rate;
+    fprintf(LOG, "PARENT: SOCKET BOUND\n");
+    fprintf(LOG, "PARENT: PACKETS=%lu | DURATION=%d | RATE=%d\n", packets, duration, rate);
 
-    fprintf(stdout, "PARENT: PACKETS=%lu | DURATION=%d | RATE=%d\n", total, duration, rate);
+    for (int j = 0; j<total; j++) {
+        fprintf(LOG, "PARENT: START => IP=%s | PORT=%d \n", inet_ntoa(addrs[j].sin_addr), ntohs(addrs[j].sin_port));
+        MsgUDP_t m = MsgUDP();
+        m.type = MsgType_t::START;
+        m.dur  = duration;
+        m.rate = rate;
 
-    MsgUDP_t m = MsgUDP();
-    m.type = MsgType_t::START;
-
-    for (int j = 0; j<lim; j++) {
-        fprintf(stdout, "PARENT: STREAM START[%d] => IP=%s | PORT=%d \n", j, inet_ntoa(addrs[j].sin_addr), ntohs(addrs[j].sin_port));
-        n = send_udp(&m, sockfd, &addrs[j], sizeof(addrs[j]));
-
+        n = sendto(sockfd, &m, sizeof(MsgUDP_t), 0, (struct sockaddr *) &addrs[j], sizeof(addrs[j]));
         if ( n < 0 ) {
             fprintf(stderr, "Failed to send\n");
             exit(EXIT_FAILURE);
         }
     }
 
-    for (int64_t i = 0; i < total; i++) {
+    auto start  = std::chrono::system_clock::now();
+    auto step = std::chrono::duration<double>(1) / rate;
+
+    for (int64_t i = 0; i < packets; i++) {
         MsgUDP_t m = MsgUDP();
-        m.id = (cnt++);
-        if (i == (total - 1)) m.type = MsgType_t::END;
-        else                  m.type = MsgType_t::ONGOING;
+        m.id  = (cnt++);
+        m.ts  = timestamp();
+        if (i == (packets - 1)) m.type = MsgType_t::END;
+        else                    m.type  = MsgType_t::ONGOING;
 
-        for (int j = 0; j<lim; j++) {
-            n = send_udp(&m, sockfd, &addrs[j], sizeof(addrs[j]));
+        for (int j = 0; j<total; j++) {
+            n = sendto(sockfd, &m, sizeof(MsgUDP_t), 0, (struct sockaddr *) &addrs[j], sizeof(addrs[j]));
+            if ( n < 0 ) {
+                fprintf(stderr, "Failed to send\n");
+                exit(EXIT_FAILURE);
+            } else {
+                fprintf(LOG, "PARENT: SENT[%4lu] => ADDR[%d]\n", i, j);
+            }
         }
-
-        std::this_thread::sleep_until(now + (step * i));
+        std::this_thread::sleep_until(start + (step * i));
     }
 
-    fprintf(stdout, "PARENT: STREAM END\n");
+    fprintf(LOG, "PARENT: END\n");
     close(sockfd);
     return 0;
 

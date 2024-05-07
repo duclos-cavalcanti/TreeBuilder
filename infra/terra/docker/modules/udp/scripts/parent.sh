@@ -21,6 +21,7 @@ pushd /work/project/build
     make
     pushd /work/project/
         command="./bin/parent -a ${addrs} -r ${rate} -d ${dur}"
+        sleep 1s
         echo ${command}
         ${command}
         echo "RET: ${?}"

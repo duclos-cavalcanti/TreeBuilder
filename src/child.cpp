@@ -1,5 +1,6 @@
 #include <iostream>
 #include <chrono>
+#include <vector>
 
 #include <cstdio>
 #include <cstdlib>
@@ -13,8 +14,12 @@
 
 #include "common.hpp"
 
-static char* IP = NULL;
-static char* PORT = NULL;
+FILE* LOG=stdout;
+
+std::vector<int64_t> diffs;
+std::string ip = "";
+int port = 0, rate, duration;
+int64_t packets;
 
 void usage(int e) {
     std::cout << "Usage: ./child [-i IP_ADDR] [-p PORT] [-h]" << std::endl;
@@ -31,11 +36,11 @@ int parse(int argc, char **argv) {
             break;
 
         case 'i':
-            IP = optarg;
+            ip =  std::string{optarg};
             break;
 
         case 'p':
-            PORT = optarg;
+            port = atoi(optarg);
             break;
 
         default:
@@ -44,22 +49,20 @@ int parse(int argc, char **argv) {
         }
     }
 
-    if ((!IP) || (!PORT)) usage(EXIT_FAILURE);
+    if ((ip == "") || (!port)) usage(EXIT_FAILURE);
     if (optind > argc) usage(EXIT_FAILURE);
 
-    fprintf(stdout, "IP: %s;PORT: %s\n", IP, PORT);
     return ret;
 }
 
 int child(void) {
-    int sockfd, port, n;
+    int sockfd, n, len, cnt = 0;
     static char buf[1000] = { 0 };
-    struct sockaddr_in sockaddr = { 0 }, parentaddr = { 0 };
-    std::string ip { IP };
+    struct sockaddr_in sockaddr = { 0 }, senderaddr = { 0 };
     MsgUDP_t* msg;
 
     sockaddr.sin_family       = AF_INET;
-    sockaddr.sin_port         = htons(port = atoi(PORT));
+    sockaddr.sin_port         = htons(port);
     sockaddr.sin_addr.s_addr  = inet_addr(ip == "localhost" ? "127.0.0.1" : ip.c_str());
 
     if ( (sockfd = socket(AF_INET, SOCK_DGRAM, 0)) < 0 ) {
@@ -72,28 +75,49 @@ int child(void) {
         exit(EXIT_FAILURE);
     }
 
-    fprintf(stdout, "CHILD: IP=%s | PORT=%d\n", IP, port);
-    fprintf(stdout, "CHILD: WAITING ON STREAM START...\n");
+    fprintf(LOG, "CHILD: SOCKET BOUND => IP=%s | PORT=%d\n", ip.c_str(), port);
+    fprintf(LOG, "CHILD: WAITING ON START...\n");
 
     while(1) {
-        n = recv_udp(sockfd, buf, sizeof(buf), &parentaddr);
-        if (n < sizeof(MsgUDP_t)) {
+        n = recvfrom(sockfd, buf, sizeof(buf), 0, (struct sockaddr*) &senderaddr, (socklen_t *) &len);
+        if (n < (int) sizeof(MsgUDP_t)) {
             continue;
         }
 
         msg = reinterpret_cast<MsgUDP_t*>(buf);
 
         if (msg->type == MsgType_t::START) { 
-            fprintf(stdout, "CHILD: STREAM START => IP=%s | PORT=%i\n", inet_ntoa(parentaddr.sin_addr), ntohs(parentaddr.sin_port));
-        } else if (msg->type == MsgType_t::END) {
-            fprintf(stdout, "CHILD: STREAM END\n");
+            rate = msg->rate;
+            duration = msg->dur;
+            packets = (int64_t)rate * duration;
+            fprintf(LOG, "CHILD: START => IP=%s | PORT=%i | PACKETS=%lu | RATE=%d | DURATION=%d\n", inet_ntoa(senderaddr.sin_addr), ntohs(senderaddr.sin_port), packets, rate, duration);
             break;
         } else {
-            fprintf(stdout, "CHILD: STREAM ONGOING\n");
+            fprintf(stderr, "Failed to start stream\n");
+            exit(EXIT_FAILURE);
+        }
+    }
 
+    while(1) {
+        n = recvfrom(sockfd, buf, sizeof(buf), 0, (struct sockaddr*) &senderaddr, (socklen_t *) &len);
+        if (n < (int) sizeof(MsgUDP_t)) {
+            continue;
         }
 
+        msg = reinterpret_cast<MsgUDP_t*>(buf);
+        diffs.push_back(timestamp() - msg->ts);
+
+        fprintf(LOG, "CHILD: RECV[%4d] => %s | ", cnt++,  msg->type_to_string(msg->type).c_str());
         msg->print();
+
+        if (msg->type == MsgType_t::END) {
+            fprintf(LOG, "CHILD: END\n");
+            fprintf(LOG, "SUMMARY | RECV=%d | TOTAL=%lu | DROPPED=%lu | DIFF_VECTOR=%lu\n", cnt, packets, packets - cnt, diffs.size());
+            for(const auto& d: diffs) {
+                fprintf(LOG, "DIFF: \t%6luMS\n", d);
+            }
+            break;
+        }
     }
 
     close(sockfd);

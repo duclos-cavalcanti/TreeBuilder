@@ -1,6 +1,8 @@
 #ifndef __COMMON__HPP
 #define __COMMON__HPP
 
+#include <string>
+
 #include <cstdint>
 #include <cstdio>
 
@@ -23,19 +25,27 @@ typedef struct MsgUDP {
     uint64_t dur;
     uint64_t rate;
 
-    void print() {
-        fprintf(stdout, "MsgUDP[%d] {\n", this->id);
-        fprintf(stdout, "\tID=%d\n",      this->id);
-        fprintf(stdout, "\tTS=%lu\n",     this->ts);
-        fprintf(stdout, "\tTYPE=%d\n",    this->type);
-        fprintf(stdout, "\tDUR=%lu\n",    this->dur);
-        fprintf(stdout, "\tRATE=%lu\n}\n",  this->rate);
+    std::string type_to_string(MsgType_t t) {
+        switch (t) {
+            case START:   return "START  ";
+            case ONGOING: return "ONGOING";
+            case END:     return "END    ";
+            default:      return "ERR";
+        }
+    }
+
+    void print(void) {
+        fprintf(stdout, "MSGUDP: { ");
+        fprintf(stdout, "ID=%d, ",       this->id);
+        fprintf(stdout, "TS=%lu, ",      this->ts);
+        fprintf(stdout, "TYPE=%s, ",     this->type_to_string(this->type).c_str());
+        fprintf(stdout, "DUR=%lu, ",     this->dur);
+        fprintf(stdout, "RATE=%lu }\n",  this->rate);
     }
 
     MsgUDP() : id(0), ts(0), type(START), dur(0), rate(0) {};
 } MsgUDP_t;
 
-int send_udp(MsgUDP_t* m, int sockfd, struct sockaddr_in* addr, size_t addr_sz);
-int recv_udp(int sockfd, char* buf, size_t buf_sz, struct sockaddr_in* addr);
+int64_t timestamp(void);
 
 #endif /* __COMMON__HPP */
