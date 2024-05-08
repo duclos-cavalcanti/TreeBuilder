@@ -157,7 +157,7 @@ main() {
     esac
     done
 
-    echo "ACTION=$action INFRA=$infra MODE=$mode"
+    echo "-- RUN: ACTION=$action INFRA=$infra MODE=$mode --"
     $action $infra $mode
 }
 
