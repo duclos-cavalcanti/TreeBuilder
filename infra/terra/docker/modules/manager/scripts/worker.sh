@@ -11,6 +11,12 @@ TAR="/work/project.tar.gz"
 mkdir /work/project
 tar -xzf ${TAR} -C /work/project
 
+mkdir /work/project/build
+pushd /work/project/build
+    cmake ..
+    make
+popd
+
 pushd /work/project
     echo "-- ROLE: $role [ $id ] --"
     python3 main.py -m manager -a worker -n ${role}  -i ${addr} -p ${port}

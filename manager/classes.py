@@ -52,10 +52,8 @@ class Manager(Node):
             id = self.tick
             data = [f"{addr}"]
             self.connect(addr)
-            self.send_message(id, MessageType.CONNECT, f=MessageFlag.NONE, data=data)
-            self.expect_message(id, MessageType.ACK, MessageFlag.NONE, data)
+            self.handshake_connect(id, data)
             self.disconnect(addr)
-            print(F"ESTABLISHED => {addr}")
 
     def root(self):
         idx = self.select()
@@ -71,7 +69,7 @@ class Manager(Node):
         data += self.pool
         self.connect(root)
         self.send_message(id, MessageType.COMMAND, f=MessageFlag.PARENT, data=data)
-        self.expect_message(id, MessageType.ACK, MessageFlag.PARENT, [])
+        ok, m = self.expect_message(id, MessageType.ACK, MessageFlag.PARENT)
 
     def run(self):
         try:
@@ -101,44 +99,56 @@ class Worker(Node):
         rate  = int(data[1])
         dur   = int(data[2])
         addrs = data[3:]
+        nodes = []
         self.print_addrs(addrs, f"CHILDREN => SELECT {sel}")
-        pnode = Node(f"{self.name}::PARENT", self.ip, "8081", zmq.REQ, self.LOG_LEVEL)
-        for addr in addrs:
+        for i, addr in enumerate(addrs):
+            n = Node(f"{self.name}::PARENT", self.ip, f"{int(self.port) + 1000 + i}", zmq.REQ, self.LOG_LEVEL)
             id = self.tick
             data = [f"{addr}"]
-            pnode.connect(addr)
-            pnode.send_message(id, MessageType.CONNECT, f=MessageFlag.NONE, data=data)
-            pnode.expect_message(id, MessageType.ACK, MessageFlag.NONE, data)
-            pnode.send_message(id, MessageType.COMMAND, f=MessageFlag.CHILD, data=data)
-            pnode.expect_message(id, MessageType.ACK, MessageFlag.CHILD, data)
-            print(f"ACKNOWLEDGED => {addr}=CHILD")
-            pnode.disconnect(addr)
-        pnode.socket.close()
-        command = f"./bin/parent -a {addrs} -r {rate} -d {dur}"
-        print(f"RUNNING => {command}")
+            n.connect(addr)
+            n.handshake_connect(id, data)
+            nodes.append(n)
 
-    def child(self, command:str):
-        print(f"RUNNING => {command}")
+        for n, addr in zip(nodes, addrs):
+            id = self.tick
+            data = [f"{addr}"]
+            n.send_message(id, MessageType.COMMAND, f=MessageFlag.CHILD, data=data)
+            ok, m = n.expect_message(id, MessageType.ACK, MessageFlag.CHILD)
+            n.disconnect(addr)
+            if not ok:
+                n.err_message(m, "CHILD ACK ERR")
+            print(f"CHILD STARTED => {addr}")
+
+        addr_list = " ".join(f"{a}" for a in addrs)
+        c = f"./bin/parent -a {addr_list} -r {rate} -d {dur}"
+        print(f"RUNNING => {c}")
+        return c
+
+    def child(self, data:str):
+        c = f"./bin/child -i {self.ip} -p {int(self.port) - 1000}"
+        print(f"RUNNING => {c}")
+        return c
 
     def connectACK(self, m:Message):
         self.print_message(m)
         id = m.id
-        data = [f"{self.socket.ip}:{self.socket.port}"]
+        data = [f"{self.socket.ip}:{self.port}"]
         self.send_message(id, MessageType.ACK, f=MessageFlag.NONE, data=data)
 
     def commandACK(self, m:Message):
         self.print_message(m)
         if m.flag == MessageFlag.PARENT:
+            if len(m.data) <= 1 : self.err_message(m, "PARENT COMMAND ERR")
             self.parent(m.data)
             id = m.id
             data = []
             self.send_message(id, MessageType.ACK, f=m.flag, data=data)
 
         elif m.flag == MessageFlag.CHILD:
-            command = f"./bin/child -i {self.ip} -p {int(self.socket.port) - 1000}"
-            self.child(command)
+            if f"{self.ip}:{self.port}" != m.data[0]: self.err_message(m, "CHILD COMMAND ERR")
+            d = self.child(m.data)
             id = m.id
-            data = [f"{command}"]
+            data = [f"{d}"]
             self.send_message(id, MessageType.ACK, f=MessageFlag.CHILD, data=data)
 
         else:
@@ -147,7 +157,7 @@ class Worker(Node):
             self.send_message(id, MessageType.ACK, f=m.flag, data=data)
 
     def run(self):
-        self.socket.bind("tcp", self.socket.ip, self.socket.port)
+        self.socket.bind("tcp", self.socket.ip, self.port)
         try:
             while(True):
                 m = self.recv_message()

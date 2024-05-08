@@ -9,13 +9,14 @@ from typing import  Tuple
 class Node():
     def __init__(self, name:str, ip:str, port:str, type, LOG_LEVEL=LOG_LEVEL.NONE):
         self.name = name.upper()
-        self.ip = ip
+        self.ip   = ip
+        self.port = port
         self.tick = 0
         self.LOG_LEVEL = LOG_LEVEL
 
         if type   == zmq.REP:   self.socket = ReplySocket(self.name, protocol="tcp", ip=ip, port=port, LOG_LEVEL=LOG_LEVEL)
         elif type == zmq.REQ:   self.socket = RequestSocket(self.name, protocol="tcp", ip=ip, port=port, LOG_LEVEL=LOG_LEVEL)
-        else:                   raise NotImplementedError(f"TYPE: {type}")
+        else:                   raise NotImplementedError(f"ZMQSOCKET TYPE: {type}")
 
     def message(self, id:int, t:MessageType, f:MessageFlag, data:list):
         m = Message()
@@ -38,14 +39,22 @@ class Node():
         m.ParseFromString(self.socket.recv())
         return m
 
-    def expect_message(self, id:int, t:MessageType, f:MessageFlag, data:list) -> Tuple[bool, Message]:
+    def expect_message(self, id:int, t:MessageType, f:MessageFlag) -> Tuple[bool, Message]:
         m = self.recv_message()
         if (m.id   == id and 
             m.type == t  and
-            m.flag == f  and
-            m.data == data): 
+            m.flag == f):
             return True, m
         return False, m
+
+    def handshake_connect(self, id:int, data:list):
+        addr = data[0]
+        self.send_message(id, MessageType.CONNECT, f=MessageFlag.NONE, data=data)
+        ok, m = self.expect_message(id, MessageType.ACK, MessageFlag.NONE)
+        if not ok or addr != m.data[0]:
+            self.err_message(m, "CONNECT ACK ERR")
+        print(f"ESTABLISHED => {addr}")
+        return m
 
     def connect(self, target:str):
         ip = target.split(":")[0]
