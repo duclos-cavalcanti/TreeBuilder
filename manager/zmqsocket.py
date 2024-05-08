@@ -2,7 +2,6 @@ import zmq
 import sys
 
 from enum import Enum
-from .message_pb2 import Message
 
 class LOG_LEVEL(Enum):
     NONE = 1 

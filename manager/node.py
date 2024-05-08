@@ -34,6 +34,11 @@ class Node():
         data = m.SerializeToString()
         self.socket.send(data)
 
+    def send_message_ack(self, m:Message, data:list=[]):
+        r = self.message(m.id, MessageType.ACK, m.flag, data)
+        data = r.SerializeToString()
+        self.socket.send(data)
+
     def recv_message(self) -> Message:
         m = Message()
         m.ParseFromString(self.socket.recv())
@@ -47,14 +52,29 @@ class Node():
             return True, m
         return False, m
 
-    def handshake_connect(self, id:int, data:list):
-        addr = data[0]
+    def handshake_connect(self, id:int, data:list, addr:str):
         self.send_message(id, MessageType.CONNECT, f=MessageFlag.NONE, data=data)
         ok, m = self.expect_message(id, MessageType.ACK, MessageFlag.NONE)
-        if not ok or addr != m.data[0]:
-            self.err_message(m, "CONNECT ACK ERR")
+        if not ok or addr != m.data[0]: self.err_message(m, "CONNECT ACK ERR")
         print(f"ESTABLISHED => {addr}")
-        return m
+        ret = m.data
+        return ret
+
+    def handshake_parent(self, id:int, data:list, addr:str):
+        self.send_message(id, MessageType.COMMAND, f=MessageFlag.PARENT, data=data)
+        ok, m = self.expect_message(id, MessageType.ACK, MessageFlag.PARENT)
+        if not ok: self.err_message(m, "PARENT ACK ERR")
+        print(f"PARENT => {addr}")
+        ret = m.data
+        return ret
+
+    def handshake_child(self, id:int, data:list, addr:str):
+        self.send_message(id, MessageType.COMMAND, f=MessageFlag.CHILD, data=data)
+        ok, m = self.expect_message(id, MessageType.ACK, MessageFlag.CHILD)
+        if not ok: self.err_message(m, "CHILD ACK ERR")
+        print(f"CHILD => {addr}")
+        ret = m.data
+        return ret
 
     def connect(self, target:str):
         ip = target.split(":")[0]

@@ -28,17 +28,22 @@ class Manager(Node):
     def print_node(self, n:dict, idx:int, header:str):
         print(f"{header}: {idx} => {n}")
 
-    def fetch_step(self):
+    def pop_step(self):
         if len(self.steps) == 0: return None
         s = self.steps[0]
         s["i"] = self.tick
         self.steps.pop(0)
         return s
 
+    def push_step(self, s:dict):
+        self.steps.append(s)
+
     def process_step(self, s:dict, callback:Callable):
-        self.print(f"-- STEP[{s['i']}]: {s['action']} => START --", prefix="\033[31m", suffix="\033[0m")
+        i   = s['i']
+        act = s['action']
+        self.print(f"STEP[{i}]: {act} => START    \t------>", prefix="\033[31m", suffix="\033[0m")
         callback()
-        self.print(f"-- STEP[{s['i']}]: {s['action']} => COMPLETE --", prefix="\033[92m", suffix="\033[0m")
+        self.print(f"STEP[{i}]: {act} => COMPLETE \t<------", prefix="\033[92m", suffix="\033[0m")
 
     def select(self):
         pool = self.pool
@@ -52,7 +57,7 @@ class Manager(Node):
             id = self.tick
             data = [f"{addr}"]
             self.connect(addr)
-            self.handshake_connect(id, data)
+            _ = self.handshake_connect(id, data, addr)
             self.disconnect(addr)
 
     def root(self):
@@ -68,13 +73,14 @@ class Manager(Node):
         data += [ self.duration ]
         data += self.pool
         self.connect(root)
-        self.send_message(id, MessageType.COMMAND, f=MessageFlag.PARENT, data=data)
-        ok, m = self.expect_message(id, MessageType.ACK, MessageFlag.PARENT)
+        _ = self.handshake_parent(id, data, root)
+        self.disconnect(root)
+
 
     def run(self):
         try:
             while(True):
-                step = self.fetch_step()
+                step = self.pop_step()
                 if not step: break
                 match step["action"]:
                     case "CONNECT": self.process_step(step, self.establish)
@@ -94,7 +100,20 @@ class Worker(Node):
     def __init__(self, name:str, ip:str, port:str, LOG_LEVEL=LOG_LEVEL.NONE):
         super().__init__(name, ip, port, zmq.REP, LOG_LEVEL)
 
-    def parent(self, data:list):
+    def childACK(self, m:Message):
+        data = m.data
+        if f"{self.ip}:{self.port}" != data[0]: 
+            self.err_message(m, "CHILD COMMAND ERR")
+
+        c = f"./bin/child -i {self.ip} -p {int(self.port) - 1000}"
+        print(f"RUNNING => {c}")
+        self.send_message_ack(m, data=[])
+
+    def parentACK(self, m:Message):
+        data = m.data
+        if len(m.data) <= 3 : 
+            self.err_message(m, "PARENT COMMAND ERR")
+
         sel   = int(data[0])
         rate  = int(data[1])
         dur   = int(data[2])
@@ -106,55 +125,34 @@ class Worker(Node):
             id = self.tick
             data = [f"{addr}"]
             n.connect(addr)
-            n.handshake_connect(id, data)
+            _ = n.handshake_connect(id, data, addr)
             nodes.append(n)
 
         for n, addr in zip(nodes, addrs):
             id = self.tick
             data = [f"{addr}"]
-            n.send_message(id, MessageType.COMMAND, f=MessageFlag.CHILD, data=data)
-            ok, m = n.expect_message(id, MessageType.ACK, MessageFlag.CHILD)
+            _ = n.handshake_child(id, data, addr)
             n.disconnect(addr)
-            if not ok:
-                n.err_message(m, "CHILD ACK ERR")
-            print(f"CHILD STARTED => {addr}")
 
         addr_list = " ".join(f"{a}" for a in addrs)
         c = f"./bin/parent -a {addr_list} -r {rate} -d {dur}"
         print(f"RUNNING => {c}")
-        return c
-
-    def child(self, data:str):
-        c = f"./bin/child -i {self.ip} -p {int(self.port) - 1000}"
-        print(f"RUNNING => {c}")
-        return c
+        self.send_message_ack(m, data=[])
 
     def connectACK(self, m:Message):
-        self.print_message(m)
-        id = m.id
-        data = [f"{self.socket.ip}:{self.port}"]
-        self.send_message(id, MessageType.ACK, f=MessageFlag.NONE, data=data)
+        self.print_message(m, header="RECEIVED MESSAGE: ")
+        self.send_message_ack(m, data=[f"{self.socket.ip}:{self.port}"])
 
     def commandACK(self, m:Message):
-        self.print_message(m)
-        if m.flag == MessageFlag.PARENT:
-            if len(m.data) <= 1 : self.err_message(m, "PARENT COMMAND ERR")
-            self.parent(m.data)
-            id = m.id
-            data = []
-            self.send_message(id, MessageType.ACK, f=m.flag, data=data)
-
-        elif m.flag == MessageFlag.CHILD:
-            if f"{self.ip}:{self.port}" != m.data[0]: self.err_message(m, "CHILD COMMAND ERR")
-            d = self.child(m.data)
-            id = m.id
-            data = [f"{d}"]
-            self.send_message(id, MessageType.ACK, f=MessageFlag.CHILD, data=data)
-
+        self.print_message(m, header="RECEIVED MESSAGE: ")
+        if   m.flag == MessageFlag.PARENT: self.parentACK(m)
+        elif m.flag == MessageFlag.CHILD:  self.childACK(m)
         else:
-            id = m.id
-            data = []
-            self.send_message(id, MessageType.ACK, f=m.flag, data=data)
+            raise NotImplementedError(f"MESSAGE FLAG: {MessageFlag.Name(m.flag)}")
+
+    def reportACK(self, m:Message):
+        self.print_message(m, header="RECEIVED MESSAGE: ")
+        raise NotImplementedError(f"REPORT MESSAGE")
 
     def run(self):
         self.socket.bind("tcp", self.socket.ip, self.port)
