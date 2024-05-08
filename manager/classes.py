@@ -1,9 +1,9 @@
 from .zmqsocket   import LOG_LEVEL
 from .message_pb2 import Message, MessageType, MessageFlag
 
-from .node      import Node
+from .node      import Node, Job
 from .tree      import Tree
-from .utils     import read_yaml
+from .utils     import read_yaml, dict_to_arr
 
 import zmq
 import os
@@ -57,7 +57,7 @@ class Manager(Node):
             id = self.tick
             data = [f"{addr}"]
             self.connect(addr)
-            _ = self.handshake_connect(id, data, addr)
+            self.handshake_connect(id, data, addr)
             self.disconnect(addr)
 
     def root(self):
@@ -73,7 +73,9 @@ class Manager(Node):
         data += [ self.duration ]
         data += self.pool
         self.connect(root)
-        _ = self.handshake_parent(id, data, root)
+        _, d = self.handshake_parent(id, data, root)
+        self.push_job(Job(arr=d))
+        self.print_jobs()
         self.disconnect(root)
 
 
@@ -105,9 +107,10 @@ class Worker(Node):
         if f"{self.ip}:{self.port}" != data[0]: 
             self.err_message(m, "CHILD COMMAND ERR")
 
-        c = f"./bin/child -i {self.ip} -p {int(self.port) - 1000}"
-        print(f"RUNNING => {c}")
-        self.send_message_ack(m, data=[])
+        job = Job(addr=f"{self.ip}:{self.port}", command=f"./bin/child -i {self.ip} -p {int(self.port) - 1000}")
+        job = self.exec_job(job)
+        self.print_jobs()
+        self.send_message_ack(m, data=job.to_arr())
 
     def parentACK(self, m:Message):
         data = m.data
@@ -131,13 +134,14 @@ class Worker(Node):
         for n, addr in zip(nodes, addrs):
             id = self.tick
             data = [f"{addr}"]
-            _ = n.handshake_child(id, data, addr)
+            _, d = n.handshake_child(id, data, addr)
+            self.push_job(Job(arr=d))
             n.disconnect(addr)
 
-        addr_list = " ".join(f"{a}" for a in addrs)
-        c = f"./bin/parent -a {addr_list} -r {rate} -d {dur}"
-        print(f"RUNNING => {c}")
-        self.send_message_ack(m, data=[])
+        job = Job(addr=f"{self.ip}:{self.port}", command="./bin/parent -a " + " ".join(f"{a}" for a in addrs) + f" -r {rate} -d {dur}")
+        job = self.exec_job(job)
+        self.print_jobs()
+        self.send_message_ack(m, data=job.to_arr())
 
     def connectACK(self, m:Message):
         self.print_message(m, header="RECEIVED MESSAGE: ")
