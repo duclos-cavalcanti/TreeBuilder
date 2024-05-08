@@ -16,13 +16,11 @@ variable "pwd" {
 variable "addrs" {
     description = "List of addrs"
     type        = list(string)
-    default     = ["localhost:8084"]
+    default     = ["localhost:8084", "localhost:8085"]
 }
 
-variable "ports" {
-    description = "List of ports"
-    type        = list(string)
-    default     = ["8084"]
+locals {
+    ports = [for addr in var.addrs: split(":", addr)[1]]
 }
 
 resource "docker_container" "parent" {
@@ -51,7 +49,7 @@ resource "docker_container" "parent" {
 }
 
 resource "docker_container" "children" {
-    count = length(var.ports)
+    count = length(var.addrs)
     name  = "child${count.index}"
     image = "ubuntu-base:jammy"
 
@@ -69,7 +67,7 @@ resource "docker_container" "children" {
 
     network_mode = "host"
 
-    entrypoint = ["/bin/bash", "/child.sh", "child${count.index}", "localhost", var.ports[count.index]]
+    entrypoint = [ "/bin/bash", "/child.sh", "child${count.index}", "localhost", local.ports[count.index] ]
 
     rm         = true
     tty        = true
