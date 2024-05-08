@@ -126,11 +126,11 @@ int parent(void) {
     for (int64_t i = 0; i < packets; i++) {
         MsgUDP_t m = MsgUDP();
         m.id  = (cnt++);
-        m.ts  = timestamp();
         if (i == (packets - 1)) m.type = MsgType_t::END;
         else                    m.type  = MsgType_t::ONGOING;
 
         for (int j = 0; j<total; j++) {
+            m.ts  = timestamp();
             n = sendto(sockfd, &m, sizeof(MsgUDP_t), 0, (struct sockaddr *) &addrs[j], sizeof(addrs[j]));
             if ( n < 0 ) {
                 fprintf(stderr, "Failed to send\n");
