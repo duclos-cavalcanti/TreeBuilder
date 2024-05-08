@@ -14,9 +14,10 @@ FILE* LOG=stdout;
 
 std::vector<struct sockaddr_in> addrs;
 int rate = 0, duration = 0;
+bool verbose = false;
 
 void usage(int e) {
-    std::cout << "Usage: ./parent [-a ADDR_1 ADDR_2] [-r rate] [-d duration] [-h]" << std::endl;
+    std::cout << "Usage: ./parent [-a ADDR_1 ADDR_2] [-r rate] [-d duration] [-h] [-v]" << std::endl;
     exit(e);
 }
 
@@ -40,10 +41,14 @@ std::vector<std::string> split(const std::string& s, char delimiter) {
 int parse(int argc, char **argv) {
     int opt = 0, opti = 0;
     int ret = 0;
-    while ( (opt = getopt (argc, argv, "ha:r:d:") ) != -1 ) {
+    while ( (opt = getopt (argc, argv, "ha:r:d:v") ) != -1 ) {
         switch (opt) {
         case 'h':
             usage(EXIT_SUCCESS);
+            break;
+
+        case 'v':
+            verbose = true;
             break;
 
         case 'a':
@@ -94,11 +99,15 @@ int parent(void) {
         exit(EXIT_FAILURE);
     }
 
-    fprintf(LOG, "PARENT: SOCKET BOUND\n");
-    fprintf(LOG, "PARENT: PACKETS=%lu | DURATION=%d | RATE=%d\n", packets, duration, rate);
+    if (verbose) {
+        fprintf(LOG, "PARENT: SOCKET BOUND\n");
+        fprintf(LOG, "PARENT: PACKETS=%lu | DURATION=%d | RATE=%d\n", packets, duration, rate);
+    }
 
     for (int j = 0; j<total; j++) {
-        fprintf(LOG, "PARENT: START => IP=%s | PORT=%d \n", inet_ntoa(addrs[j].sin_addr), ntohs(addrs[j].sin_port));
+        if (verbose) {
+            fprintf(LOG, "PARENT: START => IP=%s | PORT=%d \n", inet_ntoa(addrs[j].sin_addr), ntohs(addrs[j].sin_port));
+        }
         MsgUDP_t m = MsgUDP();
         m.type = MsgType_t::START;
         m.dur  = duration;
@@ -127,21 +136,22 @@ int parent(void) {
                 fprintf(stderr, "Failed to send\n");
                 exit(EXIT_FAILURE);
             } else {
-                fprintf(LOG, "PARENT: SENT[%4lu] => ADDR[%d]\n", i, j);
+                if (verbose) {
+                    fprintf(LOG, "PARENT: SENT[%4lu] => ADDR[%d]\n", i, j);
+                }
             }
         }
         std::this_thread::sleep_until(start + (step * i));
     }
 
-    fprintf(LOG, "PARENT: END\n");
+    if (verbose) {
+        fprintf(LOG, "PARENT: END\n");
+    }
     close(sockfd);
     return 0;
-
 }
 
 int main(int argc, char **argv) {
     parse(argc, argv);
-    parent();
-
-	return 0;
+    return parent();
 }

@@ -16,23 +16,28 @@
 
 FILE* LOG=stdout;
 
-std::vector<int64_t> diffs;
+std::vector<int64_t> latencies;
 std::string ip = "";
 int port = 0, rate, duration;
 int64_t packets;
+bool verbose = false;
 
 void usage(int e) {
-    std::cout << "Usage: ./child [-i IP_ADDR] [-p PORT] [-h]" << std::endl;
+    std::cout << "Usage: ./child [-i IP_ADDR] [-p PORT] [-h] [-v]" << std::endl;
     exit(e);
 }
 
 int parse(int argc, char **argv) {
     int opt = 0;
     int ret = 0;
-    while ( (opt = getopt (argc, argv, "hi:p:") ) != -1 ) {
+    while ( (opt = getopt (argc, argv, "hi:p:v") ) != -1 ) {
         switch (opt) {
         case 'h':
             usage(EXIT_SUCCESS);
+            break;
+
+        case 'v':
+            verbose = true;
             break;
 
         case 'i':
@@ -55,8 +60,15 @@ int parse(int argc, char **argv) {
     return ret;
 }
 
+void print_latencies(void) {
+    for(const auto& d: latencies) {
+        fprintf(LOG, "LATENCY: \t%6luMS\n", d);
+    }
+}
+
 int child(void) {
     int sockfd, n, len, cnt = 0;
+    double perc;
     size_t sz = sizeof(MsgUDP_t);
     static char buf[1000] = { 0 };
     struct sockaddr_in sockaddr = { 0 }, senderaddr = { 0 };
@@ -76,8 +88,10 @@ int child(void) {
         exit(EXIT_FAILURE);
     }
 
-    fprintf(LOG, "CHILD: SOCKET BOUND => IP=%s | PORT=%d\n", ip.c_str(), port);
-    fprintf(LOG, "CHILD: WAITING ON START...\n");
+    if (verbose) {
+        fprintf(LOG, "CHILD: SOCKET BOUND => IP=%s | PORT=%d\n", ip.c_str(), port);
+        fprintf(LOG, "CHILD: WAITING ON START...\n");
+    }
 
     while(1) {
         n = recvfrom(sockfd, buf, sizeof(buf), 0, (struct sockaddr*) &senderaddr, (socklen_t *) &len);
@@ -91,7 +105,9 @@ int child(void) {
             rate = msg->rate;
             duration = msg->dur;
             packets = (int64_t)rate * duration;
-            fprintf(LOG, "CHILD: START => IP=%s | PORT=%i | PACKETS=%lu | RATE=%d | DURATION=%d\n", inet_ntoa(senderaddr.sin_addr), ntohs(senderaddr.sin_port), packets, rate, duration);
+            if (verbose) {
+                fprintf(LOG, "CHILD: START => IP=%s | PORT=%i | PACKETS=%lu | RATE=%d | DURATION=%d\n", inet_ntoa(senderaddr.sin_addr), ntohs(senderaddr.sin_port), packets, rate, duration);
+            }
             break;
         } else {
             fprintf(stderr, "Failed to start stream\n");
@@ -106,29 +122,34 @@ int child(void) {
         }
 
         msg = reinterpret_cast<MsgUDP_t*>(buf);
-        diffs.push_back(timestamp() - msg->ts);
+        latencies.push_back(timestamp() - msg->ts);
 
-        fprintf(LOG, "CHILD: RECV[%4d] => %s | ", cnt++,  msg->type_to_string(msg->type).c_str());
-        msg->print();
+        if (verbose) {
+            fprintf(LOG, "CHILD: RECV[%4d] => %s | ", cnt++,  msg->type_to_string(msg->type).c_str());
+            msg->print();
+        }
 
         if (msg->type == MsgType_t::END) {
-            fprintf(LOG, "CHILD: END\n");
-            fprintf(LOG, "SUMMARY | RECV=%d | TOTAL=%lu | DROPPED=%lu | DIFF_VECTOR=%lu\n", cnt, packets, packets - cnt, diffs.size());
-            for(const auto& d: diffs) {
-                fprintf(LOG, "DIFF: \t%6luMS\n", d);
+            if (verbose) {
+                fprintf(LOG, "CHILD: END\n");
+                fprintf(LOG, "SUMMARY | RECV=%d | TOTAL=%lu | DROPPED=%lu | LATENCY_VECTOR=%lu\n", cnt, packets, packets - cnt, latencies.size());
             }
             break;
         }
     }
 
     close(sockfd);
-    return 0;
+    if ((perc = get_percentile(latencies, 90)) != 0.0) {
+        fprintf(stdout, "%lf\n", perc);
+        return EXIT_SUCCESS;
+    } else {
+        fprintf(stdout, "EMPTY LATENCY VECTOR!\n");
+        return EXIT_FAILURE;
+    }
 }
 
 
 int main(int argc, char **argv) {
     parse(argc, argv);
-    child();
-
-	return 0;
+    return child();
 }

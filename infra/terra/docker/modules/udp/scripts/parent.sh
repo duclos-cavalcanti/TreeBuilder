@@ -20,8 +20,8 @@ pushd /work/project/build
     cmake ..
     make
     pushd /work/project/
-        command="./bin/parent -a ${addrs} -r ${rate} -d ${dur}"
-        sleep 1s
+        command="./bin/parent -a ${addrs} -r ${rate} -d ${dur} -v"
+        sleep 2s
         echo ${command}
         ${command}
         echo "RET: ${?}"

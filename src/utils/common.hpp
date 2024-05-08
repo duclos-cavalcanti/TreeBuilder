@@ -5,6 +5,7 @@
 
 #include <cstdint>
 #include <cstdio>
+#include <vector>
 
 #include <sys/socket.h>
 #include <sys/types.h>
@@ -47,5 +48,6 @@ typedef struct MsgUDP {
 } MsgUDP_t;
 
 int64_t timestamp(void);
+double  get_percentile(const std::vector<int64_t>& data, double percentile);
 
 #endif /* __COMMON__HPP */
