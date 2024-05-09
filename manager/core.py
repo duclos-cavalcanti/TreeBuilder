@@ -1,4 +1,6 @@
-from .classes import Manager, Worker, LOG_LEVEL
+from .manager import Manager
+from .worker  import Worker
+from .utils   import LOG_LEVEL
 
 import argparse
 import time

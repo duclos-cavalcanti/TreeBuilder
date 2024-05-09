@@ -1,12 +1,7 @@
 import zmq
 import sys
 
-from enum import Enum
-
-class LOG_LEVEL(Enum):
-    NONE = 1 
-    DEBUG = 2 
-    ERROR = 3
+from .utils import LOG_LEVEL
 
 class Socket():
     def __init__(self, name:str, protocol:str, ip:str, port:str, type, LOG_LEVEL:LOG_LEVEL):

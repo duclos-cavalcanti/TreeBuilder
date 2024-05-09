@@ -1,10 +1,12 @@
-from .zmqsocket import ReplySocket, RequestSocket, LOG_LEVEL
+from .zmqsocket import ReplySocket, RequestSocket
 from .message_pb2 import Message, MessageType, MessageFlag
+from .utils import LOG_LEVEL
 
 import zmq
 import time
 import subprocess
 import threading
+import copy
 import hashlib
 
 from typing import Tuple, List
@@ -18,9 +20,9 @@ class Job():
             self.pid        = 0
             self.addr       = addr
             self.command    = command
-        self.end        = False
-        self.ret        = -1
-        self.out        = ""
+            self.end        = False
+            self.ret        = -1
+            self.out        = "NONE"
 
     def hash(self, string:str) -> str: 
         bytes = string.encode('utf-8')
@@ -33,6 +35,9 @@ class Job():
         print(f"\tPID={self.pid}")
         print(f"\tADDR={self.addr}")
         print(f"\tCOMM={self.command}")
+        print(f"\tEND={self.end}")
+        print(f"\tRET={self.ret}")
+        print(f"\tOUT={self.out}")
         print(f"}}")
 
     def to_arr(self) -> List:
@@ -41,15 +46,21 @@ class Job():
         ret.append(f"{self.pid}")
         ret.append(f"{self.addr}")
         ret.append(f"{self.command}")
+        ret.append(f"{self.end}")
+        ret.append(f"{self.ret}")
+        ret.append(f"{self.out}")
         return ret
 
     def from_arr(self, arr:List):
-        if len(arr) <= 3 : 
+        if len(arr) <= 6 : 
             raise RuntimeError(f"Array needed to create Job has incorrect length: {arr}")
         self.id         = arr[0]
         self.pid        = arr[1]
         self.addr       = arr[2]
         self.command    = arr[3]
+        self.end        = True if arr[4] == "True" else False
+        self.ret        = arr[5]
+        self.out        = arr[6]
 
 class Node():
     def __init__(self, name:str, ip:str, port:str, type, LOG_LEVEL=LOG_LEVEL.NONE):
@@ -103,34 +114,29 @@ class Node():
         self.send_message(id, MessageType.CONNECT, f=MessageFlag.NONE, data=data)
         ok, m = self.expect_message(id, MessageType.ACK, MessageFlag.NONE)
         if not ok or addr != m.data[0]: self.err_message(m, "CONNECT ACK ERR")
-        d = m.data
         print(f"ESTABLISHED => {addr}")
-        return m, d
+        return m, m.data
 
     def handshake_report(self, id:int, data:list, addr:str):
         self.send_message(id, MessageType.REPORT, f=MessageFlag.NONE, data=data)
         ok, m = self.expect_message(id, MessageType.ACK, MessageFlag.NONE)
-        if not ok: 
-            self.err_message(m, "REPORT ACK ERR")
-        d = m.data
+        if not ok: self.err_message(m, "REPORT ACK ERR")
         print(f"REPORT <= {addr}")
-        return m, d
+        return m, m.data
 
     def handshake_parent(self, id:int, data:list, addr:str):
         self.send_message(id, MessageType.COMMAND, f=MessageFlag.PARENT, data=data)
         ok, m = self.expect_message(id, MessageType.ACK, MessageFlag.PARENT)
         if not ok: self.err_message(m, "PARENT ACK ERR")
-        d = m.data
-        print(f"MANAGER => PARENT[{addr}] => RUNNING '{d[-1]}'")
-        return m, d
+        print(f"MANAGER => PARENT[{addr}] => RUNNING '{m.data[-1]}'")
+        return m, m.data
 
     def handshake_child(self, id:int, data:list, addr:str):
         self.send_message(id, MessageType.COMMAND, f=MessageFlag.CHILD, data=data)
         ok, m = self.expect_message(id, MessageType.ACK, MessageFlag.CHILD)
         if not ok: self.err_message(m, "CHILD ACK ERR")
-        d = m.data
-        print(f"PARENT => CHILD[{addr}] => RUNNING '{d[-1]}'")
-        return m, d
+        print(f"PARENT => CHILD[{addr}] => RUNNING '{m.data[-1]}'")
+        return m, m.data
 
     def connect(self, target:str):
         ip = target.split(":")[0]
@@ -175,14 +181,15 @@ class Node():
         return job
 
     def check_jobs(self, rj:Job):
-        ret = Job()
+        ret = rj
         for t, j in list(self.jobs.items()):
             if rj.id == j.id:
-                ret = j
                 if not t.is_alive():
+                    ret = j
                     del self.jobs[t]
-                return True, ret
-        return False, ret
+                    return True, ret, True
+                return True, ret, False
+        return False, ret, False
 
     def print_jobs(self, header:str="JOBS: "):
         print(f"{header}{{")
@@ -198,6 +205,9 @@ class Node():
         print(f"{header}: {{")
         for i,a in enumerate(addrs): print(f"\t{i} => {a}")
         print("}")
+
+    def print_job(self, j:Job, header:str=""):
+        j.print(header=header)
 
     def print_message(self, m:Message, header:str=""):
         print(f"{header}{{")

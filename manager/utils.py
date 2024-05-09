@@ -1,6 +1,12 @@
 import yaml
 
+from enum import Enum
 from typing import List
+
+class LOG_LEVEL(Enum):
+    NONE = 1 
+    DEBUG = 2 
+    ERROR = 3
 
 def dict_to_arr(d:dict) -> List:
     ret = []
