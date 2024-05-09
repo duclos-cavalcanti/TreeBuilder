@@ -7,6 +7,7 @@ from .utils     import read_yaml, dict_to_arr
 
 import zmq
 import os
+import time
 import random
 
 from typing import Callable
@@ -89,6 +90,7 @@ class Manager(Node):
         self.push_step(self.step(action="REPORT", desc="Check on external Jobs"))
 
     def report(self):
+        time.sleep(1)
         j = self.pop_job()
         if not j:
             raise RuntimeError(f"MANAGER HAS NO EXTERNAL JOBS")
@@ -96,8 +98,12 @@ class Manager(Node):
         self.connect(addr)
         id = self.tick 
         data = j.to_arr()
-        r, d = self.handshake_report(id, data, addr)
+        _, d = self.handshake_report(id, data, addr)
         self.disconnect(addr)
+        ret = Job(arr=d)
+        if ret.end == False:
+            self.push_job(j)
+            self.push_step(self.step(action="REPORT", desc="Check on external Jobs"))
 
     def run(self):
         try:
@@ -194,7 +200,9 @@ class Worker(Node):
         ok, j = self.check_jobs(ref_job)
         if not ok:
             raise RuntimeError(f"WORKER HAS NO JOBS TO REPORT ON")
-        self.send_message_ack(m, data=[f"{self.socket.ip}:{self.port}"])
+        else: 
+            j = ref_job
+        self.send_message_ack(m, data=j.to_arr())
 
     def run(self):
         self.socket.bind("tcp", self.socket.ip, self.port)
@@ -204,6 +212,7 @@ class Worker(Node):
                 match m.type:
                     case MessageType.CONNECT: self.connectACK(m)
                     case MessageType.COMMAND: self.commandACK(m)
+                    case MessageType.REPORT:  self.reportACK(m)
                     case _:                   self.err_message(m, f"UNEXPECTED MSG: {MessageType.Name(MessageType.ACK)} | {m.id}")
                 self.tick += 1
 

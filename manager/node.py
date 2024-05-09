@@ -112,6 +112,7 @@ class Node():
         ok, m = self.expect_message(id, MessageType.ACK, MessageFlag.NONE)
         if not ok: 
             self.err_message(m, "REPORT ACK ERR")
+        d = m.data
         print(f"REPORT <= {addr}")
         return m, d
 
@@ -174,7 +175,7 @@ class Node():
         return job
 
     def check_jobs(self, rj:Job):
-        ret = None
+        ret = Job()
         for t, j in list(self.jobs.items()):
             if rj.id == j.id:
                 ret = j
