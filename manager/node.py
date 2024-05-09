@@ -3,6 +3,9 @@ from .message_pb2 import Message, MessageType, MessageFlag
 
 import zmq
 import time
+import subprocess
+import threading
+import hashlib
 
 from typing import Tuple, List
 
@@ -10,16 +13,22 @@ class Job():
     def __init__(self, addr:str="", command:str="", arr:list=[]):
         if len(arr) > 0:
             self.from_arr(arr)
-            return
-        self.own        = False
-        self.id         = 0
-        self.pid        = 0
-        self.addr       = addr
-        self.command    = command
+        else:
+            self.id         = self.hash(f"{addr}{command}")
+            self.pid        = 0
+            self.addr       = addr
+            self.command    = command
+        self.end        = False
+        self.ret        = -1
+        self.out        = ""
+
+    def hash(self, string:str) -> str: 
+        bytes = string.encode('utf-8')
+        hash = hashlib.sha256(bytes)
+        return hash.hexdigest()
 
     def print(self, header:str):
         print(f"{header}{{")
-        print(f"\tOWN={self.own}")
         print(f"\tID={self.id}")
         print(f"\tPID={self.pid}")
         print(f"\tADDR={self.addr}")
@@ -37,7 +46,6 @@ class Job():
     def from_arr(self, arr:List):
         if len(arr) <= 3 : 
             raise RuntimeError(f"Array needed to create Job has incorrect length: {arr}")
-        self.own        =  False
         self.id         = arr[0]
         self.pid        = arr[1]
         self.addr       = arr[2]
@@ -45,17 +53,19 @@ class Job():
 
 class Node():
     def __init__(self, name:str, ip:str, port:str, type, LOG_LEVEL=LOG_LEVEL.NONE):
-        self.name = name.upper()
-        self.ip   = ip
-        self.port = port
-        self.tick = 0
-        self.LOG_LEVEL = LOG_LEVEL
+        self.name       = name.upper()
+        self.hostaddr   = f"{ip}:{port}"
+        self.ip         = ip
+        self.port       = port
+        self.tick       = 0
+        self.LOG_LEVEL  = LOG_LEVEL
 
         if type   == zmq.REP:   self.socket = ReplySocket(self.name, protocol="tcp", ip=ip, port=port, LOG_LEVEL=LOG_LEVEL)
         elif type == zmq.REQ:   self.socket = RequestSocket(self.name, protocol="tcp", ip=ip, port=port, LOG_LEVEL=LOG_LEVEL)
         else:                   raise NotImplementedError(f"ZMQSOCKET TYPE: {type}")
 
-        self.jobs = []
+        self.external_jobs = []
+        self.jobs = {}
 
     def message(self, id:int, t:MessageType, f:MessageFlag, data:list):
         m = Message()
@@ -97,12 +107,20 @@ class Node():
         print(f"ESTABLISHED => {addr}")
         return m, d
 
+    def handshake_report(self, id:int, data:list, addr:str):
+        self.send_message(id, MessageType.REPORT, f=MessageFlag.NONE, data=data)
+        ok, m = self.expect_message(id, MessageType.ACK, MessageFlag.NONE)
+        if not ok: 
+            self.err_message(m, "REPORT ACK ERR")
+        print(f"REPORT <= {addr}")
+        return m, d
+
     def handshake_parent(self, id:int, data:list, addr:str):
         self.send_message(id, MessageType.COMMAND, f=MessageFlag.PARENT, data=data)
         ok, m = self.expect_message(id, MessageType.ACK, MessageFlag.PARENT)
         if not ok: self.err_message(m, "PARENT ACK ERR")
         d = m.data
-        print(f"PARENT[{addr}] => RUNNING '{d[-1]}'")
+        print(f"MANAGER => PARENT[{addr}] => RUNNING '{d[-1]}'")
         return m, d
 
     def handshake_child(self, id:int, data:list, addr:str):
@@ -110,7 +128,7 @@ class Node():
         ok, m = self.expect_message(id, MessageType.ACK, MessageFlag.CHILD)
         if not ok: self.err_message(m, "CHILD ACK ERR")
         d = m.data
-        print(f"CHILD[{addr}] => RUNNING '{d[-1]}'")
+        print(f"PARENT => CHILD[{addr}] => RUNNING '{d[-1]}'")
         return m, d
 
     def connect(self, target:str):
@@ -123,21 +141,57 @@ class Node():
         port = target.split(":")[1]
         self.socket.disconnect("tcp", ip, port)
 
+    def pop_job(self):
+        if len(self.external_jobs) == 0: 
+            return None 
+        j = self.external_jobs[0]
+        self.external_jobs.pop(0)
+        return j
+
     def push_job(self, job:Job):
-        if f"{self.ip}:{self.port}" == job.addr:
-            job.own = True
-        self.jobs.append(job)
+        self.external_jobs.append(job)
 
     def exec_job(self, job:Job) -> Job:
-        job.id = self.tick
-        print(f"RUNNING[{job.addr}] => {job.command}")
-        self.push_job(job)
+        def run_job(j:Job):
+            print(f"RUNNING[{job.addr}] => {job.command}")
+            try:
+                p = subprocess.Popen(
+                    j.command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True
+                )
+                j.pid = p.pid
+                stdout, stderr = p.communicate()
+                j.ret = p.returncode
+                j.out = stdout if stdout else stderr
+            except Exception as e:
+                j.ret = -1
+                j.out = f"Error occurred: {e}"
+            finally:
+                j.end = True
+
+        t = threading.Thread(target=run_job, args=(job,))
+        t.start()
+        self.jobs[t] = job
         return job
+
+    def check_jobs(self, rj:Job):
+        ret = None
+        for t, j in list(self.jobs.items()):
+            if rj.id == j.id:
+                ret = j
+                if not t.is_alive():
+                    del self.jobs[t]
+                return True, ret
+        return False, ret
 
     def print_jobs(self, header:str="JOBS: "):
         print(f"{header}{{")
-        for i,j in enumerate(self.jobs):
-            j.print(header=f"[{i}]:")
+        cnt = 0
+        for t, j in list(self.jobs.items()):
+            j.print(header=f"RUNNING[{cnt}] = {t.is_alive()}:")
+            cnt += 1
+
+        for i,j in enumerate(self.external_jobs):
+            j.print(header=f"[EXTERNAL {i}]:")
 
     def print_addrs(self, addrs:list, header:str):
         print(f"{header}: {{")

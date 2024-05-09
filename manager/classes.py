@@ -28,6 +28,13 @@ class Manager(Node):
     def print_node(self, n:dict, idx:int, header:str):
         print(f"{header}: {idx} => {n}")
 
+    def step(self, action:str, desc:str) -> dict:
+        d = {
+            "action": action,
+            "description": desc
+        }
+        return d
+
     def pop_step(self):
         if len(self.steps) == 0: return None
         s = self.steps[0]
@@ -41,9 +48,10 @@ class Manager(Node):
     def process_step(self, s:dict, callback:Callable):
         i   = s['i']
         act = s['action']
-        self.print(f"STEP[{i}]: {act} => START    \t------>", prefix="\033[31m", suffix="\033[0m")
+        dsc = s['description']
+        self.print(f"STEP[{i}]: {act} => START    | {dsc}\t------>", prefix="\033[31m", suffix="\033[0m")
         callback()
-        self.print(f"STEP[{i}]: {act} => COMPLETE \t<------", prefix="\033[92m", suffix="\033[0m")
+        self.print(f"STEP[{i}]: {act} => COMPLETE | {dsc}\t<------", prefix="\033[92m", suffix="\033[0m")
 
     def select(self):
         pool = self.pool
@@ -74,10 +82,22 @@ class Manager(Node):
         data += self.pool
         self.connect(root)
         _, d = self.handshake_parent(id, data, root)
-        self.push_job(Job(arr=d))
+        job = Job(arr=d)
+        self.push_job(job)
         self.print_jobs()
         self.disconnect(root)
+        self.push_step(self.step(action="REPORT", desc="Check on external Jobs"))
 
+    def report(self):
+        j = self.pop_job()
+        if not j:
+            raise RuntimeError(f"MANAGER HAS NO EXTERNAL JOBS")
+        addr = j.addr
+        self.connect(addr)
+        id = self.tick 
+        data = j.to_arr()
+        r, d = self.handshake_report(id, data, addr)
+        self.disconnect(addr)
 
     def run(self):
         try:
@@ -87,6 +107,7 @@ class Manager(Node):
                 match step["action"]:
                     case "CONNECT": self.process_step(step, self.establish)
                     case "ROOT":    self.process_step(step, self.root)
+                    case "REPORT":  self.process_step(step, self.report)
                     case _:         raise NotImplementedError(f"ERR STEP: {step}")
                 self.tick += 1
 
@@ -102,15 +123,27 @@ class Worker(Node):
     def __init__(self, name:str, ip:str, port:str, LOG_LEVEL=LOG_LEVEL.NONE):
         super().__init__(name, ip, port, zmq.REP, LOG_LEVEL)
 
+    def child_command(self) -> str:
+        c = f"./bin/child -i {self.ip} -p {int(self.port) - 1000}"
+        return f"sleep 10 && echo {self.hostaddr}"
+
     def childACK(self, m:Message):
         data = m.data
-        if f"{self.ip}:{self.port}" != data[0]: 
+        if len(data) < 2 : 
             self.err_message(m, "CHILD COMMAND ERR")
 
-        job = Job(addr=f"{self.ip}:{self.port}", command=f"./bin/child -i {self.ip} -p {int(self.port) - 1000}")
-        job = self.exec_job(job)
+        if self.hostaddr != data[1]: 
+            self.err_message(m, "CHILD COMMAND ERR")
+
+        job = Job(addr=self.hostaddr, 
+                  command=self.child_command())
+        self.exec_job(job)
         self.print_jobs()
         self.send_message_ack(m, data=job.to_arr())
+
+    def parent_command(self, addrs, rate, dur) -> str:
+        c = "./bin/parent -a " + " ".join(f"{a}" for a in addrs) + f" -r {rate} -d {dur}"
+        return f"sleep 10 && echo {self.hostaddr}"
 
     def parentACK(self, m:Message):
         data = m.data
@@ -133,13 +166,14 @@ class Worker(Node):
 
         for n, addr in zip(nodes, addrs):
             id = self.tick
-            data = [f"{addr}"]
+            data = [self.hostaddr , addr]
             _, d = n.handshake_child(id, data, addr)
             self.push_job(Job(arr=d))
             n.disconnect(addr)
 
-        job = Job(addr=f"{self.ip}:{self.port}", command="./bin/parent -a " + " ".join(f"{a}" for a in addrs) + f" -r {rate} -d {dur}")
-        job = self.exec_job(job)
+        job = Job(addr=self.hostaddr,
+                  command=self.parent_command(addrs, rate, dur))
+        self.exec_job(job)
         self.print_jobs()
         self.send_message_ack(m, data=job.to_arr())
 
@@ -156,7 +190,11 @@ class Worker(Node):
 
     def reportACK(self, m:Message):
         self.print_message(m, header="RECEIVED MESSAGE: ")
-        raise NotImplementedError(f"REPORT MESSAGE")
+        ref_job = Job(arr=m.data)
+        ok, j = self.check_jobs(ref_job)
+        if not ok:
+            raise RuntimeError(f"WORKER HAS NO JOBS TO REPORT ON")
+        self.send_message_ack(m, data=[f"{self.socket.ip}:{self.port}"])
 
     def run(self):
         self.socket.bind("tcp", self.socket.ip, self.port)

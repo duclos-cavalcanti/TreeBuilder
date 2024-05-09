@@ -13,8 +13,8 @@ addrs:
   - "localhost:9096"
 steps:
   - action: "CONNECT"
-    description: "Establish connection with worker nodes."
-    val: 0
+    description: "Establish connection workers."
+    data: 0
   - action: "ROOT"
-    description: "Choose root node among worker nodes."
-    val: 0
+    description: "Choose root among worker nodes."
+    data: 0
