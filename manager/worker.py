@@ -19,7 +19,7 @@ class Worker(Node):
         if len(data) < 2 : 
             self.err_message(m, "CHILD COMMAND ERR")
 
-        if self.hostaddr != data[1]: 
+        if self.hostaddr != data[0]: 
             self.err_message(m, "CHILD COMMAND ERR")
 
         job = Job(addr=self.hostaddr, 
@@ -41,42 +41,31 @@ class Worker(Node):
         rate  = int(data[1])
         dur   = int(data[2])
         addrs = data[3:]
-        nodes = []
         self.print_addrs(addrs, f"CHILDREN => SELECT {sel}")
-        for i, addr in enumerate(addrs):
-            n = Node(f"{self.name}::PARENT", self.ip, f"{int(self.port) + 1000 + i}", zmq.REQ, self.LOG_LEVEL)
+        n = Node(f"{self.name}::PARENT", self.ip, f"{int(self.port) + 1000}", zmq.REQ, self.LOG_LEVEL)
+        job = Job(addr=self.hostaddr, command=self.parent_command(addrs, rate, dur))
+        for addr in addrs:
             id = self.tick
-            data = [f"{addr}"]
+            data = [addr, self.hostaddr]
             n.connect(addr)
-            _ = n.handshake_connect(id, data, addr)
-            nodes.append(n)
-
-        for n, addr in zip(nodes, addrs):
-            id = self.tick
-            data = [self.hostaddr , addr]
-            _, d = n.handshake_child(id, data, addr)
-            self.push_job(Job(arr=d))
+            n.handshake_connect(id, data, addr)
+            r = n.handshake_child(id, data, addr)
+            job.deps.append(Job(m=r))
             n.disconnect(addr)
-
-        job = Job(addr=self.hostaddr,
-                  command=self.parent_command(addrs, rate, dur))
         self.exec_job(job)
         self.print_jobs()
         self.send_message_ack(m, data=job.to_arr())
 
     def connectACK(self, m:Message):
-        self.print_message(m, header="M: ")
-        self.send_message_ack(m, data=[f"{self.socket.ip}:{self.port}"])
+        self.send_message_ack(m, data=[self.hostaddr])
 
     def commandACK(self, m:Message):
-        self.print_message(m, header="M: ")
         if   m.flag == MessageFlag.PARENT: self.parentACK(m)
         elif m.flag == MessageFlag.CHILD:  self.childACK(m)
         else:
             raise NotImplementedError(f"MESSAGE FLAG: {MessageFlag.Name(m.flag)}")
 
     def reportACK(self, m:Message):
-        self.print_message(m, header="M: ")
         ref_job = Job(arr=m.data)
         ok, j, end = self.check_jobs(ref_job)
         if not ok: raise RuntimeError(f"WORKER HAS NO JOBS TO REPORT ON")
@@ -86,6 +75,7 @@ class Worker(Node):
     def process_message(self, m:Message, callback:Callable):
         self.print(f"------>", prefix="\033[31m", suffix="\033[0m")
         self.print(f"MESSAGE[{m.id}]: {MessageType.Name(m.type)} => RECEIVED", prefix="\033[31m", suffix="\033[0m")
+        self.print_message(m, header="M: ")
         callback(m)
         self.print(f"MESSAGE[{m.id}]: {MessageType.Name(m.type)} => PROCESSED", prefix="\033[92m", suffix="\033[0m")
         self.print(f"<------", prefix="\033[92m", suffix="\033[0m")

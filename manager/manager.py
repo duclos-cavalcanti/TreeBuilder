@@ -16,10 +16,10 @@ class Manager(Node):
         self.config     = read_yaml(os.path.join(os.getcwd(), "manager", "default.yaml"))
         self.workers    = self.config["addrs"][1:]
         self.pool       = self.workers
-        self.rate       = self.config["rate"]
-        self.duration   = self.config["duration"]
+        self.rate       = int(self.config["rate"])
+        self.duration   = int(self.config["duration"])
         self.K          = self.config["hyperparameter"]
-        self.N          = int(self.config["nodes"])
+        self.N          = int(len(self.workers))
         self.steps      = self.config["steps"]
         self.tree       = Tree(self.N)
 
@@ -63,7 +63,7 @@ class Manager(Node):
         if not targets: targets = self.workers
         for addr in targets:
             id = self.tick
-            data = [f"{addr}"]
+            data = [addr, self.hostaddr]
             self.connect(addr)
             self.handshake_connect(id, data, addr)
             self.disconnect(addr)
@@ -81,30 +81,28 @@ class Manager(Node):
         data += [ self.duration ]
         data += self.pool
         self.connect(root)
-        _, d = self.handshake_parent(id, data, root)
-        job = Job(arr=d)
-        self.push_job(job)
+        self.handshake_parent(id, data, root)
+        self.exec_job(Job(addr=self.hostaddr, command=f"sleep {1.2 * self.duration}s"))
+        self.push_step(self.step(action="REPORT", desc="Check on external Jobs"))
         self.print_jobs()
         self.disconnect(root)
-        self.push_step(self.step(action="REPORT", desc="Check on external Jobs"))
 
     def report(self):
-        time.sleep(1)
-        j = self.pop_job()
-        if not j: raise RuntimeError(f"MANAGER HAS NO EXTERNAL JOBS")
-        addr = j.addr
+        ok, j, end = self.check_jobs(ref_job)
+        if not ok: raise RuntimeError(f"WORKER HAS NO JOBS TO REPORT ON")
+        if end: self.print_job(j, header=f"JOB DONE:")
+        addr = job.addr
         self.connect(addr)
         id = self.tick 
-        r, d = self.handshake_report(id, j.to_arr(), addr)
+        r, d, ts = self.handshake_report(id, job.to_arr(), addr)
         ret = Job(arr=d)
-        self.print_message(r, header="REPORTED MESSAGE: ") 
-        self.print_job(ret, header=f"REPORTED JOB:")
         if ret.end == False:
             print(f"REPORTED JOB [{addr}] => INCOMPLETE")
-            self.push_job(j)
+            self.jobs[ts] = job
             self.push_step(self.step(action="REPORT", desc="Check on external Jobs"))
         else:
             print(f"REPORTED JOB [{addr}] => COMPLETE")
+        self.print_message(r, header="REPORTED MESSAGE: ") 
         self.disconnect(addr)
 
     def run(self):

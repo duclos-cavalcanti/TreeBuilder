@@ -6,13 +6,13 @@ import zmq
 import time
 import subprocess
 import threading
-import copy
 import hashlib
 
 from typing import Tuple, List
 
 class Job():
-    def __init__(self, addr:str="", command:str="", arr:list=[]):
+    def __init__(self, addr:str="", command:str="", m:Message=Message()):
+        arr = m.data
         if len(arr) > 0:
             self.from_arr(arr)
         else:
@@ -23,6 +23,7 @@ class Job():
             self.end        = False
             self.ret        = -1
             self.out        = "NONE"
+        self.deps       = []
 
     def hash(self, string:str) -> str: 
         bytes = string.encode('utf-8')
@@ -38,6 +39,14 @@ class Job():
         print(f"\tEND={self.end}")
         print(f"\tRET={self.ret}")
         print(f"\tOUT={self.out}")
+        if len(self.deps) > 0:
+            print("DEPS: [")
+            for d in self.deps:
+                print(f"{{")
+                print(f"\tID={d.id}")
+                print(f"\tADDR={d.addr}")
+                print(f"}}")
+            print("]")
         print(f"}}")
 
     def to_arr(self) -> List:
@@ -75,13 +84,15 @@ class Node():
         elif type == zmq.REQ:   self.socket = RequestSocket(self.name, protocol="tcp", ip=ip, port=port, LOG_LEVEL=LOG_LEVEL)
         else:                   raise NotImplementedError(f"ZMQSOCKET TYPE: {type}")
 
-        self.external_jobs = []
-        self.jobs = {}
+        self.jobs     = {}
+
+    def timestamp(self) -> int: 
+        return int(time.time_ns() / 1_000)
 
     def message(self, id:int, t:MessageType, f:MessageFlag, data:list):
         m = Message()
         m.id    = id
-        m.ts    = int(time.time_ns() / 1_000)
+        m.ts    = self.timestamp()
         m.type  = t
         m.flag  = f
         if data: 
@@ -115,28 +126,28 @@ class Node():
         ok, m = self.expect_message(id, MessageType.ACK, MessageFlag.NONE)
         if not ok or addr != m.data[0]: self.err_message(m, "CONNECT ACK ERR")
         print(f"ESTABLISHED => {addr}")
-        return m, m.data
+        return m
 
     def handshake_report(self, id:int, data:list, addr:str):
         self.send_message(id, MessageType.REPORT, f=MessageFlag.NONE, data=data)
         ok, m = self.expect_message(id, MessageType.ACK, MessageFlag.NONE)
         if not ok: self.err_message(m, "REPORT ACK ERR")
         print(f"REPORT <= {addr}")
-        return m, m.data
+        return m
 
     def handshake_parent(self, id:int, data:list, addr:str):
         self.send_message(id, MessageType.COMMAND, f=MessageFlag.PARENT, data=data)
         ok, m = self.expect_message(id, MessageType.ACK, MessageFlag.PARENT)
         if not ok: self.err_message(m, "PARENT ACK ERR")
-        print(f"MANAGER => PARENT[{addr}] => RUNNING '{m.data[-1]}'")
-        return m, m.data
+        print(f"MANAGER => PARENT[{addr}] => RUNNING PROCESS")
+        return m
 
     def handshake_child(self, id:int, data:list, addr:str):
         self.send_message(id, MessageType.COMMAND, f=MessageFlag.CHILD, data=data)
         ok, m = self.expect_message(id, MessageType.ACK, MessageFlag.CHILD)
         if not ok: self.err_message(m, "CHILD ACK ERR")
-        print(f"PARENT => CHILD[{addr}] => RUNNING '{m.data[-1]}'")
-        return m, m.data
+        print(f"PARENT => CHILD[{addr}] => RUNNING PROCESS")
+        return m
 
     def connect(self, target:str):
         ip = target.split(":")[0]
@@ -148,19 +159,9 @@ class Node():
         port = target.split(":")[1]
         self.socket.disconnect("tcp", ip, port)
 
-    def pop_job(self):
-        if len(self.external_jobs) == 0: 
-            return None 
-        j = self.external_jobs[0]
-        self.external_jobs.pop(0)
-        return j
-
-    def push_job(self, job:Job):
-        self.external_jobs.append(job)
-
     def exec_job(self, job:Job) -> Job:
         def run_job(j:Job):
-            print(f"RUNNING[{job.addr}] => {job.command}")
+            print(f"RUNNING[{j.addr}] => {j.command}")
             try:
                 p = subprocess.Popen(
                     j.command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True
@@ -195,11 +196,9 @@ class Node():
         print(f"{header}{{")
         cnt = 0
         for t, j in list(self.jobs.items()):
-            j.print(header=f"RUNNING[{cnt}] = {t.is_alive()}:")
+            j.print(header=f"JOB[{cnt}]: ALIVE={t.is_alive()} => ")
             cnt += 1
-
-        for i,j in enumerate(self.external_jobs):
-            j.print(header=f"[EXTERNAL {i}]:")
+        print(f"}}")
 
     def print_addrs(self, addrs:list, header:str):
         print(f"{header}: {{")
