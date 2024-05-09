@@ -25,7 +25,7 @@ proto:
 	cd manager && protoc --python_out . message.proto
 	cd src/utils && protoc --cpp_out . message.proto
 
-udp: build
+udp: build clean
 	@./run.sh --build docker
 	@./run.sh --deploy docker --mode udp
 
@@ -33,19 +33,19 @@ build:
 	@cd build && cmake ..
 	@cd build && make
 
-docker:
+docker: clean
 	@./run.sh --build docker
 	@./run.sh --deploy docker --mode manager
 
-vagrant:
+vagrant: clean
 	@./run.sh --build  vagrant
 	@./run.sh --deploy vagrant
 
+gcp: clean
+	@./run.sh --deploy gcp --mode default
+
 image:
 	@./run.sh --build gcp
-
-gcp:
-	@./run.sh --deploy gcp --mode default
 
 clean:
 	@./run.sh --clean
