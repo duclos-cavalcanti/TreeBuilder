@@ -18,14 +18,17 @@ ifeq (, $(shell which terraform))
 $(error terraform not found)
 endif
 
-.PHONY: build proto udp docker vagrant gcp image clean rm
+.PHONY: build docs proto udp docker vagrant gcp image clean rm
 all: build
+
+docs:
+	$(MAKE) -c docs/slidev
 
 proto:
 	cd manager && protoc --python_out . message.proto
 	cd src/utils && protoc --cpp_out . message.proto
 
-udp: build clean
+udp: build
 	@./run.sh --build docker
 	@./run.sh --deploy docker --mode udp
 
@@ -33,15 +36,15 @@ build:
 	@cd build && cmake ..
 	@cd build && make
 
-docker: clean
+docker:
 	@./run.sh --build docker
 	@./run.sh --deploy docker --mode manager
 
-vagrant: clean
+vagrant:
 	@./run.sh --build  vagrant
 	@./run.sh --deploy vagrant
 
-gcp: clean
+gcp:
 	@./run.sh --deploy gcp --mode default
 
 image:
@@ -50,7 +53,7 @@ image:
 clean:
 	@./run.sh --clean
 	@find . -path ./jasper -prune -type f -name "*.tar.gz" -print0 | xargs -0 -I {} rm -v {}
-	
+
 rm: clean
 	@./run.sh --remove docker
 	
