@@ -7,7 +7,7 @@ UID := $(shell id -u)
 GID := $(shell id -g)
 
 DOCKER := tangramor/slidev:latest
-NAME := slidev
+NAME := slidev-ma
 
 .PHONY: run stop exit clean
 all: run
@@ -16,7 +16,7 @@ run:
 	docker run --name ${NAME} --rm -it \
     --user node \
     -v ${PWD}:/slidev \
-    -p 3030:3030 \
+    -p 3031:3030 \
     -e NPM_MIRROR="https://registry.npmmirror.com" \
     ${DOCKER}
 
