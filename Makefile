@@ -21,9 +21,6 @@ endif
 .PHONY: build docs proto udp docker vagrant gcp image clean rm
 all: build
 
-docs:
-	$(MAKE) -c docs/slidev
-
 proto:
 	cd manager && protoc --python_out . message.proto
 	cd src/utils && protoc --cpp_out . message.proto
@@ -56,5 +53,12 @@ clean:
 
 rm: clean
 	@./run.sh --remove docker
+
+docs:
+	$(MAKE) -C docs/slidev
+
+test:
+	@python3 -m pytest -v tests/
+
 	
 
