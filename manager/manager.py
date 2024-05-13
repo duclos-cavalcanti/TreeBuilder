@@ -80,8 +80,7 @@ class Manager(Node):
 
     def report(self):
         trigger_ts, job = self.jobs.popitem()
-        # self.sleep_to(trigger_ts)
-        time.sleep(2)
+        self.sleep_to(trigger_ts)
         self.connect(job.addr)
         r = self.handshake(self.tick, MessageType.REPORT, MessageFlag.MANAGER, job.to_arr(), job.addr)
         rjob = Job(arr=r.data)

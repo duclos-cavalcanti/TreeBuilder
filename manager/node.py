@@ -124,20 +124,20 @@ class Node():
         future = trigger_ts
         now = self.timestamp()
         if future > now: 
-            self.sleep(future - now)
+            self.sleep_us(future - now)
         else:
             print(f"TRIGGER EXPIRED={future} < NOW={now}")
 
-    def sleep(self, dur_us:int): 
-        print(f"SLEEPING UNTIL {self.timestamp() + dur_us}")
+    def sleep_us(self, dur_us:int): 
+        print(f"SLEEPING FOR: {dur_us}")
         time.sleep(self.usec_to_sec(dur_us))
         print(f"AWAKE: {self.timestamp()}")
 
     def sec_to_usec(self, sec:int) -> int:
         return (sec * 1_000_000)
     
-    def usec_to_sec(self, usec:int) -> int:
-        return int(usec / 1_000_000)
+    def usec_to_sec(self, usec:int) -> float:
+        return usec / 1_000_000
     
     def timestamp(self) -> int: 
         return int(time.time_ns() / 1_000)
