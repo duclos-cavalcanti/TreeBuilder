@@ -20,7 +20,7 @@ DESCRIPTOR = _descriptor.FileDescriptor(
   syntax='proto3',
   serialized_options=None,
   create_key=_descriptor._internal_create_key,
-  serialized_pb=b'\n\rmessage.proto\"g\n\x07Message\x12\n\n\x02id\x18\x01 \x01(\x05\x12\n\n\x02ts\x18\x02 \x01(\x03\x12\x1a\n\x04type\x18\x03 \x01(\x0e\x32\x0c.MessageType\x12\x1a\n\x04\x66lag\x18\x04 \x01(\x0e\x32\x0c.MessageFlag\x12\x0c\n\x04\x64\x61ta\x18\x05 \x03(\t*<\n\x0bMessageType\x12\x07\n\x03\x41\x43K\x10\x00\x12\x0b\n\x07\x43ONNECT\x10\x01\x12\x0b\n\x07\x43OMMAND\x10\x02\x12\n\n\x06REPORT\x10\x03*.\n\x0bMessageFlag\x12\x08\n\x04NONE\x10\x00\x12\n\n\x06PARENT\x10\x01\x12\t\n\x05\x43HILD\x10\x02\x62\x06proto3'
+  serialized_pb=b'\n\rmessage.proto\"g\n\x07Message\x12\n\n\x02id\x18\x01 \x01(\x05\x12\n\n\x02ts\x18\x02 \x01(\x03\x12\x1a\n\x04type\x18\x03 \x01(\x0e\x32\x0c.MessageType\x12\x1a\n\x04\x66lag\x18\x04 \x01(\x0e\x32\x0c.MessageFlag\x12\x0c\n\x04\x64\x61ta\x18\x05 \x03(\t*<\n\x0bMessageType\x12\x07\n\x03\x41\x43K\x10\x00\x12\x0b\n\x07\x43ONNECT\x10\x01\x12\x0b\n\x07\x43OMMAND\x10\x02\x12\n\n\x06REPORT\x10\x03*;\n\x0bMessageFlag\x12\x08\n\x04NONE\x10\x00\x12\n\n\x06PARENT\x10\x01\x12\t\n\x05\x43HILD\x10\x02\x12\x0b\n\x07MANAGER\x10\x03\x62\x06proto3'
 )
 
 _MESSAGETYPE = _descriptor.EnumDescriptor(
@@ -81,11 +81,16 @@ _MESSAGEFLAG = _descriptor.EnumDescriptor(
       serialized_options=None,
       type=None,
       create_key=_descriptor._internal_create_key),
+    _descriptor.EnumValueDescriptor(
+      name='MANAGER', index=3, number=3,
+      serialized_options=None,
+      type=None,
+      create_key=_descriptor._internal_create_key),
   ],
   containing_type=None,
   serialized_options=None,
   serialized_start=184,
-  serialized_end=230,
+  serialized_end=243,
 )
 _sym_db.RegisterEnumDescriptor(_MESSAGEFLAG)
 
@@ -97,6 +102,7 @@ REPORT = 3
 NONE = 0
 PARENT = 1
 CHILD = 2
+MANAGER = 3
 
 
 

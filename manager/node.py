@@ -1,6 +1,6 @@
 from .zmqsocket import Socket
 from .message_pb2 import Message, MessageType, MessageFlag
-from .job import Job, Report
+from .job import Job
 from .utils import LOG_LEVEL
 
 import zmq
@@ -8,6 +8,7 @@ import time
 import subprocess
 import threading
 
+from collections import OrderedDict
 from typing import Callable
 
 class Node():
@@ -19,8 +20,8 @@ class Node():
         self.tick       = 0
         self.socket = Socket(self.name, type, LOG_LEVEL=LOG_LEVEL)
 
-        self.jobs = {}
-        self.reports = []
+        self.jobs = OrderedDict()
+        self.guards = OrderedDict()
 
     def connect(self, addr:str):
         ip = addr.split(":")[0]
@@ -56,24 +57,20 @@ class Node():
         self.print_message(m, header="ERR MESSAGE: ")
         raise RuntimeError(f"{s}")
 
-    def handshake(self, id, type, flag, data, addr):
+    def handshake(self, id, type, flag, data, addr, verbose=True):
         self.send_message(id, type, flag, data=data)
         m = self.recv_message()
         if not (m.id == id and m.type == MessageType.ACK and m.flag == flag):
             self.err_message(m, f"{MessageType.Name(type)}:{MessageFlag.Name(flag)} ACK ERR")
-        print(f"{MessageType.Name(type)}[{MessageFlag.Name(flag)}] => {addr}")
+        if verbose: print(f"{MessageType.Name(type)}[{MessageFlag.Name(flag)}] => {addr}")
         return m
 
     def _helper(self, type, name:str="HELPER"):
         h = Node(f"{self.name}::{name}", self.ip, f"{int(self.port) + 1000}", type, self.socket.LOG_LEVEL)
         return h
 
-    def _launch(self, target, args=()):
-        t = threading.Thread(target=target, args=args)
-        t.start()
-        return t
-
     def _run(self, j:Job):
+        print(f"RUNNING[{j.addr}] => {j.command}")
         try:
             p = subprocess.Popen(
                 j.command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True
@@ -89,54 +86,39 @@ class Node():
             j.end = True
         return j
 
-    def _alarm(self, j:Job, addr:str, rid:str):
-        ret = self._run(j)
+    def _guard(self, job:Job):
+        print(f"GUARDING[{job.id}] => DEPS={len(job.deps)}")
         n = self._helper(zmq.REQ)
-        n.connect(addr)
-        data = [ rid ] + ret.to_arr()
-        n.send_message(id=self.tick, 
-                          t=MessageType.REPORT, 
-                          flag=MessageFlag.NONE, 
-                          data=data)
-        n.recv_message()
-        t, _ = self.find(ret)
-        del self.jobs[t]
-        n.disconnect(addr)
+        while True:
+            time.sleep(2)
+            if job.is_resolved(): break
+            for idx, j in enumerate(job.deps):
+                if not j.end:
+                    n.connect(j.addr)
+                    r = n.handshake(self.tick, MessageType.REPORT, MessageFlag.NONE, j.to_arr(), j.addr, verbose=False)
+                    rjob = Job(arr=r.data)
+                    job.deps[idx] = rjob
+                    n.disconnect(j.addr)
 
-    def exec(self, job:Job, target:Callable, args=()) -> Job:
-        print(f"RUNNING[{job.addr}] => {job.command}")
-        t = self._launch(target=target, args=args)
-        self.jobs[t] = job
-        return job
+    def launch(self, target, args=()):
+        t = threading.Thread(target=target, args=args)
+        t.start()
+        return t
 
-    def find(self, rj:Job):
-        for k, j in list(self.jobs.items()):
+    def exec(self, target:Callable, args=()) -> threading.Thread:
+        t = self.launch(target=target, args=args)
+        return t
+
+    def find(self, rj:Job, dct={}):
+        if not dct: dct = self.jobs
+        for k, j in list(dct.items()):
             if rj.id == j.id:
                 return k, j
-        raise RuntimeError(f"{self.hostaddr} => does not have job matching {rj.id}")
+        raise RuntimeError(f"{self.hostaddr} => No Job matching {rj.id}")
 
-    def pop_report(self):
-        if len(self.reports) == 0:
-            raise RuntimeError(f"{self.hostaddr} does not have pending reports")
-
-        arr = self.reports[0]
-        rid = arr[0]
-        r = arr[1]
-        self.reports.pop(0)
-        return rid, r
-
-    def push_report(self, rid:str, r:Report):
-        self.reports.append([rid, r])
-
-    def find_report(self, rid:str, job:Job):
-        if len(self.reports) == 0:
-            raise RuntimeError(f"{self.hostaddr} does not have pending reports")
-        for idx, arr in enumerate(self.reports):
-            _rid = arr[0]
-            report = arr[1]
-            if rid == _rid and job.id == report.job.id:
-                return idx, report
-        raise RuntimeError(f"{self.hostaddr} does not have matching reports to {rid}")
+    def future_ts(self, sec:int): 
+        now = self.timestamp()
+        return (now + self.sec_to_usec(sec))
 
     def sleep_to(self, trigger_ts:int): 
         future = trigger_ts

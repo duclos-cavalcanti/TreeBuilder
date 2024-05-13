@@ -2,7 +2,7 @@ from .zmqsocket   import LOG_LEVEL
 from .message_pb2 import Message, MessageType, MessageFlag
 
 from .node      import Node
-from .job       import Job, Report
+from .job       import Job
 from .utils     import LOG_LEVEL
 from .utils     import *
 
@@ -12,11 +12,12 @@ class Worker(Node):
     def __init__(self, name:str, ip:str, port:str, LOG_LEVEL=LOG_LEVEL.NONE):
         super().__init__(name, ip, port, zmq.REP, LOG_LEVEL)
 
-    def child_job(self, addr:str, rid:str):
+    def child_job(self):
         C = f"./bin/child -i {self.ip} -p {int(self.port) - 1000}"
         C=f"sleep 10 && echo CHILD DONE"
         J = Job(addr=self.hostaddr, command=C)
-        return self.exec(J, target=self._alarm, args=(J, addr, rid,))
+        self.jobs[self.exec(target=self._run, args=(J,))] = J
+        return J
 
     def parent_job(self, sel:int, rate:int, dur:int, addrs:list):
         C = "./bin/parent -a " + " ".join(f"{a}" for a in addrs) + f" -r {rate} -d {dur}"
@@ -26,15 +27,17 @@ class Worker(Node):
 
         for addr in addrs:
             id = self.tick
-            data = [addr, self.hostaddr, J.id]
+            data = [addr, self.hostaddr]
             H.connect(addr)
             r = H.handshake(id, MessageType.COMMAND, MessageFlag.CHILD, data, addr)
             rjob = Job(arr=r.data)
-            trigger = r.ts + self.sec_to_usec(int(dur * 1.2))
-            self.reports.append([J.id, Report(trigger=trigger, job=rjob)])
+            J.deps.append(rjob)
             H.disconnect(addr)
 
-        return self.exec(J, target=self._run, args=(J,))
+        self.jobs[self.exec(target=self._run, args=(J,))] = J
+        self.guards[self.exec(target=self._guard, args=(J,))] = J
+
+        return J
 
     def commandACK(self, m:Message):
         id, _, flag, data = self.parse_message(m)
@@ -50,11 +53,9 @@ class Worker(Node):
                 self.send_message(id=id, t=MessageType.ACK, flag=flag, data=job.to_arr())
 
             case MessageFlag.CHILD:  
-                if len(data) < 3 or self.hostaddr != data[0]: 
+                if len(data) < 2 or self.hostaddr != data[0]: 
                     self.err_message(m, "CHILD COMMAND ERR")
-                addr = data[1]
-                rid = data[2]
-                job = self.child_job(addr, rid)
+                job = self.child_job()
                 self.send_message(id=id, t=MessageType.ACK, flag=flag, data=job.to_arr())
 
             case _:
@@ -62,17 +63,27 @@ class Worker(Node):
 
     def reportACK(self, m:Message):
         id, _, flag, data = self.parse_message(m)
-        rjob = Job(arr=data)
-        if rjob.addr == self.hostaddr:
-            t, job = self.find(Job(arr=data))
-            if not t.is_alive(): del self.jobs[t]
+        if flag == MessageFlag.MANAGER:
+            rjob = Job(arr=data)
+            t, job = self.find(rjob)
+            job.end = (not t.is_alive() and job.is_resolved())
+            if job.end: 
+                del self.jobs[t]
+                del t
+                t, _ = self.find(rjob, dct=self.guards)
+                del self.guards[t]
+                del t
+
+            print(f"JOB[{job.id}] => COMPLETE={job.end}")
             self.send_message(id=id, t=MessageType.ACK, flag=flag, data=job.to_arr())
         else:
-            rid = data[0]
-            job = Job(arr=data[1:])
-            idx, _ = self.find_report(rid, job)
-            self.reports.pop(idx)
-            self.send_message(id=id, t=MessageType.ACK, flag=flag, data=[])
+            t, job = self.find(Job(arr=data))
+            if not t.is_alive(): 
+                del self.jobs[t]
+                del t
+
+            print(f"JOB[{job.id}] => COMPLETE={job.end}")
+            self.send_message(id=id, t=MessageType.ACK, flag=flag, data=job.to_arr())
 
     def connectACK(self, m:Message):
         id, _, flag, data = self.parse_message(m)

@@ -16,6 +16,7 @@ class Job():
             self.end        = False
             self.ret        = -1
             self.out        = "NONE"
+        self.deps = deps
 
     def __str__(self):
         output = [f"{{"]
@@ -34,6 +35,12 @@ class Job():
         bytes = string.encode('utf-8')
         hash = hashlib.sha256(bytes)
         return hash.hexdigest()
+
+    def is_resolved(self) -> bool: 
+        for d in self.deps:
+            if d.end == False: 
+                return False
+        return True
 
     def to_arr(self) -> List:
         ret = []
@@ -54,17 +61,3 @@ class Job():
         self.end        = True if arr[4] == "True" else False
         self.ret        = arr[5]
         self.out        = arr[6]
-
-class Report():
-    def __init__(self, trigger:int, job:Job):
-        self.end = False
-        self.trigger = trigger
-        self.job= job
-
-    def __str__(self):
-        output = [f"REPORT: {{"]
-        output.append(f"\tEND={self.end}")
-        output.append(f"\tTRIGGER={self.trigger}")
-        output.append(f"\tJOB={self.job}")
-        output.append(f"}}")
-        return "\n".join(output)

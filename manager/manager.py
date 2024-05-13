@@ -1,12 +1,13 @@
 from .message_pb2 import Message, MessageType, MessageFlag
 from .node      import Node
-from .job       import Job, Report
+from .job       import Job
 from .tree      import Tree
 from .utils     import LOG_LEVEL
 from .utils     import *
 
 import zmq
 import random
+import time
 import yaml
 
 
@@ -73,27 +74,28 @@ class Manager(Node):
         self.connect(root)
         r = self.handshake(id, MessageType.COMMAND, MessageFlag.PARENT, data, root)
         job = Job(arr=r.data)
-        trigger = r.ts + self.sec_to_usec(int(2))
-        self.reports.append([ job.id,  Report(trigger=trigger, job=job) ])
+        self.jobs[self.future_ts(1)] = job
         self.disconnect(root)
         self.push_step(self.step(action="REPORT", desc="Check on external Jobs"))
 
     def report(self):
-        rid, report = self.pop_report()
-        self.sleep_to(report.trigger)
-        self.connect(report.job.addr)
-        r = self.handshake(self.tick, MessageType.REPORT, MessageFlag.NONE, report.job.to_arr(), report.job.addr)
-        job = Job(arr=r.data)
-        self.disconnect(report.job.addr)
+        trigger_ts, job = self.jobs.popitem()
+        # self.sleep_to(trigger_ts)
+        time.sleep(2)
+        self.connect(job.addr)
+        r = self.handshake(self.tick, MessageType.REPORT, MessageFlag.MANAGER, job.to_arr(), job.addr)
+        rjob = Job(arr=r.data)
+        self.disconnect(job.addr)
 
-        print(f"Reported Job: {job}")
-        if job.end == False:
+        if rjob.end == False:
+            print(f"REPORT <= {job.addr}: INCOMPLETE")
+            self.print_message(r)
             self.push_step(self.step(action="REPORT", desc="Check on external Jobs"))
-            report.trigger = self.timestamp() + self.sec_to_usec(int(2))
-            self.push_report(rid, report)
+            self.jobs[self.future_ts(1)] = rjob
         else:
-            report.end = True
-            print(f"REPORT <= {job.addr} => COMPLETED: {job.command}")
+            print(f"REPORT <= {job.addr}: COMPLETED")
+            self.print_message(r)
+            # self.push_step(self.step(action="TREE", desc="Check on external Jobs"))
 
     def go(self):
         try:
