@@ -1,6 +1,6 @@
 from .zmqsocket import Socket
 from .message_pb2 import Message, MessageType, MessageFlag
-from .job import Job
+from .job import Job, Report
 from .utils import LOG_LEVEL
 
 import zmq
@@ -20,7 +20,7 @@ class Node():
         self.socket = Socket(self.name, type, LOG_LEVEL=LOG_LEVEL)
 
         self.jobs = {}
-        self.reports = {}
+        self.reports = []
 
     def connect(self, addr:str):
         ip = addr.split(":")[0]
@@ -74,7 +74,6 @@ class Node():
         return t
 
     def _run(self, j:Job):
-        print(f"RUNNING[{j.addr}] => {j.command}")
         try:
             p = subprocess.Popen(
                 j.command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True
@@ -88,24 +87,24 @@ class Node():
             j.out = f"ERROR: {e}"
         finally:
             j.end = True
-        print(f"FINISHED[{j.addr}] => {j.command}")
+        return j
 
     def _alarm(self, j:Job, addr:str, rid:str):
-        self._run(j)
+        ret = self._run(j)
         n = self._helper(zmq.REQ)
         n.connect(addr)
-        data = [ rid ] + j.to_arr()
+        data = [ rid ] + ret.to_arr()
         n.send_message(id=self.tick, 
                           t=MessageType.REPORT, 
                           flag=MessageFlag.NONE, 
                           data=data)
         n.recv_message()
-        t, _ = self.find(j)
+        t, _ = self.find(ret)
         del self.jobs[t]
         n.disconnect(addr)
-        print(f"ALARM[{j.addr}] COMPLETED => {j.command}")
 
     def exec(self, job:Job, target:Callable, args=()) -> Job:
+        print(f"RUNNING[{job.addr}] => {job.command}")
         t = self._launch(target=target, args=args)
         self.jobs[t] = job
         return job
@@ -114,25 +113,43 @@ class Node():
         for k, j in list(self.jobs.items()):
             if rj.id == j.id:
                 return k, j
-        raise RuntimeError(f"{self.hostaddr} does not have job matching {rj.id}")
+        raise RuntimeError(f"{self.hostaddr} => does not have job matching {rj.id}")
 
-    def peak(self):
+    def pop_report(self):
         if len(self.reports) == 0:
-            raise RuntimeError(f"{self.hostaddr} does not pending reports")
-        k = next(iter(self.reports))
-        return k, self.reports[k]
-                
+            raise RuntimeError(f"{self.hostaddr} does not have pending reports")
+
+        arr = self.reports[0]
+        rid = arr[0]
+        r = arr[1]
+        self.reports.pop(0)
+        return rid, r
+
+    def push_report(self, rid:str, r:Report):
+        self.reports.append([rid, r])
+
+    def find_report(self, rid:str, job:Job):
+        if len(self.reports) == 0:
+            raise RuntimeError(f"{self.hostaddr} does not have pending reports")
+        for idx, arr in enumerate(self.reports):
+            _rid = arr[0]
+            report = arr[1]
+            if rid == _rid and job.id == report.job.id:
+                return idx, report
+        raise RuntimeError(f"{self.hostaddr} does not have matching reports to {rid}")
+
     def sleep_to(self, trigger_ts:int): 
         future = trigger_ts
         now = self.timestamp()
         if future > now: 
             self.sleep(future - now)
-        print("Trigger Expired!")
+        else:
+            print(f"TRIGGER EXPIRED={future} < NOW={now}")
 
     def sleep(self, dur_us:int): 
-        print("Sleeping...")
+        print(f"SLEEPING UNTIL {self.timestamp() + dur_us}")
         time.sleep(self.usec_to_sec(dur_us))
-        print("Awake!")
+        print(f"AWAKE: {self.timestamp()}")
 
     def sec_to_usec(self, sec:int) -> int:
         return (sec * 1_000_000)

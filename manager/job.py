@@ -62,7 +62,7 @@ class Report():
         self.job= job
 
     def __str__(self):
-        output = [f"{{"]
+        output = [f"REPORT: {{"]
         output.append(f"\tEND={self.end}")
         output.append(f"\tTRIGGER={self.trigger}")
         output.append(f"\tJOB={self.job}")

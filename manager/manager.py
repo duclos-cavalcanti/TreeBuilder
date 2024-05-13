@@ -73,23 +73,27 @@ class Manager(Node):
         self.connect(root)
         r = self.handshake(id, MessageType.COMMAND, MessageFlag.PARENT, data, root)
         job = Job(arr=r.data)
-        trigger = r.ts + self.sec_to_usec(int(self.duration * 1.2))
-        self.reports[job.id] = [ Report(trigger=trigger, job=job) ]
+        trigger = r.ts + self.sec_to_usec(int(2))
+        self.reports.append([ job.id,  Report(trigger=trigger, job=job) ])
         self.disconnect(root)
         self.push_step(self.step(action="REPORT", desc="Check on external Jobs"))
 
     def report(self):
-        id, reports = self.peak()
-        report = reports[0]
+        rid, report = self.pop_report()
         self.sleep_to(report.trigger)
-        id = self.tick 
-        addr = report.job.addr
-        data =  report.job.to_arr()
-        self.connect(addr)
-        r = self.handshake(id, MessageType.REPORT, MessageFlag.PARENT, data, addr)
+        self.connect(report.job.addr)
+        r = self.handshake(self.tick, MessageType.REPORT, MessageFlag.NONE, report.job.to_arr(), report.job.addr)
         job = Job(arr=r.data)
+        self.disconnect(report.job.addr)
+
         print(f"Reported Job: {job}")
-        self.disconnect(addr)
+        if job.end == False:
+            self.push_step(self.step(action="REPORT", desc="Check on external Jobs"))
+            report.trigger = self.timestamp() + self.sec_to_usec(int(2))
+            self.push_report(rid, report)
+        else:
+            report.end = True
+            print(f"REPORT <= {job.addr} => COMPLETED: {job.command}")
 
     def go(self):
         try:

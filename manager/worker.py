@@ -24,7 +24,6 @@ class Worker(Node):
         J = Job(addr=self.hostaddr, command=C)
         H = self._helper(zmq.REQ)
 
-        reports = []
         for addr in addrs:
             id = self.tick
             data = [addr, self.hostaddr, J.id]
@@ -32,10 +31,9 @@ class Worker(Node):
             r = H.handshake(id, MessageType.COMMAND, MessageFlag.CHILD, data, addr)
             rjob = Job(arr=r.data)
             trigger = r.ts + self.sec_to_usec(int(dur * 1.2))
-            reports.append(Report(trigger=trigger, job=rjob))
+            self.reports.append([J.id, Report(trigger=trigger, job=rjob)])
             H.disconnect(addr)
 
-        self.reports[J.id] = reports
         return self.exec(J, target=self._run, args=(J,))
 
     def commandACK(self, m:Message):
@@ -67,16 +65,13 @@ class Worker(Node):
         rjob = Job(arr=data)
         if rjob.addr == self.hostaddr:
             t, job = self.find(Job(arr=data))
-            if not t.is_alive(): 
-                del self.jobs[t]
+            if not t.is_alive(): del self.jobs[t]
             self.send_message(id=id, t=MessageType.ACK, flag=flag, data=job.to_arr())
         else:
             rid = data[0]
             job = Job(arr=data[1:])
-            reports = self.reports[rid]
-            for i,r in enumerate(reports):
-                if r.job.id == job.id: reports[i].end = True
-                print(r)
+            idx, _ = self.find_report(rid, job)
+            self.reports.pop(idx)
             self.send_message(id=id, t=MessageType.ACK, flag=flag, data=[])
 
     def connectACK(self, m:Message):
