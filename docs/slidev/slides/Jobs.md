@@ -26,9 +26,11 @@ classDiagram
 
             +recv_message()
             +send_message(m:Message)
-            +exec_job(j:Job)
-            +find_job(j:Job)
-            +check_jobs()
+            +exec(j:Job, callback, args)
+            +find(j:Job)
+
+            _run(j:Job)
+            _alarm(j:Job, addr)
     }
 
     class Manager{
@@ -45,10 +47,15 @@ classDiagram
             +int: ret
             +bool: end
             +string: output
-            +list: dependencies
 
             +to_arr() -> char[]
             +from_arr(char[])
+    }
+
+    class Report{
+            +bool: end
+            +int: trigger_ts
+            +Job: job
     }
 
 
@@ -56,6 +63,7 @@ classDiagram
     Node --|> Worker
 
     style Job fill:#000000,color:#fff
+    style Report fill:#0065BD,color:#fff
 ```
 
 </div>
@@ -63,7 +71,7 @@ classDiagram
 <div 
     alt="Node"
     style="transform: scale(1.0)"
-    class="absolute bottom-7% right-10%"
+    class="absolute bottom-20% right-10%"
 >
 
 ```mermaid
@@ -75,12 +83,35 @@ block-beta
         columns 1
         A["T1 => J1"] 
         B["T2 => J2"] 
-        C["T3 => J3"] 
     end
 
     N --> J
 
     style J fill:#000000
+```
+
+</div>
+
+<div 
+    alt="Node"
+    style="transform: scale(1.0)"
+    class="absolute bottom-5% right-10%"
+>
+
+```mermaid
+block-beta
+    N("Node"):1
+    space
+    R("<font color=white>Reports"):1
+    block:jobs
+        columns 1
+        A["J1 => R1"] 
+        B["J1 => R2"] 
+    end
+
+    N --> R
+
+    style R fill:#0065BD
 ```
 
 </div>
