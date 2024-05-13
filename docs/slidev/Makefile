@@ -6,10 +6,10 @@ PWD := $(shell pwd)
 UID := $(shell id -u)
 GID := $(shell id -g)
 
-DOCKER := tangramor/slidev:latest
+DOCKER := tangramor/slidev:playwright
 NAME := slidev-ma
 
-.PHONY: run stop exit clean
+.PHONY: run exp stop exit clean
 all: run
 
 run:
@@ -19,6 +19,9 @@ run:
     -p 3031:3030 \
     -e NPM_MIRROR="https://registry.npmmirror.com" \
     ${DOCKER}
+
+exp: 
+	docker exec -i ${NAME} npx slidev export --timeout 2m --output slides.pdf
 
 exit:
 	$(error Exiting Makefile)
