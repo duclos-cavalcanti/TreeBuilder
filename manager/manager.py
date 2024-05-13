@@ -74,7 +74,7 @@ class Manager(Node):
         self.connect(root)
         r = self.handshake(id, MessageType.COMMAND, MessageFlag.PARENT, data, root)
         job = Job(arr=r.data)
-        self.jobs[self.future_ts(1)] = job
+        self.jobs[self.future_ts(2)] = job
         self.disconnect(root)
         self.push_step(self.step(action="REPORT", desc="Check on external Jobs"))
 
@@ -90,7 +90,7 @@ class Manager(Node):
             print(f"REPORT <= {job.addr}: INCOMPLETE")
             self.print_message(r)
             self.push_step(self.step(action="REPORT", desc="Check on external Jobs"))
-            self.jobs[self.future_ts(1)] = rjob
+            self.jobs[self.future_ts(2)] = rjob
         else:
             print(f"REPORT <= {job.addr}: COMPLETED")
             self.print_message(r)

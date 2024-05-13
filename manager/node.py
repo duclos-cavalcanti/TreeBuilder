@@ -116,6 +116,13 @@ class Node():
                 return k, j
         raise RuntimeError(f"{self.hostaddr} => No Job matching {rj.id}")
 
+    def kill(self, rj:Job, dct={}):
+        if not dct: dct = self.jobs
+        t, _ = self.find(rj, dct=dct)
+        print(f"KILLED THREAD={t.native_id}")
+        del dct[t]
+        del t
+
     def future_ts(self, sec:float) -> int: 
         now = self.timestamp()
         return int(now + self.sec_to_usec(sec))
