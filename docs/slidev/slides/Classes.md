@@ -2,18 +2,17 @@
 layout: two-cols-header
 ---
 
-# Manager x Worker: Jobs
+# Manager x Worker: Data Structures
 
 - Manager and Workers inherit Node Class
 - Nodes own jobs, mapped via a dictionary of threads
-- `exec_job(j:Job)`: 
-    - Runs `j.command` in separate thread
-    - stores thread handler in dict
-    - thread ultimately modifies the overloaded Job
+- `exec(j:Job)`: 
+    - Runs `j.command` in separate thread and returns handler
+    - Thread ultimately modifies overloaded Job
 
 <div 
     alt="Node"
-    style="transform: scale(1.2)"
+    style="transform: scale(1.0)"
     class="absolute top-15% right-10%"
 >
 
@@ -24,13 +23,11 @@ classDiagram
             +int port
             +dict jobs: thread -> Job
 
-            +recv_message()
-            +send_message(m:Message)
-            +exec(j:Job, callback, args)
-            +find(j:Job)
+            +exec(j:Job, callback, args) -> Thread
+            +find(j:Job, d:dict)
 
             _run(j:Job)
-            _alarm(j:Job, addr)
+            _guard(j:Job)
     }
 
     class Manager{
@@ -48,14 +45,10 @@ classDiagram
             +bool: end
             +string: output
 
+            +list: deps[]
+
             +to_arr() -> char[]
             +from_arr(char[])
-    }
-
-    class Report{
-            +bool: end
-            +int: trigger_ts
-            +Job: job
     }
 
 
@@ -63,7 +56,6 @@ classDiagram
     Node --|> Worker
 
     style Job fill:#000000,color:#fff
-    style Report fill:#0065BD,color:#fff
 ```
 
 </div>
@@ -71,47 +63,33 @@ classDiagram
 <div 
     alt="Node"
     style="transform: scale(1.0)"
-    class="absolute bottom-20% right-10%"
+    class="absolute bottom-8% right-12%"
 >
 
 ```mermaid
 block-beta
     N("Node"):1
     space
-    J("<font color=white>Jobs"):1
-    block:jobs
-        columns 1
-        A["T1 => J1"] 
-        B["T2 => J2"] 
+    block:G
+        columns 2
+        J("<font color=white>Jobs"):1
+        block:jobs
+            columns 1
+            A["T1 => J1"] 
+            B["T2 => J2"] 
+        end
+        Guard("<font color=white>Guards"):1
+        block:guards
+            columns 1
+            C["T1 => J0"] 
+            D["--------"] 
+        end
     end
 
-    N --> J
+    N --> G
 
     style J fill:#000000
-```
-
-</div>
-
-<div 
-    alt="Node"
-    style="transform: scale(1.0)"
-    class="absolute bottom-5% right-10%"
->
-
-```mermaid
-block-beta
-    N("Node"):1
-    space
-    R("<font color=white>Reports"):1
-    block:jobs
-        columns 1
-        A["J1 => R1"] 
-        B["J1 => R2"] 
-    end
-
-    N --> R
-
-    style R fill:#0065BD
+    style Guard fill:#000000
 ```
 
 </div>

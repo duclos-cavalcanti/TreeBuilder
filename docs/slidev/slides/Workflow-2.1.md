@@ -2,13 +2,15 @@
 layout: two-cols-header
 ---
 
-# Manager x Worker: Workflow [i = 2.1]
+# Manager x Worker: Workflow [Step_i = 2.1]
 
 - <span style="color:#0070C0;font-style:bold;">ACTION: ROOT</span>
-1. Connects to workers/children
-2. Commands worker to be _Child_
-    1. Starts Job: `./child <args`
-3. Starts Job: `./parent <args`
+1. Select root from pool <span style="color:#FF0000; font-style:italic;">( idx=2 )</span>
+2. Commands Root/Parent: `./parent <args`
+    1. Commands children: `./child <args`
+    2. Store their Jobs `JC`
+    3. Starts Job `JP` and returns it via ACK
+3. Pushes: `Step=REPORT` and stores `JP`
 
 <div
     alt="StepQ"
@@ -34,27 +36,36 @@ block-beta
 
 <div
     alt="Pool"
-    style="transform: scale(0.6)"
-    class="absolute top--5 left-60% right-0 bottom-0"
+    style="transform: scale(0.9)"
+    class="absolute top-13% left-60% right-0 bottom-0"
 >
 
 ```mermaid
 block-beta
+    M("<font color=white>Manager")
+    space
     P("<font color=white>Pool ")
     space
     block:workers
         columns 3
         W0["W<sub>0</sub>"] 
         W1["W<sub>1</sub>"]
-        W2["<font color=black>W<sub>2</sub>"]
+        W2["<font color=white>W<sub>2</sub>"]
         W3["W<sub>3</sub>"]
         W4["W<sub>4</sub>"]
         W5["W<sub>5</sub>"]
         W6["W<sub>6</sub>"]
+        style P fill:#0070C0
+        style W2 fill:#FF0000
+        style W0 fill:#00FF00
+        style W1 fill:#00FF00
+        style W3 fill:#00FF00
     end
+    M-->P
     P-->workers
+
+    style M fill:#FF0000
     style P fill:#0070C0
-    style W2 fill:#000000
 ```
 </div>
 
@@ -65,60 +76,36 @@ block-beta
 >
 ```mermaid
 block-beta
-    columns 2
-    JM("<font color=white>M_Jobs:"):1
-    block:mitems
+    J("<font color=white>Jobs")
+    space
+    block:items
         columns 1
-        A["____"] 
+        A["JP  "] 
+        B["____"] 
+        X["____"] 
     end
 
-    JP("<font color=white>P_Jobs:"):1
+    space
     block:pitems
         columns 1
-        B["JP: ./parent [args]"] 
+        C["JP: ./parent [args]"] 
+        D["____"] 
+        Y["____"] 
     end
 
-    JC("<font color=white>C_Jobs:"):1
+    space
     block:citems
         columns 1
-        C["JC: ./child [args]"] 
+        E["JC0: ./child [args]"] 
+        F["JC1: ./child [args]"] 
+        G["JC2: ./child [args]"] 
     end
 
-    style JM fill:#000000
-    style JP fill:#000000
-    style JC fill:#000000
-```
-</div>
+    J --> items
+    A --> C
+    C --> E
 
-<div
-    alt="RepQ"
-    style="transform: scale(0.6)"
-    class="absolute top-18% left-60% right--1% bottom-0"
->
-```mermaid
-block-beta
-    columns 2
-    RM("<font color=black>M_Reports:")
-    block:mitems
-        columns 1
-        A["JP_ID => RP"] 
-    end
-
-    RP("<font color=black>P_Reports:")
-    block:pitems
-        columns 1
-        B["JP_ID => RC"] 
-    end
-
-    RC("<font color=black>C_Reports:")
-    block:citems
-        columns 1
-        C["___________"] 
-    end
-
-    style RM fill:#DAD7CB
-    style RP fill:#DAD7CB
-    style RC fill:#DAD7CB
+    style J fill:#000000
 ```
 </div>
 
@@ -126,17 +113,55 @@ block-beta
 
 <div 
     alt="Message"
-    style="transform: scale(0.8)"
+    style="transform: scale(1.0)"
+    class="absolute left-9% bottom-22%"
 >
 
 ```mermaid
 classDiagram
-    class Message{
+    class Message_P{
+            +id   = 1
+            +ts   = 1715280981565948
+            +type = COMMAND
+            +flag = PARENT
+            +data = [ rate, dur, w_addr_0, w_addr_1, w_addr_3 ]
+    }
+
+    class Message_C{
             +id   = 1
             +ts   = 1715280981565948
             +type = COMMAND
             +flag = CHILD
             +data = [ child_addr_i, host_addr ]
+    }
+
+    %% style Message fill:#0070C0,color:#fff
+```
+
+</div>
+
+<div 
+    alt="Message_ACK"
+    style="transform: scale(0.6)"
+    class="absolute left-12% bottom-0%"
+>
+
+```mermaid
+classDiagram
+    class Message_P_ACK{
+            +id   = 1
+            +ts   = 1715280981565948
+            +type = ACK
+            +flag = NONE
+            +data = [ JP ]
+    }
+
+    class Message_C_ACK{
+            +id   = 1
+            +ts   = 1715280981565948
+            +type = ACK
+            +flag = NONE
+            +data = [ JC ]
     }
     %% style Message fill:#0070C0,color:#fff
 ```
@@ -147,39 +172,25 @@ classDiagram
 
 <div 
     alt="ManagerxWorker"
-    style="transform: scale(1.1)"
-    class="absolute bottom-13% right-16%"
+    style="transform: scale(1.3)"
+    class="absolute bottom-13% right-19%"
 >
 ```mermaid
-graph LR 
-    M[<font color=white>Manager]
-    style M fill:#FF0000
-    subgraph Worker_Pool
-        direction TB
-        W0["W<sub>0</sub>"] 
-        W1["W<sub>1</sub>"]
-        W2["<font color=white>W<sub>2</sub>"]
-        W3["W<sub>3</sub>"]
-        W4["W<sub>4</sub>"]
-        W5["W<sub>5</sub>"]
-        W6["W<sub>6</sub>"]
+sequenceDiagram
+    participant M as Manager
+    participant P as P
+    participant C0 as C0
+    participant C1 as C1
+    participant C2 as C2
 
-        style W0 fill:#00FF00
-        style W1 fill:#00FF00
-        style W3 fill:#00FF00
-        style W2 fill:#FF0000
-
-        W0 -.- W1
-        W0 -.- W2
-
-        W1 -.- W3
-        W1 -.- W4
-
-        W2 -.- W5
-        W2 -.- W6
-
-    end
-    M --> Worker_Pool
+    M->>P: COMM=PARENT
+    P->>C0: COMM=CHILD
+    C0->>P: JOB[C]
+    P->>C1: COMM=CHILD
+    C1->>P: JOB[C]
+    P->>C2: COMM=CHILD
+    C2->>P: JOB[C]
+    P->>M: JOB[P]
 ```
 
 </diV>

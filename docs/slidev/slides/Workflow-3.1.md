@@ -2,7 +2,7 @@
 layout: two-cols-header
 ---
 
-# Manager x Worker: Workflow [Step_i = 3.0]
+# Manager x Worker: Workflow [Step_i = 3.1]
 
 - <span style="color:#0070C0;font-style:bold;">ACTION: REPORT</span>
 
@@ -50,17 +50,16 @@ block-beta
     block:workers
         columns 3
         W0["W<sub>0</sub>"] 
-        W1["W<sub>1</sub>"]
+        W1["<font color=white>W<sub>1</sub>"]
         W2["<font color=white>W<sub>2</sub>"]
-        W3["W<sub>3</sub>"]
+        W3["<font color=white>W<sub>3</sub>"]
         W4["W<sub>4</sub>"]
         W5["W<sub>5</sub>"]
         W6["W<sub>6</sub>"]
         style P fill:#0070C0
         style W2 fill:#FF0000
-        style W0 fill:#00FF00
-        style W1 fill:#00FF00
-        style W3 fill:#00FF00
+        style W1 fill:#0070C0
+        style W3 fill:#0070C0
     end
     M-->P
     P-->workers
@@ -81,7 +80,7 @@ block-beta
     space
     block:items
         columns 1
-        A["JP  "] 
+        A["<del>JP  </del>"] 
         B["____"] 
         X["____"] 
     end
@@ -142,28 +141,45 @@ classDiagram
 
 ::right::
 
-<div
-    alt="Seq"
-    style="transform: scale(1.3)"
-    class="absolute bottom-13% right-19%"
+<div 
+    alt="ManagerxWorker"
+    style="transform: scale(1.1)"
+    class="absolute bottom-13% right-16%"
 >
-
 ```mermaid
-sequenceDiagram
-    participant M as Manager
-    participant P as P
-    participant C0 as C0
-    participant C1 as C1
-    participant C2 as C2
+graph LR 
+    M[<font color=white>Manager]
+    style M fill:#FF0000
+    subgraph Tree
+        direction TB
+        W0["<font color=white>W<sub>2</sub>"]
+        W1["<font color=white>W<sub>1</sub>"]
+        W2["<font color=white>W<sub>3</sub>"]
+        W3["<font color=black>W<sub>3</sub>"]
+        W4["<font color=black>W<sub>4</sub>"]
+        W5["<font color=black>W<sub>5</sub>"]
+        W6["<font color=black>W<sub>6</sub>"]
 
-    Note right of M: Sleep...
-    C0->>P: JOB_END[C0]
-    C1->>P: JOB_END[C1]
-    C2->>P: JOB_END[C2]
-    P->>P:  JOB_END[P]
-    M->>P: COMM=REPORT
-    P->>M: RESULTS
+        W0 -.- W1
+        W0 -.- W2
+
+        W1 -.- W3
+        W1 -.- W4
+
+        W2 -.- W5
+        W2 -.- W6
+
+        style W0 fill:#FF0000
+        style W1 fill:#0070C0
+        style W2 fill:#0070C0
+        style W3 fill:#000000
+        style W4 fill:#000000
+        style W5 fill:#000000
+        style W6 fill:#000000
+    end
+    M --> Tree
 ```
-</div>
+
+</diV>
 
 <TUMLogo variant="white" />

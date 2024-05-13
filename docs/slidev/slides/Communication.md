@@ -40,11 +40,15 @@ classDiagram
 
 ```mermaid
 sequenceDiagram
-    participant M
-    participant W as Worker_i
+    participant M as Manager
+    participant W1 as Worker_1
+    participant W2 as Worker_2
 
-    M->>W: SEND
-    W->>M: REPLY/ACK
+    M->>W1: SEND
+    W1->>M: REPLY/ACK
+
+    W1->>W2: SEND
+    W2->>W1: REPLY/ACK
 ```
 
 <TUMLogo variant="white" />

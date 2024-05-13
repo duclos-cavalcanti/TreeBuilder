@@ -21,15 +21,19 @@ src: ./slides/Communication.md
 ---
 
 ---
+src: ./slides/Classes.md
+---
+
+---
+src: ./slides/UDP.md
+---
+
+---
 src: ./slides/WorkerSM.md
 ---
 
 ---
 src: ./slides/ManagerSM.md
----
-
----
-src: ./slides/Jobs.md
 ---
 
 ---
@@ -49,9 +53,9 @@ src: ./slides/Workflow-2.1.md
 ---
 
 ---
-src: ./slides/Workflow-2.2.md
+src: ./slides/Workflow-3.0.md
 ---
 
 ---
-src: ./slides/Workflow-3.0.md
+src: ./slides/Workflow-3.1.md
 ---

@@ -2,7 +2,7 @@
 layout: two-cols-header
 ---
 
-# Manager x Worker: Workflow [i = 1]
+# Manager x Worker: Workflow [Step_i = 1]
 
 - <span style="color:#0070C0;font-style:bold;">ACTION: CONNECT</span>
 1. Loops through all workers
@@ -24,7 +24,7 @@ block-beta
         columns 1
         A["<del>CONN</del>"] 
         B["ROOT"]
-        C["    "]
+        C["____"]
     end
 
     Q --> items
@@ -35,12 +35,14 @@ block-beta
 
 <div
     alt="Pool"
-    style="transform: scale(0.6)"
-    class="absolute top--5 left-60% right-0 bottom-0"
+    style="transform: scale(0.9)"
+    class="absolute top-13% left-60% right-0 bottom-0"
 >
 
 ```mermaid
 block-beta
+    M("<font color=white>Manager")
+    space
     P("<font color=white>Pool ")
     space
     block:workers
@@ -53,7 +55,10 @@ block-beta
         W5["W<sub>5</sub>"]
         W6["W<sub>6</sub>"]
     end
+    M-->P
     P-->workers
+
+    style M fill:#FF0000
     style P fill:#0070C0
 ```
 </div>
@@ -79,27 +84,6 @@ block-beta
 ```
 </div>
 
-<div
-    alt="RepQ"
-    style="transform: scale(0.6)"
-    class="absolute top-18% left-60% right--1% bottom-0"
->
-```mermaid
-block-beta
-    R("<font color=black>Reports")
-    space
-    block:items
-        columns 1
-        A["____"] 
-        B["____"] 
-    end
-
-    R --> items
-
-    style R fill:#DAD7CB
-```
-</div>
-
 ::left::
 
 <div 
@@ -115,6 +99,14 @@ classDiagram
             +type = CONNECT
             +flag = NONE
             +data = [ worker_addr_i, host_addr ]
+    }
+
+    class Message_ACK{
+            +id   = 0
+            +ts   = 1715280981565948
+            +type = CONNECT
+            +flag = NONE
+            +data = [ ]
     }
     %% style Message fill:#0070C0,color:#fff
 ```
@@ -133,15 +125,15 @@ classDiagram
 graph LR 
     M[<font color=white>Manager]
     style M fill:#FF0000
-    subgraph Worker_Pool
+    subgraph Tree
         direction TB
-        W0["W<sub>0</sub>"] 
-        W1["W<sub>1</sub>"]
-        W2["W<sub>2</sub>"]
-        W3["W<sub>3</sub>"]
-        W4["W<sub>4</sub>"]
-        W5["W<sub>5</sub>"]
-        W6["W<sub>6</sub>"]
+        W0["<font color=black>W<sub>0</sub>"]
+        W1["<font color=black>W<sub>1</sub>"]
+        W2["<font color=black>W<sub>2</sub>"]
+        W3["<font color=black>W<sub>3</sub>"]
+        W4["<font color=black>W<sub>4</sub>"]
+        W5["<font color=black>W<sub>5</sub>"]
+        W6["<font color=black>W<sub>6</sub>"]
 
         W0 -.- W1
         W0 -.- W2
@@ -152,8 +144,15 @@ graph LR
         W2 -.- W5
         W2 -.- W6
 
+        style W0 fill:#000000
+        style W1 fill:#000000
+        style W2 fill:#000000
+        style W3 fill:#000000
+        style W4 fill:#000000
+        style W5 fill:#000000
+        style W6 fill:#000000
     end
-    M --> Worker_Pool
+    M --> Tree
 ```
 
 </diV>

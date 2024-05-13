@@ -2,13 +2,15 @@
 layout: two-cols-header
 ---
 
-# Manager x Worker: Workflow [i = 2]
+# Manager x Worker: Workflow [Step_i = 2]
 
 - <span style="color:#0070C0;font-style:bold;">ACTION: ROOT</span>
 1. Select root from pool <span style="color:#FF0000; font-style:italic;">( idx=2 )</span>
-2. Commands root to be _Parent_
-3. Creates/Pushes: `Step=REPORT`
-4. Creates/Pushes: `Report`
+2. Commands Root/Parent: `./parent <args`
+    1. Commands children: `./child <args`
+    2. Store their Jobs `JC`
+    3. Starts Job `JP` and returns it via ACK
+3. Pushes: `Step=REPORT` and stores `JP`
 
 <div
     alt="StepQ"
@@ -34,27 +36,36 @@ block-beta
 
 <div
     alt="Pool"
-    style="transform: scale(0.6)"
-    class="absolute top--5 left-60% right-0 bottom-0"
+    style="transform: scale(0.9)"
+    class="absolute top-13% left-60% right-0 bottom-0"
 >
 
 ```mermaid
 block-beta
+    M("<font color=white>Manager")
+    space
     P("<font color=white>Pool ")
     space
     block:workers
         columns 3
         W0["W<sub>0</sub>"] 
         W1["W<sub>1</sub>"]
-        W2["<font color=black>W<sub>2</sub>"]
+        W2["<font color=white>W<sub>2</sub>"]
         W3["W<sub>3</sub>"]
         W4["W<sub>4</sub>"]
         W5["W<sub>5</sub>"]
         W6["W<sub>6</sub>"]
+        style P fill:#0070C0
+        style W2 fill:#FF0000
+        style W0 fill:#00FF00
+        style W1 fill:#00FF00
+        style W3 fill:#00FF00
     end
+    M-->P
     P-->workers
+
+    style M fill:#FF0000
     style P fill:#0070C0
-    style W2 fill:#000000
 ```
 </div>
 
@@ -65,46 +76,36 @@ block-beta
 >
 ```mermaid
 block-beta
-    columns 2
-    JM("<font color=white>M_Jobs:"):1
-    block:mitems
+    J("<font color=white>Jobs")
+    space
+    block:items
         columns 1
-        A["____"] 
+        A["JP  "] 
+        B["____"] 
+        X["____"] 
     end
 
-    JP("<font color=white>P_Jobs:"):1
+    space
     block:pitems
         columns 1
-        B["JP: ./parent [args]"] 
+        C["JP: ./parent [args]"] 
+        D["____"] 
+        Y["____"] 
     end
 
-    style JM fill:#000000
-    style JP fill:#000000
-```
-</div>
-
-<div
-    alt="RepQ"
-    style="transform: scale(0.6)"
-    class="absolute top-18% left-60% right--1% bottom-0"
->
-```mermaid
-block-beta
-    columns 2
-    RM("<font color=black>M_Reports:")
-    block:mitems
+    space
+    block:citems
         columns 1
-        A["JP_ID => RP"] 
+        E["JC0: ./child [args]"] 
+        F["JC1: ./child [args]"] 
+        G["JC2: ./child [args]"] 
     end
 
-    RP("<font color=black>P_Reports:")
-    block:pitems
-        columns 1
-        B["___________"] 
-    end
+    J --> items
+    A --> C
+    C --> E
 
-    style RM fill:#DAD7CB
-    style RP fill:#DAD7CB
+    style J fill:#000000
 ```
 </div>
 
@@ -112,17 +113,55 @@ block-beta
 
 <div 
     alt="Message"
-    style="transform: scale(0.8)"
+    style="transform: scale(1.0)"
+    class="absolute left-9% bottom-22%"
 >
 
 ```mermaid
 classDiagram
-    class Message{
+    class Message_P{
             +id   = 1
             +ts   = 1715280981565948
             +type = COMMAND
             +flag = PARENT
             +data = [ rate, dur, w_addr_0, w_addr_1, w_addr_3 ]
+    }
+
+    class Message_C{
+            +id   = 1
+            +ts   = 1715280981565948
+            +type = COMMAND
+            +flag = CHILD
+            +data = [ child_addr_i, host_addr ]
+    }
+
+    %% style Message fill:#0070C0,color:#fff
+```
+
+</div>
+
+<div 
+    alt="Message_ACK"
+    style="transform: scale(0.6)"
+    class="absolute left-12% bottom-0%"
+>
+
+```mermaid
+classDiagram
+    class Message_P_ACK{
+            +id   = 1
+            +ts   = 1715280981565948
+            +type = ACK
+            +flag = NONE
+            +data = [ JP ]
+    }
+
+    class Message_C_ACK{
+            +id   = 1
+            +ts   = 1715280981565948
+            +type = ACK
+            +flag = NONE
+            +data = [ JC ]
     }
     %% style Message fill:#0070C0,color:#fff
 ```
@@ -140,17 +179,15 @@ classDiagram
 graph LR 
     M[<font color=white>Manager]
     style M fill:#FF0000
-    subgraph Worker_Pool
+    subgraph Tree
         direction TB
-        W0["W<sub>0</sub>"] 
-        W1["W<sub>1</sub>"]
-        W2["<font color=white>W<sub>2</sub>"]
-        W3["W<sub>3</sub>"]
-        W4["W<sub>4</sub>"]
-        W5["W<sub>5</sub>"]
-        W6["W<sub>6</sub>"]
-
-        style W2 fill:#FF0000
+        W0["<font color=white>W<sub>2</sub>"]
+        W1["<font color=black>W<sub>1</sub>"]
+        W2["<font color=black>W<sub>2</sub>"]
+        W3["<font color=black>W<sub>3</sub>"]
+        W4["<font color=black>W<sub>4</sub>"]
+        W5["<font color=black>W<sub>5</sub>"]
+        W6["<font color=black>W<sub>6</sub>"]
 
         W0 -.- W1
         W0 -.- W2
@@ -161,8 +198,15 @@ graph LR
         W2 -.- W5
         W2 -.- W6
 
+        style W0 fill:#FF0000
+        style W1 fill:#000000
+        style W2 fill:#000000
+        style W3 fill:#000000
+        style W4 fill:#000000
+        style W5 fill:#000000
+        style W6 fill:#000000
     end
-    M --> Worker_Pool
+    M --> Tree
 ```
 
 </diV>
