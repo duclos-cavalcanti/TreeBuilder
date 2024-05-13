@@ -6,9 +6,10 @@ layout: two-cols-header
 
 - <span style="color:#0070C0;font-style:bold;">ACTION: CONNECT</span>
 1. Loops through all workers
-    1. Establishes connection 
-    2. Sends/Receives CONNECT/ACK Messages
-    3. Disconnects
+    1. Establishes connection
+    2. `Send()` CONNECT Messages
+    3. `Recv()` ACK Messages
+    4. Disconnects
 
 <div
     alt="StepQ"
@@ -57,6 +58,48 @@ block-beta
 ```
 </div>
 
+<div
+    alt="JobQ"
+    style="transform: scale(0.6)"
+    class="absolute top-18% left-30% right--1% bottom-0"
+>
+```mermaid
+block-beta
+    J("<font color=white>Jobs")
+    space
+    block:items
+        columns 1
+        A["____"] 
+        B["____"] 
+    end
+
+    J --> items
+
+    style J fill:#000000
+```
+</div>
+
+<div
+    alt="RepQ"
+    style="transform: scale(0.6)"
+    class="absolute top-18% left-60% right--1% bottom-0"
+>
+```mermaid
+block-beta
+    R("<font color=black>Reports")
+    space
+    block:items
+        columns 1
+        A["____"] 
+        B["____"] 
+    end
+
+    R --> items
+
+    style R fill:#DAD7CB
+```
+</div>
+
 ::left::
 
 <div 
@@ -78,30 +121,16 @@ classDiagram
 
 </div>
 
-<div 
-    alt="Seq"
-    style="transform: scale(0.8)"
-    class="absolute left-13% bottom-5%"
->
-
-```mermaid
-graph LR
-    M[<font color=white>Manager]
-    W["W<sub>i</sub>"] 
-
-    M --> W
-    W --> M
-
-    style M fill:#FF0000
-```
-
-</div>
 
 ::right::
 
-
+<div 
+    alt="ManagerxWorker"
+    style="transform: scale(1.1)"
+    class="absolute bottom-13% right-16%"
+>
 ```mermaid
-graph LR
+graph LR 
     M[<font color=white>Manager]
     style M fill:#FF0000
     subgraph Worker_Pool
@@ -126,5 +155,7 @@ graph LR
     end
     M --> Worker_Pool
 ```
+
+</diV>
 
 <TUMLogo variant="white" />

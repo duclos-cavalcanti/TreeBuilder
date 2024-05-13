@@ -55,8 +55,55 @@ block-beta
 ```
 </div>
 
+<div
+    alt="JobQ"
+    style="transform: scale(0.6)"
+    class="absolute top-18% left-30% right--1% bottom-0"
+>
+```mermaid
+block-beta
+    J("<font color=white>Jobs")
+    space
+    block:items
+        columns 1
+        A["____"] 
+        B["____"] 
+    end
+
+    J --> items
+
+    style J fill:#000000
+```
+</div>
+
+<div
+    alt="RepQ"
+    style="transform: scale(0.6)"
+    class="absolute top-18% left-60% right--1% bottom-0"
+>
+```mermaid
+block-beta
+    R("<font color=black>Reports")
+    space
+    block:items
+        columns 1
+        A["____"] 
+        B["____"] 
+    end
+
+    R --> items
+
+    style R fill:#DAD7CB
+```
+</div>
+
 ::left::
 
+<div
+    alt="Pool"
+    style="transform: scale(1.0)"
+    class="absolute top-35% left-5%"
+>
 ```yaml
 name: DEFAULT
 hyperparameter: 0.5
@@ -78,10 +125,17 @@ steps:
     data: 0
 ```
 
+</div>
+
 ::right::
 
+<div 
+    alt="ManagerxWorker"
+    style="transform: scale(1.1)"
+    class="absolute bottom-13% right-16%"
+>
 ```mermaid
-graph LR
+graph LR 
     M[<font color=white>Manager]
     style M fill:#FF0000
     subgraph Worker_Pool
@@ -106,5 +160,7 @@ graph LR
     end
     M --> Worker_Pool
 ```
+
+</diV>
 
 <TUMLogo variant="white" />

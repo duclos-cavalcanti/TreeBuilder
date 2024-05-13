@@ -58,6 +58,48 @@ block-beta
 ```
 </div>
 
+<div
+    alt="JobQ"
+    style="transform: scale(0.6)"
+    class="absolute top-18% left-30% right--1% bottom-0"
+>
+```mermaid
+block-beta
+    J("<font color=white>Jobs")
+    space
+    block:items
+        columns 1
+        A["____"] 
+        B["____"] 
+    end
+
+    J --> items
+
+    style J fill:#000000
+```
+</div>
+
+<div
+    alt="RepQ"
+    style="transform: scale(0.6)"
+    class="absolute top-18% left-60% right--1% bottom-0"
+>
+```mermaid
+block-beta
+    R("<font color=black>Reports")
+    space
+    block:items
+        columns 1
+        A["____"] 
+        B["____"] 
+    end
+
+    R --> items
+
+    style R fill:#DAD7CB
+```
+</div>
+
 ::left::
 
 <div 
@@ -79,31 +121,12 @@ classDiagram
 
 </div>
 
-<div 
-    alt="Seq"
-    style="transform: scale(0.8)"
-    class="absolute left-13% bottom-5%"
->
-
-```mermaid
-graph LR
-    P[<font color=white>Parent]
-    C["C<sub>i</sub>"] 
-
-    P --> C
-    C --> P
-
-    style P fill:#FF0000
-```
-
-</div>
-
 ::right::
 
 <div 
     alt="ManagerxWorker"
     style="transform: scale(1.1)"
-    class="absolute top-35% right-16%"
+    class="absolute bottom-13% right-16%"
 >
 ```mermaid
 graph LR 
@@ -137,33 +160,6 @@ graph LR
     M --> Worker_Pool
 ```
 
-</diV>
-
-<div 
-    alt="Parent_x_Children"
-    style="transform: scale(0.8)"
-    class="absolute top-65% right-13%"
->
-```mermaid
-graph LR
-    subgraph Parent_x_Children
-        direction TB
-        P[<font color=white>P]
-        style P fill:#FF0000
-
-        C0["C<sub>0</sub>"] 
-        C1["C<sub>1</sub>"]
-        C3["C<sub>3</sub>"]
-
-        style C0 fill:#00FF00
-        style C1 fill:#00FF00
-        style C3 fill:#00FF00
-
-        P --> C0
-        P --> C1
-        P --> C3
-    end
-```
 </diV>
 
 <TUMLogo variant="white" />

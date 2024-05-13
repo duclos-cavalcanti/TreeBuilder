@@ -8,6 +8,7 @@ layout: two-cols-header
 1. Select root from pool <span style="color:#FF0000; font-style:italic;">( idx=2 )</span>
 2. Commands root to be _Parent_
 3. Creates/Pushes: `Step=REPORT`
+4. Creates/Pushes: `Report`
 
 <div
     alt="StepQ"
@@ -57,6 +58,48 @@ block-beta
 ```
 </div>
 
+<div
+    alt="JobQ"
+    style="transform: scale(0.6)"
+    class="absolute top-18% left-30% right--1% bottom-0"
+>
+```mermaid
+block-beta
+    J("<font color=white>Jobs")
+    space
+    block:items
+        columns 1
+        A["____"] 
+        B["____"] 
+    end
+
+    J --> items
+
+    style J fill:#000000
+```
+</div>
+
+<div
+    alt="RepQ"
+    style="transform: scale(0.6)"
+    class="absolute top-18% left-60% right--1% bottom-0"
+>
+```mermaid
+block-beta
+    R("<font color=black>Reports")
+    space
+    block:items
+        columns 1
+        A["____"] 
+        B["____"] 
+    end
+
+    R --> items
+
+    style R fill:#DAD7CB
+```
+</div>
+
 ::left::
 
 <div 
@@ -78,27 +121,13 @@ classDiagram
 
 </div>
 
-<div 
-    alt="Seq"
-    style="transform: scale(0.8)"
-    class="absolute left-13% bottom-5%"
->
-
-```mermaid
-graph LR
-    M[<font color=white>Manager]
-    W["W<sub>2</sub>"] 
-
-    M --> W
-    W --> M
-
-    style M fill:#FF0000
-```
-
-</div>
-
 ::right::
 
+<div 
+    alt="ManagerxWorker"
+    style="transform: scale(1.1)"
+    class="absolute bottom-13% right-16%"
+>
 ```mermaid
 graph LR 
     M[<font color=white>Manager]
@@ -127,5 +156,7 @@ graph LR
     end
     M --> Worker_Pool
 ```
+
+</diV>
 
 <TUMLogo variant="white" />

@@ -13,7 +13,7 @@ layout: two-cols-header
 
 <div 
     alt="Node"
-    style="transform: scale(1.0)"
+    style="transform: scale(1.2)"
     class="absolute top-15% right-10%"
 >
 
