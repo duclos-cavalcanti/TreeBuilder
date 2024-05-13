@@ -116,9 +116,9 @@ class Node():
                 return k, j
         raise RuntimeError(f"{self.hostaddr} => No Job matching {rj.id}")
 
-    def future_ts(self, sec:int): 
+    def future_ts(self, sec:float) -> int: 
         now = self.timestamp()
-        return (now + self.sec_to_usec(sec))
+        return int(now + self.sec_to_usec(sec))
 
     def sleep_to(self, trigger_ts:int): 
         future = trigger_ts
@@ -133,7 +133,7 @@ class Node():
         time.sleep(self.usec_to_sec(dur_us))
         print(f"AWAKE: {self.timestamp()}")
 
-    def sec_to_usec(self, sec:int) -> int:
+    def sec_to_usec(self, sec:float) -> float:
         return (sec * 1_000_000)
     
     def usec_to_sec(self, usec:int) -> float:
