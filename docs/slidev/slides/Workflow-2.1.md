@@ -65,17 +65,28 @@ block-beta
 >
 ```mermaid
 block-beta
-    J("<font color=white>Jobs")
-    space
-    block:items
+    columns 2
+    JM("<font color=white>M_Jobs:"):1
+    block:mitems
         columns 1
         A["____"] 
-        B["____"] 
     end
 
-    J --> items
+    JP("<font color=white>P_Jobs:"):1
+    block:pitems
+        columns 1
+        B["JP: ./parent [args]"] 
+    end
 
-    style J fill:#000000
+    JC("<font color=white>C_Jobs:"):1
+    block:citems
+        columns 1
+        C["JC: ./child [args]"] 
+    end
+
+    style JM fill:#000000
+    style JP fill:#000000
+    style JC fill:#000000
 ```
 </div>
 
@@ -86,17 +97,28 @@ block-beta
 >
 ```mermaid
 block-beta
-    R("<font color=black>Reports")
-    space
-    block:items
+    columns 2
+    RM("<font color=black>M_Reports:")
+    block:mitems
         columns 1
-        A["____"] 
-        B["____"] 
+        A["JP_ID => RP"] 
     end
 
-    R --> items
+    RP("<font color=black>P_Reports:")
+    block:pitems
+        columns 1
+        B["JP_ID => RC"] 
+    end
 
-    style R fill:#DAD7CB
+    RC("<font color=black>C_Reports:")
+    block:citems
+        columns 1
+        C["___________"] 
+    end
+
+    style RM fill:#DAD7CB
+    style RP fill:#DAD7CB
+    style RC fill:#DAD7CB
 ```
 </div>
 

@@ -9,10 +9,10 @@ layout: two-cols-header
 1. Manager: Tells root to be _Parent_
 2. Parent: 
     1. Creates required Parent Job 
-    2. Contacts Children
-    3. Append their Jobs as dependencies
+    2. Contacts Children, Get Child Job Structs
+    3. Creates/Appends Reports
     4. Execs and Replies with Parent Job
-3. Manager: Starts Timer Job _(1.2 * duration)_
+3. Creates/Appends Report
 
 <div
     alt="StepQ"
@@ -62,6 +62,70 @@ block-beta
 ```
 </div>
 
+<div
+    alt="JobQ"
+    style="transform: scale(0.6)"
+    class="absolute top-18% left-30% right--1% bottom-0"
+>
+```mermaid
+block-beta
+    columns 2
+    JM("<font color=white>M_Jobs:"):1
+    block:mitems
+        columns 1
+        A["____"] 
+    end
+
+    JP("<font color=white>P_Jobs:"):1
+    block:pitems
+        columns 1
+        B["JP: ./parent [args]"] 
+    end
+
+    JC("<font color=white>C_Jobs:"):1
+    block:citems
+        columns 1
+        C["JC: ./child [args]"] 
+    end
+
+    style JM fill:#000000
+    style JP fill:#000000
+    style JC fill:#000000
+```
+</div>
+
+<div
+    alt="RepQ"
+    style="transform: scale(0.6)"
+    class="absolute top-18% left-60% right--1% bottom-0"
+>
+```mermaid
+block-beta
+    columns 2
+    RM("<font color=black>M_Reports:")
+    block:mitems
+        columns 1
+        A["JP_ID => RP"] 
+    end
+
+    RP("<font color=black>P_Reports:")
+    block:pitems
+        columns 1
+        B["JP_ID => RC"] 
+    end
+
+    RC("<font color=black>C_Reports:")
+    block:citems
+        columns 1
+        C["___________"] 
+    end
+
+    style RM fill:#DAD7CB
+    style RP fill:#DAD7CB
+    style RC fill:#DAD7CB
+```
+</div>
+
 ::left::
 
 <div 
@@ -88,7 +152,7 @@ classDiagram
 <div
     alt="Seq"
     style="transform: scale(1.2)"
-    class="absolute right-17% top-40%"
+    class="absolute right-20% bottom-5%"
 >
 
 ```mermaid
@@ -102,40 +166,6 @@ sequenceDiagram
     C->>P: JOB[C]
     P->>M: JOB[P]
 ```
-</div>
-
-<div
-    alt="NodeJobs"
-    style="transform: scale(1.1)"
-    class="absolute right-17% bottom-5%"
->
-
-```mermaid
-block-beta
-    columns 3
-    M("Manager"):1
-    space
-    MJ("J<sub>0</sub> = sleep(dur * 1.2)"):1
-
-    M --> MJ
-
-    P("Parent"):1
-    space
-    PJ("J<sub>0</sub> = ./parent [args] "):1
-
-    P --> PJ
-
-    C("Child"):1
-    space
-    CJ("J<sub>0</sub> = ./child [args] "):1
-
-    C --> CJ
-
-    style MJ fill:#000000;color:#FFFFFF
-    style PJ fill:#000000;color:#FFFFFF
-    style CJ fill:#000000;color:#FFFFFF
-```
-
 </div>
 
 <TUMLogo variant="white" />
