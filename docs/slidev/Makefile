@@ -9,7 +9,7 @@ GID := $(shell id -g)
 DOCKER := tangramor/slidev:playwright
 NAME := slidev-ma
 
-.PHONY: run exp stop exit clean
+.PHONY: run pdf stop exit clean
 all: run
 
 run:
@@ -20,7 +20,7 @@ run:
     -e NPM_MIRROR="https://registry.npmmirror.com" \
     ${DOCKER}
 
-exp: 
+pdf: 
 	docker exec -i ${NAME} npx slidev export --timeout 2m --output slides.pdf
 
 exit:
