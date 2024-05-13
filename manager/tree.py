@@ -5,10 +5,20 @@ class TreeNode():
         self.port = addr.split(":")[1]
 
 class Tree():
-    def __init__(self, n:int):
-        self.root = None
-        self.n = n
+    def __init__(self, total:int):
+        self.n      = 0
+        self.total  = total
+        self.nodes  = []
+        self.leaves = []
 
-    def set_root(self, addr:str):
-        self.root = TreeNode(addr)
+    def next_layer(self, idx):
+        if idx == 0:
+            return 2
+        else:
+            return 2
+
+    def set_node(self, addr:str, idx:int):
+        tnode = TreeNode(addr)
+        self.nodes.append(tnode)
+        self.leaves.append(tnode)
 

@@ -1,19 +1,23 @@
-from .node      import Node, Job
+from .message_pb2 import Message, MessageType, MessageFlag
+from .node      import Node
+from .job       import Job, Report
 from .tree      import Tree
-from .utils     import LOG_LEVEL, read_yaml
+from .utils     import LOG_LEVEL
+from .utils     import *
 
 import zmq
-import os
-import time
 import random
+import yaml
 
-from typing import Callable
 
 class Manager(Node):
-    def __init__(self, name:str, ip:str, port:str, LOG_LEVEL=LOG_LEVEL.NONE):
+    def __init__(self, config:str, name:str, ip:str, port:str, LOG_LEVEL=LOG_LEVEL.NONE):
         super().__init__(name, ip, port, zmq.REQ, LOG_LEVEL)
         self.ip = ip 
-        self.config     = read_yaml(os.path.join(os.getcwd(), "manager", "default.yaml"))
+
+        with open(config, 'r') as file:
+            self.config = yaml.safe_load(file)
+
         self.workers    = self.config["addrs"][1:]
         self.pool       = self.workers
         self.rate       = int(self.config["rate"])
@@ -21,15 +25,14 @@ class Manager(Node):
         self.K          = self.config["hyperparameter"]
         self.N          = int(len(self.workers))
         self.steps      = self.config["steps"]
-        self.tree       = Tree(self.N)
+        self.tree       = Tree(total=self.N)
 
-    def print_node(self, n:dict, idx:int, header:str):
-        print(f"{header}: {idx} => {n}")
-
-    def step(self, action:str, desc:str) -> dict:
+    @staticmethod
+    def step(action:str, desc:str) -> dict:
         d = {
             "action": action,
-            "description": desc
+            "description": desc,
+            "data": 0
         }
         return d
 
@@ -43,78 +46,71 @@ class Manager(Node):
     def push_step(self, s:dict):
         self.steps.append(s)
 
-    def process_step(self, s:dict, callback:Callable):
-        i   = s['i']
-        act = s['action']
-        dsc = s['description']
-        self.print(f"------>", prefix="\033[31m", suffix="\033[0m")
-        self.print(f"STEP[{i}]: {act} => START    | {dsc}", prefix="\033[31m", suffix="\033[0m")
-        callback()
-        self.print(f"STEP[{i}]: {act} => COMPLETE | {dsc}", prefix="\033[92m", suffix="\033[0m")
-        self.print(f"<------", prefix="\033[92m", suffix="\033[0m")
-
     def select(self):
         pool = self.pool
         size = len(pool)
         idx = random.randint(0, size - 1)
-        return idx
+        addr = self.pool[idx]
+        self.pool.pop(idx)
+        print(f"CHOSEN: {idx} => {addr}")
+        print_arr(arr=self.pool, header="POOL")
+        return addr, self.pool
 
-    def establish(self, targets:list=[]):
-        if not targets: targets = self.workers
-        for addr in targets:
+    def establish(self):
+        for addr in self.workers:
             id = self.tick
             data = [addr, self.hostaddr]
             self.connect(addr)
-            self.handshake_connect(id, data, addr)
+            r = self.handshake(id, MessageType.CONNECT, MessageFlag.NONE, data, addr)
             self.disconnect(addr)
 
     def root(self):
-        idx = self.select()
-        root = self.pool[idx]
-        self.pool.pop(idx)
-        self.tree.set_root(root)
-        self.print_node(root, idx, "CHOSEN")
-        self.print_addrs(self.pool, "POOL")
+        root, children = self.select()
+        self.tree.set_node(root, 0)
+        F = self.tree.next_layer(0)
         id = self.tick 
-        data =  [ "2" ]
-        data += [ self.rate ]
-        data += [ self.duration ]
-        data += self.pool
+        data =  [ F, self.rate, self.duration ] + children
         self.connect(root)
-        self.handshake_parent(id, data, root)
-        self.exec_job(Job(addr=self.hostaddr, command=f"sleep {1.2 * self.duration}s"))
-        self.push_step(self.step(action="REPORT", desc="Check on external Jobs"))
-        self.print_jobs()
+        r = self.handshake(id, MessageType.COMMAND, MessageFlag.PARENT, data, root)
+        job = Job(arr=r.data)
+        trigger = r.ts + self.sec_to_usec(int(self.duration * 1.2))
+        self.reports[job.id] = [ Report(trigger=trigger, job=job) ]
         self.disconnect(root)
+        self.push_step(self.step(action="REPORT", desc="Check on external Jobs"))
 
     def report(self):
-        ok, j, end = self.check_jobs(ref_job)
-        if not ok: raise RuntimeError(f"WORKER HAS NO JOBS TO REPORT ON")
-        if end: self.print_job(j, header=f"JOB DONE:")
-        addr = job.addr
-        self.connect(addr)
+        id, reports = self.peak()
+        report = reports[0]
+        self.sleep_to(report.trigger)
         id = self.tick 
-        r, d, ts = self.handshake_report(id, job.to_arr(), addr)
-        ret = Job(arr=d)
-        if ret.end == False:
-            print(f"REPORTED JOB [{addr}] => INCOMPLETE")
-            self.jobs[ts] = job
-            self.push_step(self.step(action="REPORT", desc="Check on external Jobs"))
-        else:
-            print(f"REPORTED JOB [{addr}] => COMPLETE")
-        self.print_message(r, header="REPORTED MESSAGE: ") 
+        addr = report.job.addr
+        data =  report.job.to_arr()
+        self.connect(addr)
+        r = self.handshake(id, MessageType.REPORT, MessageFlag.PARENT, data, addr)
+        job = Job(arr=r.data)
+        print(f"Reported Job: {job}")
         self.disconnect(addr)
 
-    def run(self):
+    def go(self):
         try:
             while(True):
                 step = self.pop_step()
                 if not step: break
-                match step["action"]:
-                    case "CONNECT": self.process_step(step, self.establish)
-                    case "ROOT":    self.process_step(step, self.root)
-                    case "REPORT":  self.process_step(step, self.report)
+
+                i   = step['i']
+                act = step['action']
+                dsc = step['description']
+                print_color(f"------>", color=RED)
+                print_color(f"STEP[{i}]: {act} => START    | {dsc}", color=RED)
+
+                match act:
+                    case "CONNECT": self.establish()
+                    case "ROOT":    self.root()
+                    case "REPORT":  self.report()
                     case _:         raise NotImplementedError(f"ERR STEP: {step}")
+
+                print_color(f"STEP[{i}]: {act} => COMPLETE | {dsc}", color=GRN)
+                print_color(f"<------", color=GRN)
                 self.tick += 1
 
             print("FINISHED!")

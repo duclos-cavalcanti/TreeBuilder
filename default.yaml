@@ -15,5 +15,5 @@ steps:
     description: "Establish connection workers."
     data: 0
   - action: "ROOT"
-    description: "Choose root among worker nodes."
+    description: "Choose next node for tree."
     data: 0

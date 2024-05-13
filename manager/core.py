@@ -1,17 +1,21 @@
 from .manager import Manager
 from .worker  import Worker
+from .node    import Node
 from .utils   import LOG_LEVEL
 
+import os
 import argparse
-import time
 
 def manager(args):
-    M = Manager(args.name, ip=args.addr, port=args.port, LOG_LEVEL=LOG_LEVEL.NONE) 
-    M.run()
+    config = os.path.join(os.getcwd(), "default.yaml")
+    if args.config: config = args.config
+
+    M = Manager(config, args.name, ip=args.addr, port=args.port, LOG_LEVEL=LOG_LEVEL.NONE) 
+    M.go()
 
 def worker(args):
     W = Worker(args.name, ip=args.addr, port=args.port, LOG_LEVEL=LOG_LEVEL.NONE) 
-    W.run()
+    W.go()
 
 def parse(rem=None):
     arg_def = argparse.ArgumentParser(
@@ -44,11 +48,11 @@ def parse(rem=None):
     )
 
     arg_def.add_argument(
-        "-s", "--script",
+        "-c", "--config",
         type=str,
         default="",
         required=False,
-        dest="script",
+        dest="config",
     )
 
     arg_def.add_argument(
