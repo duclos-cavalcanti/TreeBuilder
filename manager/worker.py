@@ -14,14 +14,20 @@ class Worker(Node):
 
     def child_job(self):
         C = f"./bin/child -i {self.ip} -p {int(self.port) - 1000}"
-        C=f"sleep 10 && echo CHILD DONE"
         J = Job(addr=self.hostaddr, command=C)
         self.jobs[self.exec(target=self._run, args=(J,))] = J
         return J
 
     def parent_job(self, sel:int, rate:int, dur:int, addrs:list):
-        C = "./bin/parent -a " + " ".join(f"{a}" for a in addrs) + f" -r {rate} -d {dur}"
-        C = f"sleep 10 && echo PARENT DONE"
+        faddrs = []
+        for a in addrs:
+            split = a.split(":")
+            ip    = split[0]
+            port  = split[1]
+            port  = str(int(port) - 1000)
+            faddrs.append(f"{ip}:{port}")
+
+        C = "./bin/parent -a " + " ".join(f"{a}" for a in faddrs) + f" -r {rate} -d {dur}"
         J = Job(addr=self.hostaddr, command=C, param=sel)
         H = self._helper(zmq.REQ)
 
@@ -40,6 +46,7 @@ class Worker(Node):
         return J
 
     def parent_resolve(self, job:Job):
+        print(job)
         sel = job.param
         output = job.out
         job.out = output[:2]

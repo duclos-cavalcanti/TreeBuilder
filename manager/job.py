@@ -5,7 +5,7 @@ from typing import List
 class Job():
     def __init__(self, addr:str="", command:str="", param:int=0, arr:List=[]):
         if len(arr) > 0:
-            if len(arr) <= 8 : 
+            if len(arr) < 8 : 
                 raise RuntimeError(f"Arr has incorrect length: {arr}")
             self.from_arr(arr)
         else:
