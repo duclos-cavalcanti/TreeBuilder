@@ -14,7 +14,6 @@ import yaml
 class Manager(Node):
     def __init__(self, config:str, name:str, ip:str, port:str, LOG_LEVEL=LOG_LEVEL.NONE):
         super().__init__(name, ip, port, zmq.REQ, LOG_LEVEL)
-        self.ip = ip 
 
         with open(config, 'r') as file:
             self.config = yaml.safe_load(file)
@@ -26,7 +25,8 @@ class Manager(Node):
         self.K          = self.config["hyperparameter"]
         self.N          = int(len(self.workers))
         self.steps      = self.config["steps"]
-        self.tree       = Tree(total=self.N)
+        self.tree       = Tree(root=self.select(), total=self.N)
+        time.sleep(2)
 
     @staticmethod
     def step(action:str, desc:str) -> dict:
@@ -47,6 +47,16 @@ class Manager(Node):
     def push_step(self, s:dict):
         self.steps.append(s)
 
+    def slice(self, param:int=0):
+        return self.pool
+
+    def pop_job(self):
+        trigger_ts, job = self.jobs.popitem()
+        return trigger_ts, job
+
+    def push_job(self, job:Job, timer_sec:int):
+        self.jobs[self.future_ts(timer_sec)] = job
+
     def select(self):
         pool = self.pool
         size = len(pool)
@@ -55,7 +65,7 @@ class Manager(Node):
         self.pool.pop(idx)
         print(f"CHOSEN: {idx} => {addr}")
         print_arr(arr=self.pool, header="POOL")
-        return addr, self.pool
+        return addr
 
     def establish(self):
         for addr in self.workers:
@@ -66,35 +76,34 @@ class Manager(Node):
             self.disconnect(addr)
 
     def root(self):
-        root, children = self.select()
-        self.tree.set_node(root, 0)
-        F = self.tree.next_layer(0)
+        root = self.tree.next_leaf()
+        children = self.slice()
+        sel = 2
         id = self.tick 
-        data =  [ F, self.rate, self.duration ] + children
+        data =  [ sel, self.rate, self.duration ] + children
         self.connect(root)
         r = self.handshake(id, MessageType.COMMAND, MessageFlag.PARENT, data, root)
-        job = Job(arr=r.data)
-        self.jobs[self.future_ts(2)] = job
+        rjob = Job(arr=r.data)
+        self.push_job(rjob, 2)
         self.disconnect(root)
         self.push_step(self.step(action="REPORT", desc="Check on external Jobs"))
 
     def report(self):
-        trigger_ts, job = self.jobs.popitem()
+        trigger_ts, job = self.pop_job()
         self.sleep_to(trigger_ts)
         self.connect(job.addr)
         r = self.handshake(self.tick, MessageType.REPORT, MessageFlag.MANAGER, job.to_arr(), job.addr)
         rjob = Job(arr=r.data)
         self.disconnect(job.addr)
 
-        if rjob.end == False:
-            print(f"REPORT <= {job.addr}: INCOMPLETE")
-            self.print_message(r)
+        print(f"REPORT <= {job.addr}: COMPLETE={rjob.complete}")
+        self.print_message(r)
+        if not rjob.complete:
             self.push_step(self.step(action="REPORT", desc="Check on external Jobs"))
-            self.jobs[self.future_ts(2)] = rjob
+            self.push_job(rjob, 2)
         else:
-            print(f"REPORT <= {job.addr}: COMPLETED")
-            self.print_message(r)
-            # self.push_step(self.step(action="TREE", desc="Check on external Jobs"))
+            self.push_step(self.step(action="ROOT", desc="Select next children"))
+            _ = self.pop_step()
 
     def go(self):
         try:

@@ -14,8 +14,9 @@ class Job():
             self.addr       = addr
             self.command    = command
             self.end        = False
+            self.complete   = False
             self.ret        = -1
-            self.out        = "NONE"
+            self.out        = [ "NONE" ]
         self.deps = deps
 
     def __str__(self):
@@ -25,8 +26,11 @@ class Job():
         output.append(f"\tADDR={self.addr}")
         output.append(f"\tCOMM={self.command}")
         output.append(f"\tEND={self.end}")
+        output.append(f"\tCOMPLETE={self.end}")
         output.append(f"\tRET={self.ret}")
-        output.append(f"\tOUT={self.out}")
+        output.append(f"\tOUT=[")
+        for o in self.out: output.append(f"\t\t{o}")
+        output.append(f"\t]")
         output.append(f"}}")
         return "\n".join(output)
 
@@ -42,6 +46,12 @@ class Job():
                 return False
         return True
 
+    def concatenate(self) -> bool: 
+        for d in self.deps:
+            for o in d.out:
+                self.out.append(str(o))
+        return True
+
     def to_arr(self) -> List:
         ret = []
         ret.append(f"{self.id}")
@@ -49,8 +59,9 @@ class Job():
         ret.append(f"{self.addr}")
         ret.append(f"{self.command}")
         ret.append(f"{self.end}")
+        ret.append(f"{self.complete}")
         ret.append(f"{self.ret}")
-        ret.append(f"{self.out}")
+        for o in self.out: ret.append(f"{o}")
         return ret
 
     def from_arr(self, arr:List):
@@ -59,5 +70,8 @@ class Job():
         self.addr       = arr[2]
         self.command    = arr[3]
         self.end        = True if arr[4] == "True" else False
-        self.ret        = arr[5]
-        self.out        = arr[6]
+        self.complete   = True if arr[5] == "True" else False
+        self.ret        = arr[6]
+        self.out = []
+        for o in arr[7:]:
+            self.out.append(o)

@@ -63,22 +63,14 @@ class Worker(Node):
 
     def reportACK(self, m:Message):
         id, _, flag, data = self.parse_message(m)
-        if flag == MessageFlag.MANAGER:
-            t, job = self.find(Job(arr=data))
-            job.end = (not t.is_alive() and job.is_resolved())
-            if job.end: 
-                self.kill(job, dct=self.jobs)
-                self.kill(job, dct=self.guards)
+        t, job = self.find(Job(arr=data))
+        job.complete = (job.end and job.is_resolved())
+        if job.complete: 
+            job.concatenate()
+            del self.jobs[t]
 
-            print(f"JOB[{job.id}] => COMPLETE={job.end}")
-            self.send_message(id=id, t=MessageType.ACK, flag=flag, data=job.to_arr())
-        else:
-            t, job = self.find(Job(arr=data))
-            if not t.is_alive(): 
-                self.kill(job, dct=self.jobs)
-
-            print(f"JOB[{job.id}] => COMPLETE={job.end}")
-            self.send_message(id=id, t=MessageType.ACK, flag=flag, data=job.to_arr())
+        print(f"JOB[{job.id}] => END={job.end}")
+        self.send_message(id=id, t=MessageType.ACK, flag=flag, data=job.to_arr())
 
     def connectACK(self, m:Message):
         id, _, flag, data = self.parse_message(m)

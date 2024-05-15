@@ -78,12 +78,18 @@ class Node():
             j.pid = p.pid
             stdout, stderr = p.communicate()
             j.ret = p.returncode
-            j.out = stdout if stdout else stderr
+            j.out = (stdout if stdout else stderr).split("\n")
+            for i,o in enumerate(j.out):
+                if o == "":
+                    j.out.pop(i)
+
         except Exception as e:
             j.ret = -1
-            j.out = f"ERROR: {e}"
+            j.out = [ f"ERROR: {e}" ]
+
         finally:
             j.end = True
+
         return j
 
     def _guard(self, job:Job):
@@ -99,6 +105,8 @@ class Node():
                     rjob = Job(arr=r.data)
                     job.deps[idx] = rjob
                     n.disconnect(j.addr)
+        t, _ = self.find(job, dct=self.guards)
+        del self.guards[t]
 
     def launch(self, target, args=()):
         t = threading.Thread(target=target, args=args)
@@ -115,13 +123,6 @@ class Node():
             if rj.id == j.id:
                 return k, j
         raise RuntimeError(f"{self.hostaddr} => No Job matching {rj.id}")
-
-    def kill(self, rj:Job, dct={}):
-        if not dct: dct = self.jobs
-        t, _ = self.find(rj, dct=dct)
-        print(f"KILLED THREAD={t.native_id}")
-        del dct[t]
-        del t
 
     def future_ts(self, sec:float) -> int: 
         now = self.timestamp()
@@ -165,5 +166,5 @@ class Node():
         print(f"    TYPE: {MessageType.Name(m.type)}")
         print(f"    FLAG: {MessageFlag.Name(m.flag)}")
         print(f"    DATA: [")
-        for d in m.data: print(f"         {d}")
+        for d in m.data: print(f"         {d},")
         print(f"    ]\n}}")
