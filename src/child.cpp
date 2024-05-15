@@ -107,6 +107,8 @@ int child(void) {
             msg->print();
         }
 
+        cnt++;
+
         if (msg->type == MsgType_t::END) {
             if (verbose) {
                 fprintf(LOG, "CHILD: END\n");
@@ -114,7 +116,6 @@ int child(void) {
             }
             break;
         }
-        cnt++;
     }
 
     close(sockfd);
