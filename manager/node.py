@@ -101,7 +101,7 @@ class Node():
             for idx, j in enumerate(job.deps):
                 if not j.end:
                     n.connect(j.addr)
-                    r = n.handshake(self.tick, MessageType.REPORT, MessageFlag.NONE, j.to_arr(), j.addr, verbose=False)
+                    r = n.handshake(self.tick, MessageType.REPORT, MessageFlag.PARENT, j.to_arr(), j.addr, verbose=False)
                     rjob = Job(arr=r.data)
                     job.deps[idx] = rjob
                     n.disconnect(j.addr)

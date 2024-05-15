@@ -22,7 +22,7 @@ class Worker(Node):
     def parent_job(self, sel:int, rate:int, dur:int, addrs:list):
         C = "./bin/parent -a " + " ".join(f"{a}" for a in addrs) + f" -r {rate} -d {dur}"
         C = f"sleep 10 && echo PARENT DONE"
-        J = Job(addr=self.hostaddr, command=C)
+        J = Job(addr=self.hostaddr, command=C, param=sel)
         H = self._helper(zmq.REQ)
 
         for addr in addrs:
@@ -38,6 +38,13 @@ class Worker(Node):
         self.guards[self.exec(target=self._guard, args=(J,))] = J
 
         return J
+
+    def parent_resolve(self, job:Job):
+        sel = job.param
+        output = job.out
+        job.out = output[:2]
+        job.out[1] = f"{sel}"
+        return job
 
     def commandACK(self, m:Message):
         id, _, flag, data = self.parse_message(m)
@@ -68,6 +75,9 @@ class Worker(Node):
         if job.complete: 
             job.concatenate()
             del self.jobs[t]
+
+        if job.complete and flag == MessageFlag.MANAGER:
+            job = self.parent_resolve(job)
 
         print(f"JOB[{job.id}] => END={job.end}")
         self.send_message(id=id, t=MessageType.ACK, flag=flag, data=job.to_arr())
