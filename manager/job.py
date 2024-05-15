@@ -3,7 +3,7 @@ import hashlib
 from typing import List
 
 class Job():
-    def __init__(self, addr:str="", command:str="", param:int=0, arr:List=[]):
+    def __init__(self, addr:str="", command:str="", params:List=[], arr:List=[]):
         if len(arr) > 0:
             if len(arr) < 8 : 
                 raise RuntimeError(f"Arr has incorrect length: {arr}")
@@ -16,7 +16,7 @@ class Job():
             self.end        = False
             self.complete   = False
             self.ret        = -1
-            self.param      = param
+            self.params     = params
             self.out        = [ "NONE" ]
         self.deps = []
 
@@ -29,7 +29,7 @@ class Job():
         output.append(f"\tEND={self.end}")
         output.append(f"\tCOMPLETE={self.end}")
         output.append(f"\tRET={self.ret}")
-        output.append(f"\tPARAM={self.param}")
+        output.append(f"\tPARAM={self.params}")
         output.append(f"\tOUT=[")
         for o in self.out: output.append(f"\t\t{o}")
         output.append(f"\t]")
@@ -63,8 +63,12 @@ class Job():
         ret.append(f"{self.end}")
         ret.append(f"{self.complete}")
         ret.append(f"{self.ret}")
-        ret.append(f"{self.param}")
-        for o in self.out: ret.append(f"{o}")
+        ret.append(f"{self.params}")
+        if len(self.out) == 0:
+            ret.append(f"[]")
+        else:
+            for o in self.out: 
+                ret.append(f"{o}")
         return ret
 
     def from_arr(self, arr:List):
@@ -75,7 +79,7 @@ class Job():
         self.end        = True if arr[4] == "True" else False
         self.complete   = True if arr[5] == "True" else False
         self.ret        = arr[6]
-        self.param      = arr[7]
+        self.params     = arr[7]
         self.out = []
         for o in arr[8:]:
             self.out.append(o)

@@ -102,6 +102,10 @@ class Manager(Node):
             self.push_step(self.step(action="REPORT", desc="Check on external Jobs"))
             self.push_job(rjob, 2)
         else:
+            for out in rjob.out:
+                addr = out.split("/")[0]
+                perc = out.split("/")[1]
+                print(f"NEW LEAF: {addr} => {perc}")
             self.push_step(self.step(action="ROOT", desc="Select next children"))
             _ = self.pop_step()
 

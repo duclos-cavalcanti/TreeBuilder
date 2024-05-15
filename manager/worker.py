@@ -6,6 +6,7 @@ from .job       import Job
 from .utils     import LOG_LEVEL
 from .utils     import *
 
+import heapq
 import zmq
 
 class Worker(Node):
@@ -28,7 +29,7 @@ class Worker(Node):
             faddrs.append(f"{ip}:{port}")
 
         C = "./bin/parent -a " + " ".join(f"{a}" for a in faddrs) + f" -r {rate} -d {dur}"
-        J = Job(addr=self.hostaddr, command=C, param=sel)
+        J = Job(addr=self.hostaddr, command=C, params=[sel, rate, dur])
         H = self._helper(zmq.REQ)
 
         for addr in addrs:
@@ -46,11 +47,35 @@ class Worker(Node):
         return J
 
     def parent_resolve(self, job:Job):
-        print(job)
-        sel = job.param
-        output = job.out
-        job.out = output[:2]
-        job.out[1] = f"{sel}"
+        print("PARENT RESOLVE:")
+        sel   = int(job.params[0])
+        rate  = int(job.params[1])
+        dur   = int(job.params[2])
+        total = rate * dur
+
+        for dep in job.deps:
+            if int(dep.ret) != 0:
+                print(f"ERR: ADDR[{dep.addr}]: RET={dep.ret}")
+                job.ret = dep.ret
+                return job
+
+        percs = []
+        for _, dep in enumerate(job.deps):
+            recv = int(dep.out[0])
+            perc = float(dep.out[1])
+            percs.append(perc)
+            print(f"ADDR[{dep.addr}]: {perc}")
+ 
+
+        n_best   = heapq.nsmallest(sel, enumerate(percs), key=lambda x: x[1])
+        n_best_i =  [item[0] for item in n_best]
+        n_best_v =  [item[1] for item in n_best]
+
+        job.out = []
+
+        for idx, perc in zip(n_best_i, n_best_v):
+            job.out.append(f"{job.deps[idx].addr}/{perc}")
+
         return job
 
     def commandACK(self, m:Message):
@@ -80,7 +105,6 @@ class Worker(Node):
         t, job = self.find(Job(arr=data))
         job.complete = (job.end and job.is_resolved())
         if job.complete: 
-            job.concatenate()
             del self.jobs[t]
 
         if job.complete and flag == MessageFlag.MANAGER:
