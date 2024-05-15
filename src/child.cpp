@@ -18,8 +18,7 @@ FILE* LOG=stdout;
 
 std::vector<int64_t> latencies;
 std::string ip = "";
-int port = 0, rate, duration;
-int64_t packets;
+int port = 0;
 bool verbose = false;
 
 void usage(int e) {
@@ -30,7 +29,7 @@ void usage(int e) {
 int parse(int argc, char **argv) {
     int opt = 0;
     int ret = 0;
-    while ( (opt = getopt (argc, argv, "hi:p:v") ) != -1 ) {
+    while ( (opt = getopt (argc, argv, "hi:p:t:v") ) != -1 ) {
         switch (opt) {
         case 'h':
             usage(EXIT_SUCCESS);
@@ -93,28 +92,7 @@ int child(void) {
         fprintf(LOG, "CHILD: WAITING ON START...\n");
     }
 
-    while(1) {
-        n = recvfrom(sockfd, buf, sizeof(buf), 0, (struct sockaddr*) &senderaddr, (socklen_t *) &len);
-        if (n < sz) {
-            continue;
-        }
-
-        msg = reinterpret_cast<MsgUDP_t*>(buf);
-
-        if (msg->type == MsgType_t::START) { 
-            rate = msg->rate;
-            duration = msg->dur;
-            packets = (int64_t)rate * duration;
-            if (verbose) {
-                fprintf(LOG, "CHILD: START => IP=%s | PORT=%i | PACKETS=%lu | RATE=%d | DURATION=%d\n", inet_ntoa(senderaddr.sin_addr), ntohs(senderaddr.sin_port), packets, rate, duration);
-            }
-            break;
-        } else {
-            fprintf(stderr, "Failed to start stream\n");
-            exit(EXIT_FAILURE);
-        }
-    }
-
+    if (verbose) fprintf(LOG, "CHILD: START => \n");
     while(1) {
         n = recvfrom(sockfd, buf, sizeof(buf), 0, (struct sockaddr*) &senderaddr, (socklen_t *) &len);
         if (n < sz) {
@@ -125,22 +103,23 @@ int child(void) {
         latencies.push_back(timestamp() - msg->ts);
 
         if (verbose) {
-            fprintf(LOG, "CHILD: RECV[%4d] => %s | ", cnt++,  msg->type_to_string(msg->type).c_str());
+            fprintf(LOG, "CHILD: RECV[%4d] => %s | ", cnt,  msg->type_to_string(msg->type).c_str());
             msg->print();
         }
 
         if (msg->type == MsgType_t::END) {
             if (verbose) {
                 fprintf(LOG, "CHILD: END\n");
-                fprintf(LOG, "SUMMARY | RECV=%d | TOTAL=%lu | DROPPED=%lu | LATENCY_VECTOR=%lu\n", cnt, packets, packets - cnt, latencies.size());
+                fprintf(LOG, "SUMMARY | RECV=%d | LATENCY_VECTOR=%lu\n", cnt, latencies.size());
             }
             break;
         }
+        cnt++;
     }
 
     close(sockfd);
     if ((perc = get_percentile(latencies, 90)) != 0.0) {
-        fprintf(stdout, "%lf\n", perc);
+        fprintf(stdout, "%d\n%lf\n", cnt, perc);
         return EXIT_SUCCESS;
     } else {
         fprintf(stdout, "EMPTY LATENCY VECTOR!\n");

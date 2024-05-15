@@ -104,30 +104,14 @@ int parent(void) {
         fprintf(LOG, "PARENT: PACKETS=%lu | DURATION=%d | RATE=%d\n", packets, duration, rate);
     }
 
-    for (int j = 0; j<total; j++) {
-        if (verbose) {
-            fprintf(LOG, "PARENT: START => IP=%s | PORT=%d \n", inet_ntoa(addrs[j].sin_addr), ntohs(addrs[j].sin_port));
-        }
-        MsgUDP_t m = MsgUDP();
-        m.type = MsgType_t::START;
-        m.dur  = duration;
-        m.rate = rate;
-
-        n = sendto(sockfd, &m, sizeof(MsgUDP_t), 0, (struct sockaddr *) &addrs[j], sizeof(addrs[j]));
-        if ( n < 0 ) {
-            fprintf(stderr, "Failed to send\n");
-            exit(EXIT_FAILURE);
-        }
-    }
-
     auto start  = std::chrono::system_clock::now();
     auto step = std::chrono::duration<double>(1) / rate;
 
     for (int64_t i = 0; i < packets; i++) {
         MsgUDP_t m = MsgUDP();
         m.id  = (cnt++);
-        if (i == (packets - 1)) m.type = MsgType_t::END;
-        else                    m.type  = MsgType_t::ONGOING;
+        if (i == (packets - 1)) 
+            m.type = MsgType_t::END;
 
         for (int j = 0; j<total; j++) {
             m.ts  = timestamp();
