@@ -1,6 +1,7 @@
 import hashlib
 import time
 
+from collections import deque
 from typing import List
 from enum import Enum
 
@@ -54,31 +55,64 @@ class Timer():
         return usec / 1_000_000
 
 class Tree():
+    class Layer():
+        def __init__(self, length:int):
+            self.length = length
+
     class TreeNode():
-        def __init__(self, addr:str):
+        def __init__(self, addr:str, parent=None):
             self.addr = ''.join(addr.split())
-            self.ip   = self.addr.split(":")[0]
-            self.port = self.addr.split(":")[1]
-            print(f"NEW NODE => {self.addr}")
+            self.parent = parent
+            self.children = []
+            # print(f"NEW NODE => {self.addr}")
 
-    def __init__(self, root:str, fanout:int=2, height:int=3):
-        tnode = self.TreeNode(root)
+    def __init__(self, root:str, fanout:int=2, max_height:int=3):
+        self.root   = self.TreeNode(root)
+        self.Q      = deque([self.root])
+        self.leaves = [ self.root ]
         self.fanout = fanout
-        self.height = height
-        self.nodes  = [ tnode ]
-        self.leaves = [ tnode ]
-
-    def set_node(self, addr:str, idx:int):
-        self.nodes[idx] = self.TreeNode(addr)
+        self.height = 0
+        self.max_height = max_height
 
     def next_leaf(self):
         l = self.leaves[0]
         self.leaves.pop(0)
         return l.addr
 
-    def add_leaf(self, addr):
-        tnode = self.TreeNode(addr)
-        pass
+    def add_leaf(self, addr) -> bool:
+        while True:
+            node = self.Q[0]
+
+            if len(node.children) < self.fanout:
+                leaf = self.TreeNode(addr, parent = node)
+                node.children.append(leaf)
+                self.Q.append(leaf)
+                self.leaves.append(leaf)
+                return True
+
+            self.Q.popleft()
+
+            if not self.Q:
+                self.height += 1
+                if self.max_height > self.height:
+                    return False
+                else:
+                    self.Q.extend(node.children)
+                    return True
+
+    def show(self):
+        queue = deque([self.root])
+        i = 0
+        h = 0
+        while queue:
+            node = queue.popleft()
+            if (i % self.fanout == 0): 
+                h += 1
+            print(f"NODE: {node.addr} => CHILDREN: {[child.addr for child in node.children]}")
+            queue.extend(node.children)
+            i += 1
+
+
 
 class Job():
     def __init__(self, addr:str="", command:str="", params:List=[], arr:List=[]):

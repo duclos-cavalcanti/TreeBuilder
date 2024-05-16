@@ -91,7 +91,7 @@ class Manager(Node):
                 act = step['action']
                 dsc = step['desc']
                 print_color(f"------>", color=RED)
-                print_color(f"STEP[{self.tick}]: {act} => START    | {dsc}", color=RED)
+                print_color(f"STEP[{self.tick}]: {act} => START: {dsc}", color=RED)
 
                 match act:
                     case "CONNECT": self.establish()
@@ -99,7 +99,7 @@ class Manager(Node):
                     case "REPORT":  self.report()
                     case _:         raise NotImplementedError(f"ERR STEP: {step}")
 
-                print_color(f"STEP[{self.tick}]: {act} => COMPLETE | {dsc}", color=GRN)
+                print_color(f"STEP[{self.tick}]: {act} => COMPLETE: {dsc}", color=GRN)
                 print_color(f"<------", color=GRN)
                 self.tick += 1
 
