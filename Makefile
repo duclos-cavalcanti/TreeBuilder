@@ -22,8 +22,8 @@ endif
 all: build
 
 proto:
-	cd manager && protoc --python_out . message.proto
-	cd src/utils && protoc --cpp_out . message.proto
+	cd manager/message && protoc --python_out . message.proto
+	@#cd src/utils && protoc --cpp_out . message.proto
 
 udp: build
 	@./run.sh --build docker
