@@ -1,9 +1,8 @@
 from .zmqsocket import Socket
 from .message   import Message, MessageType, MessageFlag
-from .ds        import Job, LOG_LEVEL
+from .ds        import Job, Timer, LOG_LEVEL
 
 import zmq
-import time
 import subprocess
 import threading
 
@@ -17,8 +16,9 @@ class Node():
         self.ip         = ip
         self.port       = port
         self.tick       = 0
-        self.socket = Socket(self.name, type, LOG_LEVEL=LOG_LEVEL)
+        self.socket     = Socket(self.name, type, LOG_LEVEL=LOG_LEVEL)
 
+        self.timer      = Timer()
         self.jobs = OrderedDict()
         self.guards = OrderedDict()
 
@@ -35,13 +35,20 @@ class Node():
     def tag_message(self, id:int, t:MessageType, f:MessageFlag, data:list):
         m = Message()
         m.id    = id
-        m.ts    = self.timestamp()
+        m.ts    = self.timer.ts()
         m.type  = t
         m.flag  = f
         if data: 
             for d in data: 
                 m.data.append(str(d))
         return m
+
+    def parse_message(self, m:Message):
+        id   = m.id
+        type = m.type
+        flag = m.flag
+        data = m.data
+        return id, type, flag, data
 
     def recv_message(self) -> Message:
         m = Message()
@@ -51,9 +58,15 @@ class Node():
     def send_message(self, id:int, t:MessageType, flag:MessageFlag, data:list=[]):
         m = self.tag_message(id, t, flag, data)
         self.socket.send(m.SerializeToString())
+        return m
+
+    def print_message(self, m:Message, header:str="X"):
+        lines = f"\n{m}".split("\n")
+        lines = "\n\t".join(lines)
+        print(f"MESSAGE[{header}]: {lines}")
 
     def err_message(self, m:Message, s:str):
-        self.print_message(m, header="ERR MESSAGE: ")
+        self.print_message(m)
         raise RuntimeError(f"{s}")
 
     def handshake(self, id, type, flag, data, addr, verbose=True):
@@ -64,7 +77,7 @@ class Node():
         if verbose: print(f"{MessageType.Name(type)}[{MessageFlag.Name(flag)}] => {addr}")
         return m
 
-    def _helper(self, type, name:str="HELPER"):
+    def _node(self, type, name:str="HELPER"):
         h = Node(f"{self.name}::{name}", self.ip, f"{int(self.port) + 1000}", type, self.socket.LOG_LEVEL)
         return h
 
@@ -93,9 +106,9 @@ class Node():
 
     def _guard(self, job:Job):
         print(f"GUARDING[{job.id}] => DEPS={len(job.deps)}")
-        n = self._helper(zmq.REQ)
+        n = self._node(zmq.REQ)
         while True:
-            time.sleep(2)
+            self.timer.sleep_sec(2)
             if job.is_resolved(): break
             for idx, j in enumerate(job.deps):
                 if not j.end:
@@ -122,48 +135,3 @@ class Node():
             if rj.id == j.id:
                 return k, j
         raise RuntimeError(f"{self.hostaddr} => No Job matching {rj.id}")
-
-    def future_ts(self, sec:float) -> int: 
-        now = self.timestamp()
-        return int(now + self.sec_to_usec(sec))
-
-    def sleep_to(self, trigger_ts:int): 
-        future = trigger_ts
-        now = self.timestamp()
-        if future > now: 
-            self.sleep_us(future - now)
-        else:
-            print(f"TRIGGER EXPIRED={future} < NOW={now}")
-
-    def sleep_us(self, dur_us:int): 
-        print(f"SLEEPING FOR: {dur_us}")
-        time.sleep(self.usec_to_sec(dur_us))
-        print(f"AWAKE: {self.timestamp()}")
-
-    def sec_to_usec(self, sec:float) -> float:
-        return (sec * 1_000_000)
-    
-    def usec_to_sec(self, usec:int) -> float:
-        return usec / 1_000_000
-    
-    def timestamp(self) -> int: 
-        return int(time.time_ns() / 1_000)
-
-    @staticmethod
-    def parse_message(m:Message):
-        id   = m.id
-        type = m.type
-        flag = m.flag
-        data = m.data
-        return id, type, flag, data
-
-    @staticmethod
-    def print_message( m:Message, header:str=""):
-        print(f"{header}{{")
-        print(f"    ID: {m.id}")
-        print(f"    TS: {m.ts}")
-        print(f"    TYPE: {MessageType.Name(m.type)}")
-        print(f"    FLAG: {MessageFlag.Name(m.flag)}")
-        print(f"    DATA: [")
-        for d in m.data: print(f"         {d},")
-        print(f"    ]\n}}")

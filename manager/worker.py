@@ -27,7 +27,7 @@ class Worker(Node):
 
         C = "./bin/parent -a " + " ".join(f"{a}" for a in faddrs) + f" -r {rate} -d {dur}"
         J = Job(addr=self.hostaddr, command=C, params=[sel, rate, dur])
-        H = self._helper(zmq.REQ)
+        H = self._node(zmq.REQ)
 
         for addr in addrs:
             id = self.tick
@@ -86,13 +86,15 @@ class Worker(Node):
                 dur   = int(data[2])
                 addrs = data[3:]
                 job = self.parent_job(sel, rate, dur, addrs)
-                self.send_message(id=id, t=MessageType.ACK, flag=flag, data=job.to_arr())
+                r = self.send_message(id=id, t=MessageType.ACK, flag=flag, data=job.to_arr())
+                return r
 
             case MessageFlag.CHILD:  
                 if len(data) < 2 or self.hostaddr != data[0]: 
                     self.err_message(m, "CHILD COMMAND ERR")
                 job = self.child_job()
-                self.send_message(id=id, t=MessageType.ACK, flag=flag, data=job.to_arr())
+                r = self.send_message(id=id, t=MessageType.ACK, flag=flag, data=job.to_arr())
+                return r
 
             case _:
                 raise NotImplementedError(f"COMMAND FLAG: {MessageFlag.Name(flag)}")
@@ -108,31 +110,33 @@ class Worker(Node):
             job = self.parent_resolve(job)
 
         print(f"JOB[{job.id}] => END={job.end}")
-        self.send_message(id=id, t=MessageType.ACK, flag=flag, data=job.to_arr())
+        r = self.send_message(id=id, t=MessageType.ACK, flag=flag, data=job.to_arr())
+        return r
 
     def connectACK(self, m:Message):
         id, _, flag, data = self.parse_message(m)
         if self.hostaddr != data[0]: 
             self.err_message(m, "CONNECT ERR")
-        self.send_message(id=id, t=MessageType.ACK, flag=flag, data=[self.hostaddr])
+        r = self.send_message(id=id, t=MessageType.ACK, flag=flag, data=[self.hostaddr])
+        return r
 
     def go(self):
         self.socket.bind(protocol="tcp", ip=self.ip, port=self.port)
         try:
             while(True):
+                r = Message()
                 m = self.recv_message()
-                print_color(f"------>", color=RED)
-                print_color(f"MESSAGE[{m.id}]: {MessageType.Name(m.type)} => RECEIVED", color=RED)
+                print_color(f"------> RECEIVED", color=RED)
+                self.print_message(m, header="RECV")
 
-                self.print_message(m)
                 match m.type:
-                    case MessageType.CONNECT: self.connectACK(m)
-                    case MessageType.COMMAND: self.commandACK(m)
-                    case MessageType.REPORT:  self.reportACK(m)
+                    case MessageType.CONNECT: r = self.connectACK(m)
+                    case MessageType.COMMAND: r = self.commandACK(m)
+                    case MessageType.REPORT:  r = self.reportACK(m)
                     case _:                   self.err_message(m, f"UNEXPECTED MSG: {MessageType.Name(MessageType.ACK)} | {m.id}")
 
-                print_color(f"MESSAGE[{m.id}]: {MessageType.Name(m.type)} => PROCESSED", color=GRN)
-                print_color(f"<------", color=GRN)
+                self.print_message(r, header="SENT")
+                print_color(f"<------ PROCESSED", color=GRN)
                 self.tick += 1
 
 

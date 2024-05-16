@@ -1,26 +1,74 @@
 import hashlib
+import time
 
 from typing import List
 from enum import Enum
 
-class TreeNode():
-    def __init__(self, addr:str):
-        self.addr = addr
-        self.ip   = addr.split(":")[0]
-        self.port = addr.split(":")[1]
+class QueueDict():
+    def __init__(self):
+        self.Q = []
+
+    def make(self, **kwargs) -> dict:
+        return kwargs
+
+    def pop(self) -> dict:
+        if len(self.Q) == 0: 
+            return {}
+        ret = self.Q[0]
+        self.Q.pop(0)
+        return ret
+
+    def push(self, d:dict) -> None:
+        self.Q.append(d)
+
+class Timer():
+    def __init__(self):
+        pass
+
+    def ts(self) -> int: 
+        return int(time.time_ns() / 1_000)
+
+    def future_ts(self, sec:float) -> int: 
+        now = self.ts()
+        return int(now + self.sec_to_usec(sec))
+
+    def sleep_to(self, ts:int): 
+        now = self.ts()
+        if ts > now: 
+            self.sleep_usec(ts - now)
+        else:
+            print(f"TRIGGER EXPIRED={ts} < NOW={now}")
+
+    def sleep_sec(self, sec:float): 
+        time.sleep(sec)
+
+    def sleep_usec(self, usec:int): 
+        print(f"SLEEP UNTIL: {usec}")
+        self.sleep_sec(self.usec_to_sec(usec))
+        print(f"AWAKE AT: {self.ts()}")
+
+    def sec_to_usec(self, sec:float) -> float:
+        return (sec * 1_000_000)
+    
+    def usec_to_sec(self, usec:int) -> float:
+        return usec / 1_000_000
 
 class Tree():
-    def __init__(self, root:str, total:int, ):
-        self.n      = 0
-        self.total  = total
+    class TreeNode():
+        def __init__(self, addr:str):
+            self.addr = addr
+            self.ip   = addr.split(":")[0]
+            self.port = addr.split(":")[1]
 
-        tnode = TreeNode(root)
-
+    def __init__(self, root:str, fanout:int=2, height:int=3):
+        tnode = self.TreeNode(root)
+        self.fanout = fanout
+        self.height = height
         self.nodes  = [ tnode ]
         self.leaves = [ tnode ]
 
     def set_node(self, addr:str, idx:int):
-        self.nodes[idx] = TreeNode(addr)
+        self.nodes[idx] = self.TreeNode(addr)
 
     def next_leaf(self):
         l = self.leaves[0]

@@ -1,7 +1,7 @@
 import zmq
 import sys
 
-from .utils import LOG_LEVEL
+from .ds import LOG_LEVEL
 
 class Socket():
     def __init__(self, name:str, type, LOG_LEVEL:LOG_LEVEL):

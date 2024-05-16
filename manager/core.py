@@ -1,9 +1,9 @@
 from .manager import Manager
 from .worker  import Worker
-from .node    import Node
-from .utils   import LOG_LEVEL
+from .ds      import LOG_LEVEL
 
 import os
+import time
 import argparse
 
 def manager(args):
@@ -11,6 +11,7 @@ def manager(args):
     if args.config: config = args.config
 
     M = Manager(config, args.name, ip=args.addr, port=args.port, LOG_LEVEL=LOG_LEVEL.NONE) 
+    time.sleep(2)
     M.go()
 
 def worker(args):

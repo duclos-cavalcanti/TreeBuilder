@@ -18,7 +18,7 @@ ifeq (, $(shell which terraform))
 $(error terraform not found)
 endif
 
-.PHONY: build docs proto udp docker vagrant gcp image clean rm
+.PHONY: build docs test proto udp docker vagrant gcp image clean rm
 all: build
 
 proto:
@@ -58,7 +58,4 @@ docs:
 	$(MAKE) -C docs/slidev
 
 test:
-	@python3 -m pytest -v tests/
-
-	
-
+	@python3 -m pytest -v test/

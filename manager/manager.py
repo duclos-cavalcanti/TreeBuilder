@@ -1,11 +1,10 @@
 from .message   import Message, MessageType, MessageFlag
 from .node      import Node
-from .ds        import Job, Tree, LOG_LEVEL
+from .ds        import Job, Tree, QueueDict, LOG_LEVEL
 from .utils     import *
 
 import zmq
 import random
-import time
 import yaml
 
 
@@ -22,38 +21,16 @@ class Manager(Node):
         self.duration   = int(self.config["duration"])
         self.K          = self.config["hyperparameter"]
         self.N          = int(len(self.workers))
-        self.steps      = self.config["steps"]
-        self.tree       = Tree(root=self.select(), total=self.N)
-        time.sleep(2)
 
-    @staticmethod
-    def step(action:str, desc:str) -> dict:
-        d = {
-            "action": action,
-            "description": desc,
-            "data": 0
-        }
-        return d
+        self.reportsQ   = QueueDict()
+        self.stepQ      = QueueDict()
+        for d in self.config["steps"]: 
+            self.stepQ.push(d)
 
-    def pop_step(self):
-        if len(self.steps) == 0: return None
-        s = self.steps[0]
-        s["i"] = self.tick
-        self.steps.pop(0)
-        return s
-
-    def push_step(self, s:dict):
-        self.steps.append(s)
+        self.tree       = Tree(root=self.select())
 
     def slice(self, param:int=0):
         return self.pool
-
-    def pop_job(self):
-        trigger_ts, job = self.jobs.popitem()
-        return trigger_ts, job
-
-    def push_job(self, job:Job, timer_sec:int):
-        self.jobs[self.future_ts(timer_sec)] = job
 
     def select(self):
         pool = self.pool
@@ -82,42 +59,42 @@ class Manager(Node):
         self.connect(root)
         r = self.handshake(id, MessageType.COMMAND, MessageFlag.PARENT, data, root)
         rjob = Job(arr=r.data)
-        self.push_job(rjob, 2)
         self.disconnect(root)
-        self.push_step(self.step(action="REPORT", desc="Check on external Jobs"))
+        self.reportsQ.push(self.reportsQ.make(job=rjob, ts=self.timer.future_ts(2)))
+        self.stepQ.push(self.stepQ.make(action="REPORT", desc="Get reports on running jobs"))
 
     def report(self):
-        trigger_ts, job = self.pop_job()
-        self.sleep_to(trigger_ts)
+        report = self.reportsQ.pop()
+        ts  = report["ts"]
+        job = report["job"]
+        self.timer.sleep_to(ts)
         self.connect(job.addr)
         r = self.handshake(self.tick, MessageType.REPORT, MessageFlag.MANAGER, job.to_arr(), job.addr)
         rjob = Job(arr=r.data)
         self.disconnect(job.addr)
 
-        print(f"REPORT <= {job.addr}: COMPLETE={rjob.complete}")
-        self.print_message(r)
+        print(f"REPORT COMPLETE={rjob.complete}")
         if not rjob.complete:
-            self.push_step(self.step(action="REPORT", desc="Check on external Jobs"))
-            self.push_job(rjob, 2)
+            self.stepQ.push(self.stepQ.make(action="REPORT", desc="Get reports on running jobs"))
+            self.reportsQ.push(self.reportsQ.make(job=rjob, ts=self.timer.future_ts(2)))
         else:
             for out in rjob.out:
                 addr = out.split("/")[0]
                 perc = out.split("/")[1]
                 print(f"NEW LEAF: {addr} => {perc}")
-            self.push_step(self.step(action="ROOT", desc="Select next children"))
-            _ = self.pop_step()
+            self.stepQ.push(self.stepQ.make(action="ROOT", desc="Select next children"))
+            _ = self.stepQ.pop()
 
     def go(self):
         try:
             while(True):
-                step = self.pop_step()
+                step = self.stepQ.pop()
                 if not step: break
 
-                i   = step['i']
                 act = step['action']
-                dsc = step['description']
+                dsc = step['desc']
                 print_color(f"------>", color=RED)
-                print_color(f"STEP[{i}]: {act} => START    | {dsc}", color=RED)
+                print_color(f"STEP[{self.tick}]: {act} => START    | {dsc}", color=RED)
 
                 match act:
                     case "CONNECT": self.establish()
@@ -125,7 +102,7 @@ class Manager(Node):
                     case "REPORT":  self.report()
                     case _:         raise NotImplementedError(f"ERR STEP: {step}")
 
-                print_color(f"STEP[{i}]: {act} => COMPLETE | {dsc}", color=GRN)
+                print_color(f"STEP[{self.tick}]: {act} => COMPLETE | {dsc}", color=GRN)
                 print_color(f"<------", color=GRN)
                 self.tick += 1
 
