@@ -17,7 +17,7 @@ pushd /work/project/build
     cmake ..
     make
     pushd /work/project/
-        command="./bin/child -i ${addr} -p ${port} -v"
+        command="./bin/child -i ${addr} -p ${port}"
         echo ${command}
         ${command}
         echo "RET: ${?}"

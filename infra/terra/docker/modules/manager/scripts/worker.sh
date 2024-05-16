@@ -18,7 +18,7 @@ pushd /work/project/build
 popd
 
 pushd /work/project
-    echo "-- ROLE: $role [ $id ] --"
+    echo "-- ROLE: $role [ ${addr}:${port} ] --"
     python3 main.py -m manager -a worker -n ${role}  -i ${addr} -p ${port}
     # PID=$!
     # echo "PID: ${PID}"
