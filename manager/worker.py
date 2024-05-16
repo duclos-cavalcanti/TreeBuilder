@@ -69,9 +69,8 @@ class Worker(Node):
         n_best_v =  [item[1] for item in n_best]
 
         job.out = []
-
         for idx, perc in zip(n_best_i, n_best_v):
-            job.out.append(f"{job.deps[idx].addr}/{perc}")
+            job.out.append(f"{job.deps[idx].addr}")
 
         return job
 

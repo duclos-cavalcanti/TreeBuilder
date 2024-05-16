@@ -78,10 +78,7 @@ class Manager(Node):
             self.stepQ.push(self.stepQ.make(action="REPORT", desc="Get reports on running jobs"))
             self.reportsQ.push(self.reportsQ.make(job=rjob, ts=self.timer.future_ts(2)))
         else:
-            for out in rjob.out:
-                addr = out.split("/")[0]
-                perc = out.split("/")[1]
-                print(f"NEW LEAF: {addr} => {perc}")
+            for addr in rjob.out: self.tree.add_leaf(addr)
             self.stepQ.push(self.stepQ.make(action="ROOT", desc="Select next children"))
             _ = self.stepQ.pop()
 

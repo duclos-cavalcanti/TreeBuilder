@@ -56,9 +56,10 @@ class Timer():
 class Tree():
     class TreeNode():
         def __init__(self, addr:str):
-            self.addr = addr
-            self.ip   = addr.split(":")[0]
-            self.port = addr.split(":")[1]
+            self.addr = ''.join(addr.split())
+            self.ip   = self.addr.split(":")[0]
+            self.port = self.addr.split(":")[1]
+            print(f"NEW NODE => {self.addr}")
 
     def __init__(self, root:str, fanout:int=2, height:int=3):
         tnode = self.TreeNode(root)
@@ -75,7 +76,8 @@ class Tree():
         self.leaves.pop(0)
         return l.addr
 
-    def add_leaf(self):
+    def add_leaf(self, addr):
+        tnode = self.TreeNode(addr)
         pass
 
 class Job():
