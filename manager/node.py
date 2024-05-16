@@ -1,7 +1,6 @@
 from .zmqsocket import Socket
-from .message_pb2 import Message, MessageType, MessageFlag
-from .job import Job
-from .utils import LOG_LEVEL
+from .message   import Message, MessageType, MessageFlag
+from .ds        import Job, LOG_LEVEL
 
 import zmq
 import time

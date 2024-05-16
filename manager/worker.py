@@ -1,9 +1,6 @@
-from .zmqsocket   import LOG_LEVEL
-from .message_pb2 import Message, MessageType, MessageFlag
-
+from .message   import Message, MessageType, MessageFlag
 from .node      import Node
-from .job       import Job
-from .utils     import LOG_LEVEL
+from .ds        import Job, LOG_LEVEL
 from .utils     import *
 
 import heapq
