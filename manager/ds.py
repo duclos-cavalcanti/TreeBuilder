@@ -73,7 +73,18 @@ class Tree():
         self.max    = self._max()
         self.n      = 1
 
-        self.queue      = deque([self.root])
+        self.queue  = deque([self.root])
+
+    def _state(self):
+        ret = "[ "
+        for i,n in enumerate(self.queue):
+            ret += f"{n.id}"
+            if i < len(self.queue) - 1:
+                ret += ", "
+            else:
+                ret += " ]"
+
+        return ret
 
     def _max(self):
         F = self.fanout
@@ -88,10 +99,25 @@ class Tree():
         return node
 
     def next(self):
+        if not self.queue: return None, None
         n = self.peak()
         return n.id, self.fanout
 
     def add(self, id) -> bool:
+        def level(n):
+            parent = n.parent
+            if parent == None:
+                return (len(n.children) >= self.fanout)
+
+            if len(parent.children) < self.fanout: 
+                return False
+
+            for child in parent.children:
+                if len(child.children) < self.fanout: 
+                    return False
+
+            return True
+
         def extend(q, node):
             if not node.parent: 
                 q.extend(node.children)
@@ -111,22 +137,8 @@ class Tree():
             if not self.queue:
                 extend(self.queue, node)
 
-        if self.level(node): 
+        if level(node): 
             self.d += 1
-
-        return True
-
-    def level(self, n):
-        parent = n.parent
-        if parent == None:
-            return (len(n.children) >= self.fanout)
-
-        if len(parent.children) < self.fanout: 
-            return False
-
-        for child in parent.children:
-            if len(child.children) < self.fanout: 
-                return False
 
         return True
 
@@ -134,17 +146,14 @@ class Tree():
         queue = deque([self.root])
         while queue:
             node = queue.popleft()
-            callback(node)
+            callback(self, node)
             queue.extend(node.children)
 
     def leaves(self) -> List:
-        ret = []
-        queue = deque([self.root])
-        while queue:
-            node = queue.popleft()
-            if (len(node.children) == 0): ret.append(node)
-            queue.extend(node.children)
-        return ret
+        self.arr = []
+        callback = lambda self, node: self.arr.append(node)
+        self.traverse(callback)
+        return self.arr
 
 
 class Job():
