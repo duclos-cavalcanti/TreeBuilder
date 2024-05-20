@@ -103,28 +103,15 @@ class Tree():
         n = self.peak()
         return n.id, self.fanout
 
-    def add(self, id) -> bool:
-        def level(n):
-            parent = n.parent
-            if parent == None:
-                return (len(n.children) >= self.fanout)
+    def depth(self, node):
+        d = 0 
+        n = node
+        while n.parent is not None:
+            d += 1
+            n = n.parent
+        return d
 
-            if len(parent.children) < self.fanout: 
-                return False
-
-            for child in parent.children:
-                if len(child.children) < self.fanout: 
-                    return False
-
-            return True
-
-        def extend(q, node):
-            if not node.parent: 
-                q.extend(node.children)
-            else:
-                for child in node.parent.children:
-                    q.extend(child.children)
-
+    def add(self, id):
         if self.n >= self.max:
             return False
 
@@ -135,10 +122,7 @@ class Tree():
         if len(node.children) >= self.fanout:
             self.queue.popleft()
             if not self.queue:
-                extend(self.queue, node)
-
-        if level(node): 
-            self.d += 1
+                self.queue.extend(self.leaves())
 
         return True
 
@@ -151,7 +135,10 @@ class Tree():
 
     def leaves(self) -> List:
         self.arr = []
-        callback = lambda self, node: self.arr.append(node)
+        def callback(self, node):
+            if len(node.children) == 0: 
+                self.arr.append(node)
+
         self.traverse(callback)
         return self.arr
 

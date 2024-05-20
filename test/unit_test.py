@@ -8,7 +8,9 @@ def test_binary_tree():
         if n.parent == None: 
             print(f"TREE => NODES={t.n} | DEPTH={t.d}")
 
-        print(f"NODE: {n.id} => ", end='')
+        print(f"NODE: {n.id} => \t", end='')
+
+        print(f"DEPTH={t.depth(n)}, ", end='')
         
         if (len(n.children) == 0):
             print(f"LEAF")
@@ -31,16 +33,23 @@ def test_binary_tree():
         parent = "___" if not cur.parent else cur.parent.id
         qprev = t._state()
 
-        t.next()
+        # test addition of node to tree
         result = t.add(addr)
+        assert True == result
 
         q = t._state()
 
-        print(f"ADD_LEAF({addr}): {result}, D={t.d}")
+        print(f"ADD_LEAF({addr}): {result}")
         print(f"\tQUEUE:{qprev} => {q}")
         print(f"\tNODE[{cur.id}] => PARENT[{parent}] | CHILDREN: {[child.id for child in cur.children]}")
 
-        assert True == result
-
     t.traverse(callback)
+
+    # test if tree correctly reached complete state
+    assert max == t.n
+
+    # test if all leaves have the same depth equal to the one instructed
+    assert any(t.depth(node) == depth for node in t.leaves())
+
+    # test if tree refuses to add node beyond max
     assert False == t.add("wrong")
