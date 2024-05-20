@@ -5,7 +5,7 @@ from collections import deque
 from typing import List
 from enum import Enum
 
-class QueueDict():
+class DictionaryQueue():
     def __init__(self):
         self.Q = []
 
@@ -59,59 +59,111 @@ class Tree():
         def __init__(self, length:int):
             self.length = length
 
-    class TreeNode():
-        def __init__(self, addr:str, parent=None):
-            self.addr = ''.join(addr.split())
+    class Node():
+        def __init__(self, id:str, parent=None):
+            self.id = ''.join(id.split())
             self.parent = parent
             self.children = []
-            # print(f"NEW NODE => {self.addr}")
 
-    def __init__(self, root:str, fanout:int=2, max_height:int=3):
-        self.root   = self.TreeNode(root)
-        self.Q      = deque([self.root])
+    def __init__(self, root:str, fanout:int=2, depth:int=2):
+        self.root   = self.Node(root)
         self.leaves = [ self.root ]
         self.fanout = fanout
-        self.height = 0
-        self.max_height = max_height
+        self.d      = 0
+        self.dmax   = depth
+        self.max    = self._max()
+        self.n      = 1
 
-    def next_leaf(self):
+        self.queue      = deque([self.root])
+
+    def _max(self):
+        F = self.fanout
+        D = self.dmax
+        if F == 1:
+            return D + 1
+        else:
+            return (F ** (D + 1) - 1) // (F - 1)  # 
+
+    def next(self):
         l = self.leaves[0]
         self.leaves.pop(0)
-        return l.addr
+        return l.id, self.fanout
 
-    def add_leaf(self, addr) -> bool:
-        while True:
-            node = self.Q[0]
+    def peak(self):
+        node = self.queue[0]
+        return node
 
-            if len(node.children) < self.fanout:
-                leaf = self.TreeNode(addr, parent = node)
-                node.children.append(leaf)
-                self.Q.append(leaf)
-                self.leaves.append(leaf)
-                return True
+    def state(self):
+        string = "[ "
+        size = len(self.queue)
 
-            self.Q.popleft()
+        for i,n in enumerate(self.queue):
+            string += f"{n.id}"
+            if i < size - 1:
+                string += ", "
+            else:
+                string += " ]"
 
-            if not self.Q:
-                self.height += 1
-                if self.max_height > self.height:
-                    return False
-                else:
-                    self.Q.extend(node.children)
-                    return True
+        return string
 
-    def show(self):
+    def birth(self, parent, child):
+        parent.children.append(child)
+        self.n += 1
+
+    def add(self, id) -> bool:
+        def extend(q, node):
+            if not node.parent: 
+                q.extend(node.children)
+            else:
+                for child in node.parent.children:
+                    q.extend(child.children)
+
+        if self.n >= self.max:
+            return False
+
+        node = self.peak()
+        child = self.Node(id, parent=node)
+        self.birth(node, child)
+
+        if len(node.children) >= self.fanout:
+            self.queue.popleft()
+            if not self.queue:
+                extend(self.queue, node)
+
+        if self.level(node): 
+            self.d += 1
+
+        return True
+
+    def level(self, n):
+        parent = n.parent
+        if parent == None:
+            return (len(n.children) >= self.fanout)
+
+        if len(parent.children) < self.fanout: 
+            return False
+
+        for child in parent.children:
+            if len(child.children) < self.fanout: 
+                return False
+
+        return True
+
+
+    def print(self):
+        print(f"TREE => NODES={self.n} | DEPTH={self.d}")
+
         queue = deque([self.root])
-        i = 0
-        h = 0
         while queue:
             node = queue.popleft()
-            if (i % self.fanout == 0): 
-                h += 1
-            print(f"NODE: {node.addr} => CHILDREN: {[child.addr for child in node.children]}")
-            queue.extend(node.children)
-            i += 1
+            print(f"NODE: {node.id} => ", end='')
 
+            if (len(node.children) == 0):
+                print(f"LEAF")
+            else:
+                print(f"CHILDREN: {[child.id for child in node.children]}")
+
+            queue.extend(node.children)
 
 
 class Job():

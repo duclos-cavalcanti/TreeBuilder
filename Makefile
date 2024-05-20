@@ -58,4 +58,4 @@ docs:
 	$(MAKE) -C docs/slidev
 
 test:
-	@python3 -m pytest -v test/
+	@python3 -m pytest -v test/ -s
