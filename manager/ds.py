@@ -67,7 +67,6 @@ class Tree():
 
     def __init__(self, root:str, fanout:int=2, depth:int=2):
         self.root   = self.Node(root)
-        self.leaves = [ self.root ]
         self.fanout = fanout
         self.d      = 0
         self.dmax   = depth
@@ -85,9 +84,8 @@ class Tree():
             return (F ** (D + 1) - 1) // (F - 1)  # 
 
     def next(self):
-        l = self.leaves[0]
-        self.leaves.pop(0)
-        return l.id, self.fanout
+        n = self.peak()
+        return n.id, self.fanout
 
     def peak(self):
         node = self.queue[0]
@@ -106,10 +104,6 @@ class Tree():
 
         return string
 
-    def birth(self, parent, child):
-        parent.children.append(child)
-        self.n += 1
-
     def add(self, id) -> bool:
         def extend(q, node):
             if not node.parent: 
@@ -122,8 +116,8 @@ class Tree():
             return False
 
         node = self.peak()
-        child = self.Node(id, parent=node)
-        self.birth(node, child)
+        node.children.append(self.Node(id, parent=node))
+        self.n += 1
 
         if len(node.children) >= self.fanout:
             self.queue.popleft()
@@ -149,22 +143,35 @@ class Tree():
 
         return True
 
+    def leaves(self) -> List:
+        ret = []
+        queue = deque([self.root])
+        while queue:
+            node = queue.popleft()
+            if (len(node.children) == 0): ret.append(node)
+            queue.extend(node.children)
+        return ret
+
 
     def print(self):
         print(f"TREE => NODES={self.n} | DEPTH={self.d}")
 
         queue = deque([self.root])
+        leaves = []
+
         while queue:
             node = queue.popleft()
             print(f"NODE: {node.id} => ", end='')
 
             if (len(node.children) == 0):
                 print(f"LEAF")
+                leaves.append(node)
             else:
                 print(f"CHILDREN: {[child.id for child in node.children]}")
 
             queue.extend(node.children)
 
+        print(f"LEAVES: {[leaf.id for leaf in leaves]}")
 
 class Job():
     def __init__(self, addr:str="", command:str="", params:List=[], arr:List=[]):

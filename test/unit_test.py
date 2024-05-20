@@ -14,11 +14,13 @@ def test_binary_tree():
     print()
 
     for i in range(max - 1):
+        addr = f"{c}_{i}"
+
         cur = t.peak()
         parent = "___" if not cur.parent else cur.parent.id
         _q = t.state()
 
-        addr = f"{c}_{i}"
+        t.next()
         result = t.add(addr)
 
         q = t.state()
