@@ -26,7 +26,7 @@ class Manager(Node):
         self.stepQ      = DictionaryQueue()
         for d in self.config["steps"]: self.stepQ.push(d)
 
-        self.tree       = Tree(root=self.select())
+        self.tree       = Tree(root=self.select(), fanout=2, depth=2)
 
     def slice(self, param:int=0):
         return self.pool
