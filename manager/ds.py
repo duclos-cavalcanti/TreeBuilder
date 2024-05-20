@@ -2,7 +2,7 @@ import hashlib
 import time
 
 from collections import deque
-from typing import List
+from typing import List, Callable
 from enum import Enum
 
 class DictionaryQueue():
@@ -81,28 +81,15 @@ class Tree():
         if F == 1:
             return D + 1
         else:
-            return (F ** (D + 1) - 1) // (F - 1)  # 
-
-    def next(self):
-        n = self.peak()
-        return n.id, self.fanout
+            return (F ** (D + 1) - 1) // (F - 1)
 
     def peak(self):
         node = self.queue[0]
         return node
 
-    def state(self):
-        string = "[ "
-        size = len(self.queue)
-
-        for i,n in enumerate(self.queue):
-            string += f"{n.id}"
-            if i < size - 1:
-                string += ", "
-            else:
-                string += " ]"
-
-        return string
+    def next(self):
+        n = self.peak()
+        return n.id, self.fanout
 
     def add(self, id) -> bool:
         def extend(q, node):
@@ -143,6 +130,13 @@ class Tree():
 
         return True
 
+    def traverse(self, callback:Callable):
+        queue = deque([self.root])
+        while queue:
+            node = queue.popleft()
+            callback(node)
+            queue.extend(node.children)
+
     def leaves(self) -> List:
         ret = []
         queue = deque([self.root])
@@ -152,26 +146,6 @@ class Tree():
             queue.extend(node.children)
         return ret
 
-
-    def print(self):
-        print(f"TREE => NODES={self.n} | DEPTH={self.d}")
-
-        queue = deque([self.root])
-        leaves = []
-
-        while queue:
-            node = queue.popleft()
-            print(f"NODE: {node.id} => ", end='')
-
-            if (len(node.children) == 0):
-                print(f"LEAF")
-                leaves.append(node)
-            else:
-                print(f"CHILDREN: {[child.id for child in node.children]}")
-
-            queue.extend(node.children)
-
-        print(f"LEAVES: {[leaf.id for leaf in leaves]}")
 
 class Job():
     def __init__(self, addr:str="", command:str="", params:List=[], arr:List=[]):
