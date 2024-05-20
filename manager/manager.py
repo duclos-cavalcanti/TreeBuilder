@@ -1,6 +1,6 @@
 from .message   import Message, MessageType, MessageFlag
 from .node      import Node
-from .ds        import Job, Tree, QueueDict, LOG_LEVEL
+from .ds        import Job, Tree, DictionaryQueue, LOG_LEVEL
 from .utils     import *
 
 import zmq
@@ -22,10 +22,9 @@ class Manager(Node):
         self.K          = self.config["hyperparameter"]
         self.N          = int(len(self.workers))
 
-        self.reportsQ   = QueueDict()
-        self.stepQ      = QueueDict()
-        for d in self.config["steps"]: 
-            self.stepQ.push(d)
+        self.reportsQ   = DictionaryQueue()
+        self.stepQ      = DictionaryQueue()
+        for d in self.config["steps"]: self.stepQ.push(d)
 
         self.tree       = Tree(root=self.select())
 
@@ -50,16 +49,15 @@ class Manager(Node):
             r = self.handshake(id, MessageType.CONNECT, MessageFlag.NONE, data, addr)
             self.disconnect(addr)
 
-    def root(self):
-        root = self.tree.next_leaf()
+    def parent(self):
+        parent, n_children = self.tree.next()
         children = self.slice()
-        sel = 2
         id = self.tick 
-        data =  [ sel, self.rate, self.duration ] + children
-        self.connect(root)
-        r = self.handshake(id, MessageType.COMMAND, MessageFlag.PARENT, data, root)
+        data =  [ n_children, self.rate, self.duration ] + children
+        self.connect(parent)
+        r = self.handshake(id, MessageType.COMMAND, MessageFlag.PARENT, data, parent)
         rjob = Job(arr=r.data)
-        self.disconnect(root)
+        self.disconnect(parent)
         self.reportsQ.push(self.reportsQ.make(job=rjob, ts=self.timer.future_ts(2)))
         self.stepQ.push(self.stepQ.make(action="REPORT", desc="Get reports on running jobs"))
 
@@ -78,8 +76,8 @@ class Manager(Node):
             self.stepQ.push(self.stepQ.make(action="REPORT", desc="Get reports on running jobs"))
             self.reportsQ.push(self.reportsQ.make(job=rjob, ts=self.timer.future_ts(2)))
         else:
-            for addr in rjob.out: self.tree.add_leaf(addr)
-            self.stepQ.push(self.stepQ.make(action="ROOT", desc="Select next children"))
+            for addr in rjob.out: self.tree.add(addr)
+            self.stepQ.push(self.stepQ.make(action="PARENT", desc="Choose next node for tree."))
             _ = self.stepQ.pop()
 
     def go(self):
@@ -95,7 +93,7 @@ class Manager(Node):
 
                 match act:
                     case "CONNECT": self.establish()
-                    case "ROOT":    self.root()
+                    case "PARENT":  self.parent()
                     case "REPORT":  self.report()
                     case _:         raise NotImplementedError(f"ERR STEP: {step}")
 
