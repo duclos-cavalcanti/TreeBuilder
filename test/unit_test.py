@@ -4,19 +4,6 @@ import ipdb
 from manager import Tree
 
 def test_binary_tree():
-    def callback(t, n):
-        if n.parent == None: 
-            print(f"TREE => NODES={t.n} | DEPTH={t.d}")
-
-        print(f"NODE: {n.id} => \t", end='')
-
-        print(f"DEPTH={t.depth(n)}, ", end='')
-        
-        if (len(n.children) == 0):
-            print(f"LEAF")
-        else:
-            print(f"CHILDREN: {[child.id for child in n.children]}")
-
     i = 0
     c = "c"
     fanout = 2
@@ -43,7 +30,7 @@ def test_binary_tree():
         print(f"\tQUEUE:{qprev} => {q}")
         print(f"\tNODE[{cur.id}] => PARENT[{parent}] | CHILDREN: {[child.id for child in cur.children]}")
 
-    t.traverse(callback)
+    t.show()
 
     # test if tree correctly reached complete state
     assert max == t.n

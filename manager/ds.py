@@ -99,7 +99,6 @@ class Tree():
         return node
 
     def next(self):
-        if not self.queue: return None, None
         n = self.peak()
         return n.id, self.fanout
 
@@ -111,13 +110,16 @@ class Tree():
             n = n.parent
         return d
 
-    def add(self, id):
+    def add(self, id, verbose:bool=False):
         if self.n >= self.max:
             return False
 
         node = self.peak()
         node.children.append(self.Node(id, parent=node))
         self.n += 1
+
+        if verbose:
+            print(f"ADDED {id} TO TREE")
 
         if len(node.children) >= self.fanout:
             self.queue.popleft()
@@ -141,6 +143,18 @@ class Tree():
 
         self.traverse(callback)
         return self.arr
+
+    def show(self, header:str=""):
+        def callback(_, node):
+            n_children = len(node.children)
+            if node.parent == None: name = "ROOT"
+            elif n_children > 0:    name = "NODE"
+            else:                   name = "LEAF"
+
+            print(f"{name}: {node.id} \t=> CHILDREN: {[child.id for child in node.children]}")
+
+        if header: print(f"{header}")
+        self.traverse(callback)
 
 
 class Job():
