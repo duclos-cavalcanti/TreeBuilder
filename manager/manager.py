@@ -78,23 +78,24 @@ class Manager(Node):
         r = self.handshake(id, MessageType.COMMAND, MessageFlag.PARENT, data, parent)
         rjob = Job(arr=r.data)
         self.disconnect(parent)
-        self.reportsQ.push(self.reportsQ.make(job=rjob, ts=self.timer.future_ts(2)))
+        self.reportsQ.push(self.reportsQ.make(job=rjob, ts=self.timer.future_ts(2), flag=MessageFlag.PARENT))
         self.stepQ.push(self.stepQ.make(action="REPORT", desc="Get reports on running jobs"))
 
     def report(self):
         report = self.reportsQ.pop()
         ts  = report["ts"]
         job = report["job"]
+        flag = report["flag"]
         self.timer.sleep_to(ts)
         self.connect(job.addr)
-        r = self.handshake(self.tick, MessageType.REPORT, MessageFlag.MANAGER, job.to_arr(), job.addr)
+        r = self.handshake(self.tick, MessageType.REPORT, flag, job.to_arr(), job.addr)
         rjob = Job(arr=r.data)
         self.disconnect(job.addr)
 
         print(f"REPORT COMPLETE={rjob.complete}")
         if not rjob.complete:
             self.stepQ.push(self.stepQ.make(action="REPORT", desc="Get reports on running jobs"))
-            self.reportsQ.push(self.reportsQ.make(job=rjob, ts=self.timer.future_ts(2)))
+            self.reportsQ.push(self.reportsQ.make(job=rjob, ts=self.timer.future_ts(2), flag=flag))
         else:
             if job.ret != 0: raise RuntimeError()
             for addr in rjob.out: 

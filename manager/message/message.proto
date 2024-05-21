@@ -11,7 +11,7 @@ enum MessageFlag {
     NONE = 0;
     PARENT = 1;
     CHILD = 2;
-    MANAGER = 3;
+    MCAST = 3;
 }
 
 message Message {

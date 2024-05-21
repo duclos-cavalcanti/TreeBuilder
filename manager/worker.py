@@ -121,7 +121,7 @@ class Worker(Node):
         if job.complete: 
             del self.jobs[t]
 
-        if job.complete and flag == MessageFlag.MANAGER:
+        if job.complete and flag == MessageFlag.PARENT:
             job = self.parent_resolve(job)
 
         print(f"JOB[{job.id}] => END={job.end}")
