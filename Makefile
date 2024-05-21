@@ -29,6 +29,10 @@ udp: build
 	@./run.sh --build docker
 	@./run.sh --deploy docker --mode udp
 
+mcast: build
+	@./run.sh --build docker
+	@./run.sh --deploy docker --mode mcast
+
 build:
 	@cd build && cmake ..
 	@cd build && make

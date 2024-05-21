@@ -30,3 +30,9 @@ module "udp" {
     count = (var.mode == "udp") ? 1 : 0
     pwd = var.pwd
 }
+
+module "mcast" {
+    source = "./modules/mcast/"
+    count = (var.mode == "mcast") ? 1 : 0
+    pwd = var.pwd
+}

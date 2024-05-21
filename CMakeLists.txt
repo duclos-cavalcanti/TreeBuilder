@@ -39,6 +39,7 @@ set(PROJECT_LIBRARIES       ${CPPZMQ_LIBRARIES} ${PROTOBUF_LIBRARIES})
 
 set(PARENT "parent")
 set(CHILD  "child")
+set(MCAST  "mcast")
 
 include_directories(${PROJECT_INCLUDES})
 add_executable(${PARENT} "${PROJECT_SOURCE_DIR}/src/parent.cpp" ${PROJECT_SOURCES})
@@ -49,6 +50,11 @@ include_directories(${PROJECT_INCLUDES})
 add_executable(${CHILD} "${PROJECT_SOURCE_DIR}/src/child.cpp" ${PROJECT_SOURCES})
 target_compile_definitions(${CHILD} PUBLIC ZMQ_BUILD_DRAFT_API=1)
 target_link_libraries(${CHILD} PUBLIC ${PROJECT_LIBRARIES})
+
+include_directories(${PROJECT_INCLUDES})
+add_executable(${MCAST} "${PROJECT_SOURCE_DIR}/src/mcast.cpp" ${PROJECT_SOURCES})
+target_compile_definitions(${MCAST} PUBLIC ZMQ_BUILD_DRAFT_API=1)
+target_link_libraries(${MCAST} PUBLIC ${PROJECT_LIBRARIES})
 
 set_property(DIRECTORY PROPERTY ADDITIONAL_CLEAN_FILES
     "${PROJECT_SOURCE_DIR}/build/CMakeFiles"
