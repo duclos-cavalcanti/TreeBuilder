@@ -54,6 +54,10 @@ class Timer():
     def usec_to_sec(self, usec:int) -> float:
         return usec / 1_000_000
 
+class Pool():
+    def __init__(self):
+        pass
+
 class Tree():
     class Layer():
         def __init__(self, length:int):
@@ -81,9 +85,8 @@ class Tree():
             ret += f"{n.id}"
             if i < len(self.queue) - 1:
                 ret += ", "
-            else:
-                ret += " ]"
 
+        ret += " ]"
         return ret
 
     def _max(self):
@@ -99,8 +102,11 @@ class Tree():
         return node
 
     def next(self):
-        n = self.peak()
-        return n.id, self.fanout
+        if self.queue:
+            n = self.peak()
+            return n.id
+        else:
+            return ""
 
     def depth(self, node):
         d = 0 
@@ -123,7 +129,7 @@ class Tree():
 
         if len(node.children) >= self.fanout:
             self.queue.popleft()
-            if not self.queue:
+            if not self.queue and self.n < self.max:
                 self.queue.extend(self.leaves())
 
         return True
@@ -233,7 +239,7 @@ class Job():
         self.command    = arr[3]
         self.end        = True if arr[4] == "True" else False
         self.complete   = True if arr[5] == "True" else False
-        self.ret        = arr[6]
+        self.ret        = int(arr[6])
         self.params     = arr[7]
         self.out = []
         for o in arr[8:]:

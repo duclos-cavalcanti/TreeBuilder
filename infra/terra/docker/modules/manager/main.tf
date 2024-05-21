@@ -16,7 +16,7 @@ variable "pwd" {
 variable "ports" {
     description = "List of ports"
     type        = list(string)
-    default     = ["9092", "9093", "9094", "9095", "9096", "9097", "9098"]
+    default     = ["9092", "9093", "9094", "9095", "9096", "9097", "9098", "9099"]
 }
 
 resource "docker_volume" "shared_volume" {

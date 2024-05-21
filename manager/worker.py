@@ -9,6 +9,8 @@ import zmq
 class Worker(Node):
     def __init__(self, name:str, ip:str, port:str, LOG_LEVEL=LOG_LEVEL.NONE):
         super().__init__(name, ip, port, zmq.REP, LOG_LEVEL)
+        self.best   = []
+        self.worst  = []
 
     def child_job(self):
         C = f"./bin/child -i {self.ip} -p {int(self.port) - 1000}"
@@ -50,28 +52,42 @@ class Worker(Node):
         dur   = int(job.params[2])
         total = rate * dur
 
+        if job.ret != 0:
+            print(f"ERR: PARENT[{job.addr}]: RET={job.ret}")
+            return job
+
         for dep in job.deps:
-            if int(dep.ret) != 0:
+            if dep.ret != 0:
                 print(f"ERR: ADDR[{dep.addr}]: RET={dep.ret}")
                 job.ret = dep.ret
                 return job
 
         percs = []
         for _, dep in enumerate(job.deps):
-            recv = int(dep.out[0])
-            perc = float(dep.out[1])
-            percs.append(perc)
-            print(f"ADDR[{dep.addr}]: {perc}")
+            print(f"ADDR[{dep.addr}]: PERC={float(dep.out[1])} | RECV={int(dep.out[0])}")
+            percs.append(float(dep.out[1]))
  
 
-        n_best   = heapq.nsmallest(sel, enumerate(percs), key=lambda x: x[1])
-        n_best_i =  [item[0] for item in n_best]
-        n_best_v =  [item[1] for item in n_best]
+        sorted   = heapq.nsmallest(len(job.deps), enumerate(percs), key=lambda x: x[1])
+        n_best   = sorted[:sel]
+        n_worst  = [ w for w in reversed(sorted[(-1 * sel):]) ]
 
-        job.out = []
-        for idx, perc in zip(n_best_i, n_best_v):
-            job.out.append(f"{job.deps[idx].addr}")
+        out = []
+        for i, (best, worst) in enumerate(zip(n_best, n_worst)):
+            best_i = best[0]
+            best_v = best[1]
+            worst_i = worst[0]
+            worst_v = worst[1]
 
+            b_addr = job.deps[best_i].addr
+            w_addr = job.deps[worst_i].addr
+            print(f"BEST[{i}]: {b_addr}/{best_v} | WRST[{i}]: {w_addr}/{worst_v}")
+
+            self.best.append(b_addr)
+            self.worst.append(w_addr)
+            out.append(b_addr)
+
+        job.out = out
         return job
 
     def commandACK(self, m:Message):

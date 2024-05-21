@@ -117,6 +117,7 @@ class Node():
                     rjob = Job(arr=r.data)
                     job.deps[idx] = rjob
                     n.disconnect(j.addr)
+
         t, _ = self.find(job, dct=self.guards)
         del self.guards[t]
 

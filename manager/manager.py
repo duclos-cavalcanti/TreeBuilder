@@ -40,12 +40,6 @@ class Manager(Node):
                 return
         raise RuntimeError(f"Attempted to remove {addr} not found in pool")
 
-    def resolve(self):
-        if not self.pool and self.tree._max() == self.tree.n:
-            self.tree.show(header="POOL CLEARED AND TREE RECREATED")
-        else:
-            raise RuntimeError()
-
     def select(self):
         pool = self.pool
         size = len(pool)
@@ -56,6 +50,13 @@ class Manager(Node):
         print_arr(arr=self.pool, header="POOL")
         return addr
 
+    def resolve(self):
+        if self.tree._max() == self.tree.n:
+            print_arr(arr=self.pool, header="REMAINING POOL")
+            self.tree.show(header="TREE COMPLETE")
+        else:
+            raise RuntimeError()
+
     def establish(self):
         for addr in self.workers:
             id = self.tick
@@ -65,11 +66,11 @@ class Manager(Node):
             self.disconnect(addr)
 
     def parent(self):
-        if not self.pool:
-            self.resolve()
-            return
+        if not self.tree.next(): 
+            return self.resolve()
 
-        parent, n_children = self.tree.next()
+        parent = self.tree.next()
+        n_children = self.tree.fanout
         children = self.slice()
         id = self.tick 
         data =  [ n_children, self.rate, self.duration ] + children
@@ -95,6 +96,7 @@ class Manager(Node):
             self.stepQ.push(self.stepQ.make(action="REPORT", desc="Get reports on running jobs"))
             self.reportsQ.push(self.reportsQ.make(job=rjob, ts=self.timer.future_ts(2)))
         else:
+            if job.ret != 0: raise RuntimeError()
             for addr in rjob.out: 
                 self.tree.add(addr, verbose=True)
                 self.remove(addr)
