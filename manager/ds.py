@@ -1,26 +1,10 @@
 import hashlib
 import time
+import random
 
 from collections import deque
 from typing import List, Callable
 from enum import Enum
-
-class DictionaryQueue():
-    def __init__(self):
-        self.Q = []
-
-    def make(self, **kwargs) -> dict:
-        return kwargs
-
-    def pop(self) -> dict:
-        if len(self.Q) == 0: 
-            return {}
-        ret = self.Q[0]
-        self.Q.pop(0)
-        return ret
-
-    def push(self, d:dict) -> None:
-        self.Q.append(d)
 
 class Timer():
     def __init__(self):
@@ -54,15 +38,65 @@ class Timer():
     def usec_to_sec(self, usec:int) -> float:
         return usec / 1_000_000
 
+class DictionaryQueue():
+    def __init__(self, dict_arr:List=[]):
+        self.Q = dict_arr
+
+    def make(self, **kwargs) -> dict:
+        return kwargs
+
+    def pop(self) -> dict:
+        if len(self.Q) == 0: 
+            return {}
+        ret = self.Q[0]
+        self.Q.pop(0)
+        return ret
+
+    def push(self, d:dict) -> None:
+        self.Q.append(d)
+
 class Pool():
-    def __init__(self):
-        pass
+    def __init__(self, elements:List, K:float, N:int):
+        self.pool = elements
+        self.K = K 
+        self.N = N
+
+    def select(self, verbose=False):
+        pool = self.pool
+        size = len(pool)
+        idx = random.randint(0, size - 1)
+        el = self.pool[idx]
+        self.pool.pop(idx)
+
+        if verbose: self.show(header=f"CHOSEN: {idx} => {el}")
+        return el
+
+    def slice(self, param:int=0, verbose=False):
+        if verbose: self.show()
+        return self.pool
+
+    def n_remove(self, elements:List, verbose=False):
+        for el in elements: 
+            self.remove(el, verbose)
+
+    def remove(self, el:str, verbose=False):
+        for i,p in enumerate(self.pool):
+            if p == el: 
+                self.pool.pop(i)
+                if verbose: 
+                    print(f"REMOVED: {i} => {el}")
+                return
+        raise RuntimeError(f"ATTEMPT TO REMOVE[{el}] NOT IN POOL")
+
+    def show(self, header:str=""):
+        if header:
+            print(f"{header}")
+        print("POOL: {")
+        for i,el in enumerate(self.pool): 
+            print(f"\t{i} => {el}")
+        print("}")
 
 class Tree():
-    class Layer():
-        def __init__(self, length:int):
-            self.length = length
-
     class Node():
         def __init__(self, id:str, parent=None):
             self.id = ''.join(id.split())
@@ -97,6 +131,9 @@ class Tree():
         else:
             return (F ** (D + 1) - 1) // (F - 1)
 
+    def full(self):
+        return (self.n >= self.max)
+
     def peak(self):
         node = self.queue[0]
         return node
@@ -116,8 +153,12 @@ class Tree():
             n = n.parent
         return d
 
+    def n_add(self, arr:List, verbose:bool=False):
+        for id in arr:
+            self.add(id, verbose=verbose)
+
     def add(self, id, verbose:bool=False):
-        if self.n >= self.max:
+        if self.full():
             return False
 
         node = self.peak()

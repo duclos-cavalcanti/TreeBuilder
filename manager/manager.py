@@ -1,10 +1,9 @@
 from .message   import Message, MessageType, MessageFlag
 from .node      import Node
-from .ds        import Job, Tree, DictionaryQueue, LOG_LEVEL
+from .ds        import Pool, Tree, Job, DictionaryQueue, LOG_LEVEL
 from .utils     import *
 
 import zmq
-import random
 import yaml
 
 
@@ -16,46 +15,13 @@ class Manager(Node):
             self.config = yaml.safe_load(file)
 
         self.workers    = self.config["addrs"][1:]
-        self.pool       = self.workers
         self.rate       = int(self.config["rate"])
         self.duration   = int(self.config["duration"])
-        self.K          = self.config["hyperparameter"]
-        self.N          = int(len(self.workers))
 
+        self.pool       = Pool(self.workers, float(self.config["hyperparameter"]), int(len(self.workers)))
         self.reportsQ   = DictionaryQueue()
-        self.stepQ      = DictionaryQueue()
-        for d in self.config["steps"]: self.stepQ.push(d)
-
-        self.tree       = Tree(root=self.select(), fanout=2, depth=2)
-
-    def slice(self, param:int=0):
-        print_arr(arr=self.pool, header="POOL")
-        return self.pool
-
-    def remove(self, addr:str, verbose=False):
-        for i,p in enumerate(self.pool):
-            if p == addr: 
-                self.pool.pop(i)
-                if verbose: print(f"REMOVED: {i} => {addr}")
-                return
-        raise RuntimeError(f"Attempted to remove {addr} not found in pool")
-
-    def select(self):
-        pool = self.pool
-        size = len(pool)
-        idx = random.randint(0, size - 1)
-        addr = self.pool[idx]
-        self.pool.pop(idx)
-        print(f"CHOSEN: {idx} => {addr}")
-        print_arr(arr=self.pool, header="POOL")
-        return addr
-
-    def resolve(self):
-        if self.tree._max() == self.tree.n:
-            print_arr(arr=self.pool, header="REMAINING POOL")
-            self.tree.show(header="TREE COMPLETE")
-        else:
-            raise RuntimeError()
+        self.stepQ      = DictionaryQueue(dict_arr=self.config["steps"])
+        self.tree       = Tree(root=self.pool.select(verbose=True), fanout=2, depth=2)
 
     def establish(self):
         for addr in self.workers:
@@ -67,11 +33,11 @@ class Manager(Node):
 
     def parent(self):
         if not self.tree.next(): 
-            return self.resolve()
+            raise RuntimeError("TREE QUEUE EMPTY")
 
         parent = self.tree.next()
         n_children = self.tree.fanout
-        children = self.slice()
+        children = self.pool.slice(verbose=True)
         id = self.tick 
         data =  [ n_children, self.rate, self.duration ] + children
         self.connect(parent)
@@ -98,10 +64,15 @@ class Manager(Node):
             self.reportsQ.push(self.reportsQ.make(job=rjob, ts=self.timer.future_ts(2), flag=flag))
         else:
             if job.ret != 0: raise RuntimeError()
-            for addr in rjob.out: 
-                self.tree.add(addr, verbose=True)
-                self.remove(addr)
-            self.stepQ.push(self.stepQ.make(action="PARENT", desc="Choose next node for tree."))
+            self.tree.n_add(rjob.out)
+            self.pool.n_remove(rjob.out)
+
+            if self.tree.full():
+                self.pool.show(header="REMAINING ELEMENTS")
+                self.tree.show(header="TREE COMPLETE")
+                # self.stepQ.push(self.stepQ.make(action="MCAST", desc="Get multicast results from tree"))
+            else:
+                self.stepQ.push(self.stepQ.make(action="PARENT", desc="Choose next node for tree."))
 
     def go(self):
         try:
