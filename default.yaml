@@ -10,6 +10,8 @@ addrs:
   - "localhost:9094"
   - "localhost:9095"
   - "localhost:9096"
+  - "localhost:9097"
+  - "localhost:9098"
 steps:
   - action: "CONNECT"
     desc: "Establish connection workers."
