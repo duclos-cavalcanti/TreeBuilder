@@ -12,36 +12,25 @@
 #include <netinet/in.h>
 #include <netinet/ip.h>
 #include <arpa/inet.h>
-
-typedef enum MsgType {
-    ONGOING = 1,
-    END = 2
-} MsgType_t;
+#include <unistd.h>
 
 typedef struct MsgUDP {
     uint32_t id;
     uint64_t ts;
-    MsgType_t type;
-
-    std::string type_to_string(MsgType_t t) {
-        switch (t) {
-            case ONGOING: return "ONGOING";
-            case END:     return "END    ";
-            default:      return "ERR";
-        }
-    }
+    uint64_t deadline;
 
     void print(void) {
         fprintf(stdout, "MSGUDP: { ");
         fprintf(stdout, "ID=%d, ",       this->id);
-        fprintf(stdout, "TS=%lu, ",      this->ts);
-        fprintf(stdout, "TYPE=%s, ",     this->type_to_string(this->type).c_str());
+        fprintf(stdout, "TS=%lu }",      this->ts);
     }
 
-    MsgUDP() : id(0), ts(0), type(ONGOING) {};
+    MsgUDP() : id(0), ts(0) {};
 } MsgUDP_t;
 
+struct timeval timeout(int dur_ms);
 int64_t timestamp(void);
+int64_t deadline(float dur_sec);
 double  get_percentile(const std::vector<int64_t>& data, double percentile);
 
 #endif /* __COMMON__HPP */

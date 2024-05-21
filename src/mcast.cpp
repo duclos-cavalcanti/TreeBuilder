@@ -142,9 +142,6 @@ int root(void) {
     for (int64_t i = 0; i < packets; i++) {
         MsgUDP_t m = MsgUDP();
         m.id  = (cnt++);
-        if (i == (packets - 1)) 
-            m.type = MsgType_t::END;
-
         m.ts  = timestamp();
         for (int j = 0; j<total; j++) {
             n = sendto(sockfd, &m, sizeof(MsgUDP_t), 0, (struct sockaddr *) &addrs[j], sizeof(addrs[j]));
@@ -173,10 +170,12 @@ int proxy(void) {
     unsigned long cnt = 0;
     int len, n, total = addrs.size();
     auto packets = (int64_t)rate * duration;
-    size_t sz = sizeof(MsgUDP_t);
+    int sz = sizeof(MsgUDP_t);
     static char buf[1000] = { 0 };
     struct sockaddr_in sockaddr = { 0 }, senderaddr = { 0 };
     MsgUDP_t* msg;
+
+    auto deadline_ts = deadline(1.2  * duration);
 
     sockaddr.sin_family       = AF_INET;
     sockaddr.sin_port         = htons(port);
@@ -211,7 +210,7 @@ int proxy(void) {
         msg = reinterpret_cast<MsgUDP_t*>(buf);
 
         if (verbose) {
-            fprintf(LOG, "PROXY::%s: RCV[%4lu] => %s\n", name.c_str(), cnt,  msg->type_to_string(msg->type).c_str());
+            fprintf(LOG, "CHILD: RCV[%4lu]\n", cnt);
         }
 
         cnt++;
@@ -228,7 +227,7 @@ int proxy(void) {
             }
         }
 
-        if (msg->type == MsgType_t::END) {
+        if (1) {
             if (verbose) {
                 fprintf(LOG, "PROXY::%s: SUMMARY => RECV=%lu\n", name.c_str(), cnt);
             }
@@ -250,7 +249,7 @@ int leaf(void) {
     double perc;
     int len, n;
     auto packets = (int64_t)rate * duration;
-    size_t sz = sizeof(MsgUDP_t);
+    int sz = sizeof(MsgUDP_t);
     static char buf[1000] = { 0 };
     struct sockaddr_in sockaddr = { 0 }, senderaddr = { 0 };
     MsgUDP_t* msg;
@@ -288,14 +287,14 @@ int leaf(void) {
         latencies.push_back(timestamp() - msg->ts);
 
         if (verbose) {
-            fprintf(LOG, "LEAF::%s: RCV[%4lu] => %s", name.c_str(), cnt,  msg->type_to_string(msg->type).c_str());
+            fprintf(LOG, "LEAF::%s: RCV[%4lu] => ", name.c_str(), cnt);
             msg->print();
             fprintf(LOG, "\n");
         }
 
         cnt++;
 
-        if (msg->type == MsgType_t::END) {
+        if (1) {
             if (verbose) {
                 fprintf(LOG, "LEAF::%s: SUMMARY => RECV=%lu\n", name.c_str(), cnt);
             }

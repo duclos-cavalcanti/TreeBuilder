@@ -9,8 +9,18 @@
 int64_t timestamp(void) {
     auto cur    = std::chrono::system_clock::now();
     auto epoch  = cur.time_since_epoch();
-    auto ms     = std::chrono::duration_cast<std::chrono::microseconds>(epoch);
-    int64_t ts = ms.count();
+    auto us     = std::chrono::duration_cast<std::chrono::microseconds>(epoch);
+    int64_t ts  = us.count();
+    return ts;
+}
+
+int64_t deadline(float dur_sec) {
+    auto cur    = std::chrono::system_clock::now();
+    auto dur    = std::chrono::duration<float>(dur_sec);
+    auto future = cur + std::chrono::duration_cast<std::chrono::system_clock::duration>(dur);
+    auto epoch  = future.time_since_epoch();
+    auto us     = std::chrono::duration_cast<std::chrono::microseconds>(epoch);
+    int64_t ts  = us.count();
     return ts;
 }
 
@@ -31,4 +41,12 @@ double get_percentile(const std::vector<int64_t>& data, double percentile) {
         int ceilValue = sorted_data[ceilIndex];
         return floorValue + (index - floor(index)) * (ceilValue - floorValue);
     }
+}
+
+struct timeval timeout(int dur_ms) {
+    struct timeval timeout;
+    int N = dur_ms;
+    timeout.tv_sec = N / 1000;
+    timeout.tv_usec = (N % 1000) * 1000;
+    return timeout;
 }
