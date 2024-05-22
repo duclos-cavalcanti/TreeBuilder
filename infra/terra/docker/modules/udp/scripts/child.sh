@@ -4,6 +4,7 @@ echo "ARGS: $@"
 role="$1"
 addr="$2"
 port="$3"
+dur=10
 
 export ROLE="$role"
 
@@ -17,7 +18,7 @@ pushd /work/project/build
     cmake ..
     make
     pushd /work/project/
-        command="./bin/child -i ${addr} -p ${port}"
+        command="./bin/child -i ${addr} -p ${port} -d ${dur} -v"
         echo ${command}
         ${command}
         echo "RET: ${?}"
