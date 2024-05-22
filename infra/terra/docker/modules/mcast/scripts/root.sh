@@ -15,7 +15,7 @@ mkdir /work/project/build
 pushd /work/project/build
     echo "-- ROLE: $role --"
     cmake ..
-    make mcast
+    make
     pushd /work/project/
         command="./bin/mcast ${args} -n ${role} -v"
         sleep 2s
