@@ -52,7 +52,7 @@ target_compile_definitions(${CHILD} PUBLIC ZMQ_BUILD_DRAFT_API=1)
 target_link_libraries(${CHILD} PUBLIC ${PROJECT_LIBRARIES})
 
 include_directories(${PROJECT_INCLUDES})
-add_executable(${MCAST} "${PROJECT_SOURCE_DIR}/src/mcast.cpp" ${PROJECT_SOURCES})
+add_executable(${MCAST} EXCLUDE_FROM_ALL "${PROJECT_SOURCE_DIR}/src/mcast.cpp" ${PROJECT_SOURCES})
 target_compile_definitions(${MCAST} PUBLIC ZMQ_BUILD_DRAFT_API=1)
 target_link_libraries(${MCAST} PUBLIC ${PROJECT_LIBRARIES})
 
