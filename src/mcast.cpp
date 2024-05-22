@@ -122,8 +122,9 @@ int parse(int argc, char **argv) {
     }
 
 
-    if (!ROOT && ip == "")               usage(EXIT_FAILURE);
-    if (!ROOT && port == 0)              usage(EXIT_FAILURE);
+    if (!duration)              usage(EXIT_FAILURE);
+    if (!ROOT && ip == "")      usage(EXIT_FAILURE);
+    if (!ROOT && port == 0)     usage(EXIT_FAILURE);
     if (addrs.empty() && !LEAF) usage(EXIT_FAILURE);
     if (optind > argc)          usage(EXIT_FAILURE);
     return ret;
@@ -219,8 +220,6 @@ int proxy(void) {
         }
 
         msg = reinterpret_cast<MsgUDP_t*>(buf);
-        log("CHILD: RCV[%4lu]\n", cnt++);
-
         for (int j = 0; j<total; j++) {
             n = sendto(sockfd, msg, sizeof(MsgUDP_t), 0, (struct sockaddr *) &addrs[j], sizeof(addrs[j]));
             if ( n < 0 ) {
@@ -230,7 +229,7 @@ int proxy(void) {
                 log("PROXY::%s: FWD[%4lu] => ADDR[%d]\n", name.c_str(), cnt, j);
             }
         }
-
+        cnt++;
     }
 
     log("PROXY::%s: END\n", name.c_str());
