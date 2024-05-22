@@ -43,10 +43,9 @@ double get_percentile(const std::vector<int64_t>& data, double percentile) {
     }
 }
 
-struct timeval timeout(int dur_ms) {
+struct timeval timeout(int dur_sec) {
     struct timeval timeout;
-    int N = dur_ms;
-    timeout.tv_sec = N / 1000;
-    timeout.tv_usec = (N % 1000) * 1000;
+    timeout.tv_sec  = dur_sec;
+    timeout.tv_usec = 0;
     return timeout;
 }

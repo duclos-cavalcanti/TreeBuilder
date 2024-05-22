@@ -4,6 +4,7 @@
 
 #include <cstdio>
 #include <cstdlib>
+#include <cstdarg>
 #include <unistd.h>
 
 #include <sys/socket.h>
@@ -15,13 +16,21 @@
 #include "common.hpp"
 
 FILE* LOG=stdout;
-
 std::vector<int64_t> latencies;
 std::string ip = "";
-
 int duration=0, port = 0;
-
 bool verbose = false;
+
+void log(const char* format, ...) {
+    if (!verbose) {
+        return;
+    }
+
+    va_list args;
+    va_start(args, format);
+        vfprintf(LOG, format, args);
+    va_end(args);
+}
 
 void usage(int e) {
     std::cout << "Usage: ./child [-i IP_ADDR] [-d DUR] [-p PORT] [-h] [-v]" << std::endl;
@@ -74,16 +83,17 @@ void print_latencies(void) {
 
 int child(void) {
     unsigned long cnt = 0;
-    int sockfd, n, len;
+    int sockfd, n;
     double perc;
     int sz = sizeof(MsgUDP_t);
     static char buf[1000] = { 0 };
     struct sockaddr_in sockaddr = { 0 }, senderaddr = { 0 };
+    socklen_t len = sizeof(senderaddr);
     MsgUDP_t* msg;
     uint64_t now;
 
-    auto deadline_ts = deadline(1.2  * duration);
-    auto t = timeout(100);
+    auto deadline_ts = deadline(1.5  * duration);
+    auto t = timeout(1);
 
     sockaddr.sin_family       = AF_INET;
     sockaddr.sin_port         = htons(port);
@@ -105,51 +115,40 @@ int child(void) {
         exit(EXIT_FAILURE);
     }
 
-    if (verbose) {
-        fprintf(LOG, "CHILD: SOCKET BOUND => IP=%s | PORT=%d\n", ip.c_str(), port);
-        fprintf(LOG, "CHILD: WAITING ON START...\n");
-    }
-
-    if (verbose) {
-        fprintf(LOG, "CHILD: START => \n");
-    }
+    log("CHILD: SOCKET BOUND => IP=%s | PORT=%d\n", ip.c_str(), port);
+    log("CHILD: WAITING ON START...\n");
+    log("CHILD: START => \n");
 
     while(1) {
         n = recvfrom(sockfd, buf, sizeof(buf), 0, (struct sockaddr*) &senderaddr, (socklen_t *) &len);
         if (n < sz) {
             if (errno == EAGAIN || errno == EWOULDBLOCK) {
-                if (verbose) 
-                    fprintf(LOG, "CHILD: SOCKET TIMED OUT\n");
-
-                if (timestamp() >= deadline_ts)
-                    break;
+                if (timestamp() >= deadline_ts) break;
+                continue;
+            } else {
+                log("ERROR OCCURRED: %d\n", errno);
+                break;
             }
-            continue;
         }
 
         msg = reinterpret_cast<MsgUDP_t*>(buf);
         latencies.push_back((now = timestamp()) - msg->ts);
 
-        if (verbose) {
-            fprintf(LOG, "CHILD: RECV[%4lu] AT TS=%lu => ", cnt, now);
-            msg->print();
-            fprintf(LOG, "\n");
-        }
-
+        log("CHILD: RECV[%4lu] AT TS=%lu => ", cnt, now);
+        log(msg->str());
+        log("\n");
         cnt++;
     }
 
-    if (verbose) {
-        fprintf(LOG, "CHILD: END\n");
-        fprintf(LOG, "SUMMARY | RECV=%lu | LATENCY_VECTOR=%lu\n", cnt, latencies.size());
-    }
+    log("CHILD: END\n");
+    log("SUMMARY | RECV=%lu | LATENCY_VECTOR=%lu\n", cnt, latencies.size());
 
     close(sockfd);
     if ((perc = get_percentile(latencies, 90)) != 0.0) {
         fprintf(stdout, "%lu\n%lf\n", cnt, perc);
         return EXIT_SUCCESS;
     } else {
-        fprintf(stdout, "EMPTY LATENCY VECTOR!\n");
+        fprintf(stdout, "-1\n-1\n");
         return EXIT_FAILURE;
     }
 }

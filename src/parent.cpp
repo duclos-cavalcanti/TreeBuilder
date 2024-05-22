@@ -6,15 +6,27 @@
 
 #include <cstdio>
 #include <cstdlib>
+#include <cstdarg>
 #include <unistd.h>
 
 #include "common.hpp"
 
 FILE* LOG=stdout;
-
 std::vector<struct sockaddr_in> addrs;
 int rate = 0, duration = 0;
 bool verbose = false;
+
+void log(const char* format, ...) {
+    if (!verbose) {
+        return;
+    }
+
+    va_list args;
+    va_start(args, format);
+        vfprintf(LOG, format, args);
+    va_end(args);
+}
+
 
 void usage(int e) {
     std::cout << "Usage: ./parent [-a ADDR_1 ADDR_2] [-r rate] [-d duration] [-h] [-v]" << std::endl;
@@ -99,10 +111,8 @@ int parent(void) {
         exit(EXIT_FAILURE);
     }
 
-    if (verbose) {
-        fprintf(LOG, "PARENT: SOCKET BOUND\n");
-        fprintf(LOG, "PARENT: PACKETS=%lu | DURATION=%d | RATE=%d\n", packets, duration, rate);
-    }
+    log("PARENT: SOCKET OPENED\n");
+    log("PARENT: PACKETS=%lu | DURATION=%d | RATE=%d\n", packets, duration, rate);
 
     auto start  = std::chrono::system_clock::now();
     auto step = std::chrono::duration<double>(1) / rate;
@@ -111,23 +121,20 @@ int parent(void) {
         MsgUDP_t m = MsgUDP();
         m.id  = (cnt++);
         m.ts  = timestamp();
+
         for (int j = 0; j<total; j++) {
             n = sendto(sockfd, &m, sizeof(MsgUDP_t), 0, (struct sockaddr *) &addrs[j], sizeof(addrs[j]));
             if ( n < 0 ) {
                 fprintf(stderr, "Failed to send\n");
                 exit(EXIT_FAILURE);
             } else {
-                if (verbose) {
-                    fprintf(LOG, "PARENT: SENT[%4lu] => ADDR[%d]\n", i, j);
-                }
+                log("PARENT: SENT[%4lu] => ADDR[%d]\n", i, j);
             }
         }
         std::this_thread::sleep_until(start + (step * i));
     }
 
-    if (verbose) {
-        fprintf(LOG, "PARENT: END\n");
-    }
+    log("PARENT: END\n");
     close(sockfd);
     return 0;
 }

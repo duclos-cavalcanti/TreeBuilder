@@ -25,10 +25,19 @@ typedef struct MsgUDP {
         fprintf(stdout, "TS=%lu }",      this->ts);
     }
 
+    char* str(void) {
+        static char buf[1000] = { 0 };
+        sprintf(buf, "MSGUDP: { ");
+        sprintf(buf, "ID=%d, ",  this->id);
+        sprintf(buf, "TS=%lu }", this->ts);
+
+        return buf;
+    }
+
     MsgUDP() : id(0), ts(0) {};
 } MsgUDP_t;
 
-struct timeval timeout(int dur_ms);
+struct timeval timeout(int dur_sec);
 int64_t timestamp(void);
 int64_t deadline(float dur_sec);
 double  get_percentile(const std::vector<int64_t>& data, double percentile);
