@@ -5,6 +5,7 @@ enum MessageType {
     CONNECT = 1;
     COMMAND = 2;
     REPORT = 3;
+    ERR = 4;
 }
 
 enum MessageFlag {
