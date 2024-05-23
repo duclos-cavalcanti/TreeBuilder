@@ -64,7 +64,8 @@ class Pool():
     def select(self, verbose=False):
         pool = self.pool
         size = len(pool)
-        idx = random.randint(0, size - 1)
+        # idx = random.randint(0, size - 1)
+        idx = 1
         el = self.pool[idx]
         self.pool.pop(idx)
 
@@ -207,8 +208,7 @@ class Tree():
 class Job():
     def __init__(self, addr:str="", command:str="", params:List=[], arr:List=[]):
         if len(arr) > 0:
-            if len(arr) < 8 : 
-                raise RuntimeError(f"Arr has incorrect length: {arr}")
+            if len(arr) < 8 : raise RuntimeError(f"Arr has incorrect length: {arr}")
             self.from_arr(arr)
         else:
             self.id         = self.hash(f"{addr}{command}")
@@ -246,15 +246,16 @@ class Job():
 
     def is_resolved(self) -> bool: 
         for d in self.deps:
-            if d.end == False: 
+            if d.complete == False: 
                 return False
         return True
 
-    def concatenate(self) -> bool: 
+    def concatenate(self) -> List: 
+        arr = []
         for d in self.deps:
             for o in d.out:
-                self.out.append(str(o))
-        return True
+                arr.append(str(o))
+        return arr
 
     def to_arr(self) -> List:
         ret = []

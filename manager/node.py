@@ -60,21 +60,35 @@ class Node():
         self.socket.send(m.SerializeToString())
         return m
 
+    def ack_message(self, m:Message, data:list=[]):
+        ack = self.tag_message(m.id, MessageType.ACK, m.flag, data)
+        self.socket.send(ack.SerializeToString())
+        return ack
+
+    def err_message(self, m:Message, data:list=[]):
+        r = self.tag_message(m.id, MessageType.ERR, m.flag, data)
+        self.socket.send(r.SerializeToString())
+        return r
+
     def print_message(self, m:Message, header:str="X"):
         lines = f"\n{m}".split("\n")
         lines = "\n\t".join(lines)
         print(f"MESSAGE[{header}]: {lines}")
 
-    def err_message(self, m:Message, s:str):
+    def exit_message(self, m:Message, s:str):
         self.print_message(m)
         raise RuntimeError(f"{s}")
 
     def handshake(self, id, type, flag, data, addr, verbose=True):
         self.send_message(id, type, flag, data=data)
         m = self.recv_message()
+
         if not (m.id == id and m.type == MessageType.ACK and m.flag == flag):
-            self.err_message(m, f"{MessageType.Name(type)}:{MessageFlag.Name(flag)} ACK ERR")
-        if verbose: print(f"{MessageType.Name(type)}[{MessageFlag.Name(flag)}] => {addr}")
+            self.exit_message(m, f"{MessageType.Name(type)}:{MessageFlag.Name(flag)} ACK ERR")
+
+        if verbose: 
+            print(f"{MessageType.Name(type)}[{MessageFlag.Name(flag)}] => {addr}")
+
         return m
 
     def _node(self, type, name:str="HELPER"):
@@ -89,7 +103,7 @@ class Node():
             )
             j.pid = p.pid
             stdout, stderr = p.communicate()
-            j.ret = p.returncode
+            j.ret = int(p.returncode)
             j.out = (stdout if stdout else stderr).split("\n")
             for i,o in enumerate(j.out):
                 if o == "":
@@ -104,16 +118,16 @@ class Node():
 
         return j
 
-    def _guard(self, job:Job):
+    def _guard(self, job:Job, flag:MessageType):
         print(f"GUARDING[{job.id}] => DEPS={len(job.deps)}")
         n = self._node(zmq.REQ)
         while True:
             self.timer.sleep_sec(2)
             if job.is_resolved(): break
             for idx, j in enumerate(job.deps):
-                if not j.end:
+                if not j.complete:
                     n.connect(j.addr)
-                    r = n.handshake(self.tick, MessageType.REPORT, MessageFlag.CHILD, j.to_arr(), j.addr, verbose=False)
+                    r = n.handshake(self.tick, MessageType.REPORT, flag, j.to_arr(), j.addr, verbose=False)
                     rjob = Job(arr=r.data)
                     job.deps[idx] = rjob
                     n.disconnect(j.addr)

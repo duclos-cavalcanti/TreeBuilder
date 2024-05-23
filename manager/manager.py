@@ -32,9 +32,7 @@ class Manager(Node):
             self.disconnect(addr)
 
     def parent(self):
-        if not self.tree.next(): 
-            raise RuntimeError("TREE QUEUE EMPTY")
-
+        if not self.tree.next(): raise RuntimeError()
         parent = self.tree.next()
         n_children = self.tree.fanout
         children = self.pool.slice(verbose=True)
@@ -45,6 +43,16 @@ class Manager(Node):
         rjob = Job(arr=r.data)
         self.disconnect(parent)
         self.reportsQ.push(self.reportsQ.make(job=rjob, ts=self.timer.future_ts(2), flag=MessageFlag.PARENT))
+        self.stepQ.push(self.stepQ.make(action="REPORT", desc="Get reports on running jobs"))
+
+    def mcast(self):
+        root = self.tree.root.id
+        data =  [ 0, self.rate, self.duration ]
+        self.connect(root)
+        r = self.handshake(id, MessageType.COMMAND, MessageFlag.MCAST, data, root)
+        rjob = Job(arr=r.data)
+        self.disconnect(root)
+        self.reportsQ.push(self.reportsQ.make(job=rjob, ts=self.timer.future_ts(2), flag=MessageFlag.MCAST))
         self.stepQ.push(self.stepQ.make(action="REPORT", desc="Get reports on running jobs"))
 
     def report(self):
@@ -89,6 +97,7 @@ class Manager(Node):
                     case "CONNECT": self.establish()
                     case "PARENT":  self.parent()
                     case "REPORT":  self.report()
+                    case "MCAST":   self.mcast()
                     case _:         raise NotImplementedError(f"ERR STEP: {step}")
 
                 print_color(f"STEP[{self.tick}]: {act} => COMPLETE: {dsc}", color=GRN)

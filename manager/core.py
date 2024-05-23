@@ -11,7 +11,6 @@ def manager(args):
     if args.config: config = args.config
 
     M = Manager(config, args.name, ip=args.addr, port=args.port, LOG_LEVEL=LOG_LEVEL.NONE) 
-    time.sleep(2)
     M.go()
 
 def worker(args):
