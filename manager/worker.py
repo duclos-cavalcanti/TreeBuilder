@@ -69,7 +69,6 @@ class Worker(Node):
         for dep in job.deps: 
             if dep.ret != 0:
                 return job, self.err_message(m, data=[f"PARENT'S CHILD[{dep.addr}] JOB[{dep.id}] FAILED"])
-            print(f"ADDR[{dep.addr}]: PERC={float(dep.out[0])}")
 
         percs    = [float(p) for p in job.concatenate()]
         sorted   = heapq.nsmallest(len(percs), enumerate(percs), key=lambda x: x[1])
@@ -98,7 +97,14 @@ class Worker(Node):
 
         # root and proxies
         if len(self.children) > 0: 
-            C += " -a " + " ".join(f"{c}" for c in self.children)
+            f_children = []
+            for c in self.children:
+                split = c.split(":")
+                ip = split[0]
+                port = split[1]
+                f_children.append(f"{ip}:{int(port) - 1000}")
+
+            C += " -a " + " ".join(f"{c}" for c in f_children)
             if id == 0: 
                 C += f" -R"
             else:
@@ -132,10 +138,35 @@ class Worker(Node):
         id = params[0]
         data = []
 
-        if job.ret != 0:
+        if job.params[0] == 0 and job.ret != 0:
             return job, self.err_message(m, data=[f"MCAST[{job.addr}] JOB[{job.id}] FAILED"])
 
-        return job, self.ack_message(m, data=job.to_arr())
+        if len(self.children) > 0:
+            for dep in job.deps: 
+                if dep.ret != 0:
+                    job.ret = dep.ret
+                    return job, self.ack_message(m, data=job.to_arr())
+                print(f"ADDR[{dep.addr}] => RES={dep.out[0]}")
+
+            percs    = [float(p.split("/")[1]) for p in job.concatenate()]
+            sorted   = heapq.nlargest(1, enumerate(percs), key=lambda x: x[1])
+            out = []
+            idx = sorted[0][0]
+            perc = sorted[0][1]
+            addr = job.deps[idx].out[0].split("/")[0]
+            out.append(f"{addr}/{perc}")
+            print(f"MCAST WORST LEAF OF {self.ip}:{self.port}: => {addr}: PERC={perc}")
+            job.out = out
+            return job, self.ack_message(m, data=job.to_arr())
+        else:
+            total = job.params[1] * job.params[2]
+            recv = int(job.out[0])
+            perc = float(job.out[1])
+
+            job.out = []
+            job.out.append(f"{job.addr}/{perc}")
+            print(f"MCAST[{job.addr}] LEAF => PERC={perc} | RECV={recv}/{total} | RET={job.ret}")
+            return job, self.ack_message(m, data=job.to_arr())
 
     def commandACK(self, m:Message):
         id, _, flag, data = self.parse_message(m)
@@ -198,11 +229,11 @@ class Worker(Node):
 
     def connectACK(self, m:Message):
         _, _, _, data = self.parse_message(m)
-        if self.hostaddr != data[0]: 
+        if len(data) < 2 or self.hostaddr != data[0]: 
             self.exit_message(m, "CONNECT ERR")
 
-        r = self.ack_message(m, data=[self.hostaddr])
-        return r
+        self.manageraddr = data[1]
+        return self.ack_message(m, data=[self.hostaddr])
 
     def go(self):
         self.socket.bind(protocol="tcp", ip=self.ip, port=self.port)

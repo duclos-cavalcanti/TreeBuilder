@@ -14,6 +14,7 @@ class Manager(Node):
         with open(config, 'r') as file:
             self.config = yaml.safe_load(file)
 
+        self.manageraddr = self.config["addrs"][0]
         self.workers    = self.config["addrs"][1:]
         self.rate       = int(self.config["rate"])
         self.duration   = int(self.config["duration"])
@@ -49,7 +50,7 @@ class Manager(Node):
         root = self.tree.root.id
         data =  [ 0, self.rate, self.duration ]
         self.connect(root)
-        r = self.handshake(id, MessageType.COMMAND, MessageFlag.MCAST, data, root)
+        r = self.handshake(self.tick, MessageType.COMMAND, MessageFlag.MCAST, data, root)
         rjob = Job(arr=r.data)
         self.disconnect(root)
         self.reportsQ.push(self.reportsQ.make(job=rjob, ts=self.timer.future_ts(2), flag=MessageFlag.MCAST))
@@ -72,15 +73,24 @@ class Manager(Node):
             self.reportsQ.push(self.reportsQ.make(job=rjob, ts=self.timer.future_ts(2), flag=flag))
         else:
             if job.ret != 0: raise RuntimeError()
-            self.tree.n_add(rjob.out)
-            self.pool.n_remove(rjob.out)
+            if flag == MessageFlag.PARENT:
+                self.tree.n_add(rjob.out)
+                self.pool.n_remove(rjob.out)
 
-            if self.tree.full():
-                self.pool.show(header="REMAINING ELEMENTS")
-                self.tree.show(header="TREE COMPLETE")
-                # self.stepQ.push(self.stepQ.make(action="MCAST", desc="Get multicast results from tree"))
+                if self.tree.full():
+                    self.pool.show(header="REMAINING ELEMENTS")
+                    self.tree.show(header="TREE COMPLETE")
+                    self.stepQ.push(self.stepQ.make(action="MCAST", desc="Get multicast results from tree"))
+                else:
+                    self.stepQ.push(self.stepQ.make(action="PARENT", desc="Choose next node for tree."))
+            elif flag == MessageFlag.MCAST:
+                res = rjob.out[0]
+                addr = res.split("/")[0]
+                perc = res.split("/")[1]
+                print(f"MCAST PERFORMANCE: LEAF[{addr}] => {perc}")
+                self.tree.show()
             else:
-                self.stepQ.push(self.stepQ.make(action="PARENT", desc="Choose next node for tree."))
+                raise RuntimeError()
 
     def go(self):
         try:

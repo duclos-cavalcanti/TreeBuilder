@@ -17,6 +17,7 @@ class Node():
         self.port       = port
         self.tick       = 0
         self.socket     = Socket(self.name, type, LOG_LEVEL=LOG_LEVEL)
+        self.manageraddr = ""
 
         self.timer      = Timer()
         self.jobs = OrderedDict()
@@ -127,10 +128,19 @@ class Node():
             for idx, j in enumerate(job.deps):
                 if not j.complete:
                     n.connect(j.addr)
-                    r = n.handshake(self.tick, MessageType.REPORT, flag, j.to_arr(), j.addr, verbose=False)
-                    rjob = Job(arr=r.data)
-                    job.deps[idx] = rjob
-                    n.disconnect(j.addr)
+
+                    try:
+                        r = n.handshake(self.tick, MessageType.REPORT, flag, j.to_arr(), j.addr, verbose=False)
+                        rjob = Job(arr=r.data)
+                        job.deps[idx] = rjob
+
+                    except RuntimeError as _:
+                        n.disconnect(j.addr)
+                        n.connect(self.manageraddr)
+                        n.disconnect(self.manageraddr)
+
+                    else:
+                        n.disconnect(j.addr)
 
         t, _ = self.find(job, dct=self.guards)
         del self.guards[t]
