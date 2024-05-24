@@ -44,6 +44,7 @@ clean() {
 deploy() {
     local infra="$1"
     local mode="$2"
+    local yaml="$3"
     local terradir="infra/terra"
     local isdockerbuilt="$(docker images -q ubuntu-base:jammy)"
     local isvagrantbuilt="$(vagrant box list | grep ubuntu-base)"
@@ -63,7 +64,7 @@ deploy() {
     compress "$terradir/${infra}/extract"
     pushd $terradir/${infra}
         terraform init
-        terraform apply -auto-approve -var pwd=$(pwd) -var mode=${mode}
+        terraform apply -auto-approve -var pwd=$(pwd) -var mode=${mode} -var yaml=${yaml}
     popd
     exit 0
 }
@@ -116,6 +117,7 @@ main() {
     action=""
     infra=""
     mode=""
+    yaml=""
     while [ $# -gt 0 ]; do
     case "$1" in
         -h | --help)
@@ -125,6 +127,11 @@ main() {
 
         -m | --mode)
             mode="$2"
+            shift 2
+            ;;
+
+        -y | --yaml)
+            yaml="$2"
             shift 2
             ;;
 
@@ -157,8 +164,8 @@ main() {
     esac
     done
 
-    echo "-- RUN: ACTION=$action INFRA=$infra MODE=$mode --"
-    $action $infra $mode
+    echo "-- RUN: ACTION=$action INFRA=$infra MODE=$mode YAML=$yaml --"
+    $action $infra $mode $yaml
 }
 
 main $@

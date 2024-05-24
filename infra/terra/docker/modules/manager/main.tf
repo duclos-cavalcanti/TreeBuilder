@@ -16,7 +16,7 @@ variable "pwd" {
 variable "yaml" {
     description = "Path to present working directory"
     type        = string
-    default     = "./plans/connect.yaml"
+    default     = "./plans/default.yaml"
 }
 
 variable "ports" {

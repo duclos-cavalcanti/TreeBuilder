@@ -19,10 +19,17 @@ variable "mode" {
   default     = "manager"
 }
 
+variable "yaml" {
+    description = "Path to present working directory"
+    type        = string
+    default     = "./plans/default.yaml"
+}
+
 module "manager" {
     source = "./modules/manager/"
     count = (var.mode == "manager") ? 1 : 0
     pwd = var.pwd
+    yaml = var.yaml
 }
 
 module "udp" {
