@@ -8,20 +8,19 @@ import yaml
 
 
 class Manager(Node):
-    def __init__(self, config:str, name:str, ip:str, port:str, LOG_LEVEL=LOG_LEVEL.NONE):
+    def __init__(self, plan:str, name:str, ip:str, port:str, LOG_LEVEL=LOG_LEVEL.NONE):
         super().__init__(name, ip, port, zmq.REQ, LOG_LEVEL)
 
-        with open(config, 'r') as file:
-            self.config = yaml.safe_load(file)
+        with open(plan, 'r') as file:
+            self.plan = yaml.safe_load(file)
 
-        self.manageraddr = self.config["addrs"][0]
-        self.workers    = self.config["addrs"][1:]
-        self.rate       = int(self.config["rate"])
-        self.duration   = int(self.config["duration"])
+        self.workers    = self.plan["addrs"][1:]
+        self.rate       = int(self.plan["rate"])
+        self.duration   = int(self.plan["duration"])
 
-        self.pool       = Pool(self.workers, float(self.config["hyperparameter"]), int(len(self.workers)))
+        self.pool       = Pool(self.workers, float(self.plan["hyperparameter"]), int(len(self.workers)))
         self.reportsQ   = DictionaryQueue()
-        self.stepQ      = DictionaryQueue(dict_arr=self.config["steps"])
+        self.stepQ      = DictionaryQueue(dict_arr=self.plan["steps"])
         self.tree       = Tree(root=self.pool.select(verbose=True), fanout=2, depth=2)
 
     def establish(self):
@@ -33,14 +32,12 @@ class Manager(Node):
             self.disconnect(addr)
 
     def parent(self):
-        if not self.tree.next(): raise RuntimeError()
         parent = self.tree.next()
         n_children = self.tree.fanout
         children = self.pool.slice(verbose=True)
-        id = self.tick 
-        data =  [ n_children, self.rate, self.duration ] + children
+        data = [ n_children, self.rate, self.duration ] + children
         self.connect(parent)
-        r = self.handshake(id, MessageType.COMMAND, MessageFlag.PARENT, data, parent)
+        r = self.handshake(self.tick, MessageType.COMMAND, MessageFlag.PARENT, data, parent)
         rjob = Job(arr=r.data)
         self.disconnect(parent)
         self.reportsQ.push(self.reportsQ.make(job=rjob, ts=self.timer.future_ts(2), flag=MessageFlag.PARENT))

@@ -3,7 +3,7 @@
 role="$1"
 addr="$2"
 port="$3"
-id="$4"
+yaml="$4"
 
 export ROLE="$role"
 
@@ -19,7 +19,7 @@ popd
 
 pushd /work/project
     echo "-- ROLE: $role --"
-    python3 main.py -m manager -a manager -n ${role}  -i ${addr} -p ${port}
+    python3 main.py -m manager -a manager -n ${role}  -i ${addr} -p ${port} -y ${yaml}
     # PID=$!
     # echo "PID: ${PID}"
     bash

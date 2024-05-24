@@ -7,10 +7,10 @@ import time
 import argparse
 
 def manager(args):
-    config = os.path.join(os.getcwd(), "default.yaml")
-    if args.config: config = args.config
+    plan = os.path.join(os.getcwd(), "plans", "default.yaml")
+    if args.yaml: plan = args.yaml
 
-    M = Manager(config, args.name, ip=args.addr, port=args.port, LOG_LEVEL=LOG_LEVEL.NONE) 
+    M = Manager(plan, args.name, ip=args.addr, port=args.port, LOG_LEVEL=LOG_LEVEL.NONE) 
     M.go()
 
 def worker(args):
@@ -48,11 +48,11 @@ def parse(rem=None):
     )
 
     arg_def.add_argument(
-        "-c", "--config",
+        "-y", "--yaml",
         type=str,
         default="",
         required=False,
-        dest="config",
+        dest="yaml",
     )
 
     arg_def.add_argument(

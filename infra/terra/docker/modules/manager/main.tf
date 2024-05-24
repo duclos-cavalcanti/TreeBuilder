@@ -13,6 +13,12 @@ variable "pwd" {
     default     = "/path"
 }
 
+variable "yaml" {
+    description = "Path to present working directory"
+    type        = string
+    default     = "./plans/connect.yaml"
+}
+
 variable "ports" {
     description = "List of ports"
     type        = list(string)
@@ -47,7 +53,7 @@ resource "docker_container" "manager" {
 
     network_mode = "host"
 
-    entrypoint = ["/bin/bash", "/manager.sh", "manager", "localhost", "9091"]
+    entrypoint = ["/bin/bash", "/manager.sh", "manager", "localhost", "9091", "${var.yaml}" ]
 
     rm         = true
     tty        = true
