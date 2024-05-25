@@ -1,10 +1,22 @@
-import hashlib
 import time
 import random
 
 from collections import deque
 from typing import List, Callable
-from enum import Enum
+
+class SQueue():
+    def __init__(self, arr:List=[]):
+        self.Q = arr
+
+    def pop(self):
+        if len(self.Q) == 0: 
+            return None
+        el = self.Q[0]
+        self.Q.pop(0)
+        return el
+
+    def push(self, el) -> None:
+        self.Q.append(el)
 
 class Timer():
     def __init__(self):
@@ -37,23 +49,6 @@ class Timer():
     
     def usec_to_sec(self, usec:int) -> float:
         return usec / 1_000_000
-
-class DictionaryQueue():
-    def __init__(self, dict_arr:List=[]):
-        self.Q = dict_arr
-
-    def make(self, **kwargs) -> dict:
-        return kwargs
-
-    def pop(self) -> dict:
-        if len(self.Q) == 0: 
-            return {}
-        ret = self.Q[0]
-        self.Q.pop(0)
-        return ret
-
-    def push(self, d:dict) -> None:
-        self.Q.append(d)
 
 class Pool():
     def __init__(self, elements:List, K:float, N:int):
@@ -144,7 +139,7 @@ class Tree():
             n = self.peak()
             return n.id
         else:
-            return ""
+            raise RuntimeError("Tree Queue is empty")
 
     def depth(self, node):
         d = 0 
@@ -203,91 +198,3 @@ class Tree():
 
         if header: print(f"{header}")
         self.traverse(callback)
-
-
-class Job():
-    def __init__(self, addr:str="", command:str="", params:List=[], arr:List=[]):
-        if len(arr) > 0:
-            if len(arr) < 8 : raise RuntimeError(f"Arr has incorrect length: {arr}")
-            self.from_arr(arr)
-        else:
-            self.id         = self.hash(f"{addr}{command}")
-            self.pid        = 0
-            self.addr       = addr
-            self.command    = command
-            self.end        = False
-            self.complete   = False
-            self.ret        = -1
-            self.params     = params
-            self.out        = [ "NONE" ]
-        self.deps = []
-
-    def __str__(self):
-        output = [f"{{"]
-        output.append(f"\tID={self.id}")
-        output.append(f"\tPID={self.pid}")
-        output.append(f"\tADDR={self.addr}")
-        output.append(f"\tCOMM={self.command}")
-        output.append(f"\tEND={self.end}")
-        output.append(f"\tCOMPLETE={self.end}")
-        output.append(f"\tRET={self.ret}")
-        output.append(f"\tPARAM={self.params}")
-        output.append(f"\tOUT=[")
-        for o in self.out: output.append(f"\t\t{o}")
-        output.append(f"\t]")
-        output.append(f"}}")
-        return "\n".join(output)
-
-
-    def hash(self, string:str) -> str: 
-        bytes = string.encode('utf-8')
-        hash = hashlib.sha256(bytes)
-        return hash.hexdigest()
-
-    def is_resolved(self) -> bool: 
-        for d in self.deps:
-            if d.complete == False: 
-                return False
-        return True
-
-    def concatenate(self) -> List: 
-        arr = []
-        for d in self.deps:
-            for o in d.out:
-                arr.append(str(o))
-        return arr
-
-    def to_arr(self) -> List:
-        ret = []
-        ret.append(f"{self.id}")
-        ret.append(f"{self.pid}")
-        ret.append(f"{self.addr}")
-        ret.append(f"{self.command}")
-        ret.append(f"{self.end}")
-        ret.append(f"{self.complete}")
-        ret.append(f"{self.ret}")
-        ret.append(f"{self.params}")
-        if len(self.out) == 0:
-            ret.append(f"[]")
-        else:
-            for o in self.out: 
-                ret.append(f"{o}")
-        return ret
-
-    def from_arr(self, arr:List):
-        self.id         = arr[0]
-        self.pid        = arr[1]
-        self.addr       = arr[2]
-        self.command    = arr[3]
-        self.end        = True if arr[4] == "True" else False
-        self.complete   = True if arr[5] == "True" else False
-        self.ret        = int(arr[6])
-        self.params     = arr[7]
-        self.out = []
-        for o in arr[8:]:
-            self.out.append(o)
-
-class LOG_LEVEL(Enum):
-    NONE = 1 
-    DEBUG = 2 
-    ERROR = 3

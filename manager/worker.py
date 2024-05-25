@@ -1,6 +1,6 @@
-from .message   import Message, MessageType, MessageFlag
-from .node      import Node
-from .ds        import Job, LOG_LEVEL
+from .message   import Message, MessageType, MessageFlag, Job, Order, Report
+from .message   import MessageHandler, JobHandler
+from .node      import Node, LOG_LEVEL
 from .utils     import *
 
 import heapq
@@ -9,7 +9,9 @@ import zmq
 class Worker(Node):
     def __init__(self, name:str, ip:str, port:str, LOG_LEVEL=LOG_LEVEL.NONE):
         super().__init__(name, ip, port, zmq.REP, LOG_LEVEL)
-        self.children  = []
+        self.req        = self.context.socket(zmq.REQ)
+        self.guard      = self.context.socket(zmq.REQ)
+        self.children   = []
 
     def child_job(self, rate:int, dur:int):
         C = f"./bin/child -i {self.ip} -p {int(self.port) - 1000} -d {dur}"
@@ -41,16 +43,17 @@ class Worker(Node):
 
         C = "./bin/parent -a " + " ".join(f"{a}" for a in faddrs) + f" -r {rate} -d {dur}"
         J = Job(addr=self.hostaddr, command=C, params=[sel, rate, dur])
-        H = self._node(zmq.REQ)
 
         for addr in addrs:
             id = self.tick
             data = [addr, self.hostaddr, rate, dur]
+            format = self.format(addr)
+            self.req.connect(format)
             H.connect(addr)
             r = H.handshake(id, MessageType.COMMAND, MessageFlag.CHILD, data, addr)
             rjob = Job(arr=r.data)
             J.deps.append(rjob)
-            H.disconnect(addr)
+            self.req.disconnect(format)
 
         self.jobs[self.exec(target=self._run, args=(J,))] = J
         self.guards[self.exec(target=self._guard, args=(J, MessageFlag.CHILD))] = J
@@ -173,7 +176,7 @@ class Worker(Node):
         match flag:
             case MessageFlag.PARENT: 
                 if len(data) <= 3: 
-                    self.exit_message(m, "PARENT COMMAND ERR")
+                    return self.err_message(m, data=[f"PARENT[{self.hostaddr}] COMMAND FORMAT ERR"])
                 sel   = int(data[0])
                 rate  = int(data[1])
                 dur   = int(data[2])
@@ -184,14 +187,14 @@ class Worker(Node):
 
             case MessageFlag.CHILD:  
                 if len(data) < 4 or self.hostaddr != data[0]: 
-                    self.exit_message(m, "CHILD COMMAND ERR")
+                    return self.err_message(m, data=[f"CHILD[{self.hostaddr}] COMMAND FORMAT ERR"])
                 job = self.child_job(rate=int(data[2]), dur=int(data[3]))
                 r = self.ack_message(m, data=job.to_arr())
                 return r
 
             case MessageFlag.MCAST:  
                 if len(data) < 3: 
-                    self.exit_message(m, "MCAST COMMAND ERR")
+                    return self.err_message(m, data=[f"MCAST[{self.hostaddr}] COMMAND FORMAT ERR"])
                 id    = int(data[0])
                 rate  = int(data[1])
                 dur   = int(data[2])
@@ -230,30 +233,31 @@ class Worker(Node):
     def connectACK(self, m:Message):
         _, _, _, data = self.parse_message(m)
         if len(data) < 2 or self.hostaddr != data[0]: 
-            self.exit_message(m, "CONNECT ERR")
+            return self.err_message(m, data=[f"CONNECT[{self.hostaddr}] FORMAT ERR"])
 
         self.manageraddr = data[1]
         return self.ack_message(m, data=[self.hostaddr])
 
     def go(self):
-        self.socket.bind(protocol="tcp", ip=self.ip, port=self.port)
+        self.bind()
         try:
             while(True):
                 r = Message()
                 m = self.recv_message()
+                h = MessageHandler(m)
+
                 print_color(f"------> RECEIVED", color=RED)
-                self.print_message(m, header="RECV")
+                h.show(m, header="RECV")
 
                 match m.type:
                     case MessageType.CONNECT: r = self.connectACK(m)
                     case MessageType.COMMAND: r = self.commandACK(m)
                     case MessageType.REPORT:  r = self.reportACK(m)
-                    case _:                   self.exit_message(m, f"UNEXPECTED MSG: {MessageType.Name(MessageType.ACK)} | {m.id}")
+                    case _:                   raise RuntimeError()
 
-                self.print_message(r, header="SENT")
+                h.show(r, "SENT:")
                 print_color(f"<------ PROCESSED", color=GRN)
                 self.tick += 1
-
 
         except KeyboardInterrupt:
             print("\n-------------------")

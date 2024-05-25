@@ -1,24 +1,67 @@
 syntax = "proto3";
 
-enum MessageType {
-    ACK = 0;
-    CONNECT = 1;
-    COMMAND = 2;
-    REPORT = 3;
-    ERR = 4;
-}
-
-enum MessageFlag {
-    NONE = 0;
-    PARENT = 1;
-    CHILD = 2;
-    MCAST = 3;
-}
-
 message Message {
     int32 id = 1;
     int64 ts = 2;
+
+    enum MessageType {
+        ACK = 0;
+        CONNECT = 1;
+        COMMAND = 2;
+        REPORT = 3;
+        ERR = 4;
+    }
     MessageType type = 3;
+
+    enum MessageFlag {
+        NONE = 0;
+        PARENT = 1;
+        MCAST = 3;
+    }
+
     MessageFlag flag = 4;
-    repeated string data = 5;
+
+    message MessageMetadata {
+        string src = 1; 
+        string dst = 2;
+        oneof data {
+            Command  command = 3;
+            Report   report = 5;
+            Error    error = 6;
+        }
+    }
+    MessageMetadata mdata = 5;
 }
+
+message Command {
+    string instr = 2;
+    int32 layer = 3;
+    int32 select = 4;
+    int32 rate = 5;
+    int32 dur = 6;      // in seconds
+    int32 timeout = 7;  // in seconds
+    repeated string addrs = 8;
+}
+
+message Report {
+    int64 trigger_ts = 1;
+    bool complete = 2;
+    Job job = 3;
+}
+
+message Job {
+    string owner = 1;
+    string id = 2;
+    int32 pid = 3;
+    string command = 4;
+    bool end = 5;
+    int32 ret = 7;
+    string output = 8;
+    repeated Job deps = 9;
+    repeated int32 params = 10;
+}
+
+message Error {
+    string desc = 1;
+}
+

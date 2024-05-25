@@ -1,6 +1,7 @@
-from .message   import Message, MessageType, MessageFlag
-from .node      import Node
-from .ds        import Pool, Tree, Job, DictionaryQueue, LOG_LEVEL
+from .message   import Message, MessageType, MessageMetadata, MessageHandler
+from .message   import Command, Report, Job, JobHandler
+from .node      import Node, LOG_LEVEL
+from .ds        import SQueue, Pool, Tree
 from .utils     import *
 
 import zmq
@@ -16,30 +17,40 @@ class Manager(Node):
 
         self.workers    = self.plan["addrs"][1:]
         self.rate       = int(self.plan["rate"])
-        self.duration   = int(self.plan["duration"])
+        self.dur        = int(self.plan["duration"])
 
         self.pool       = Pool(self.workers, float(self.plan["hyperparameter"]), int(len(self.workers)))
-        self.reportsQ   = DictionaryQueue()
-        self.stepQ      = DictionaryQueue(dict_arr=self.plan["steps"])
+        self.reportsQ   = SQueue()
+        self.stepQ      = SQueue(arr=self.plan["steps"])
         self.tree       = Tree(root=self.pool.select(verbose=True), fanout=2, depth=2)
 
     def establish(self):
         for addr in self.workers:
-            id = self.tick
-            data = [addr, self.hostaddr]
+            h = MessageHandler()
+            h.fconnect(id=self.tick, dst=addr, src=self.hostaddr)
             self.connect(addr)
-            r = self.handshake(id, MessageType.CONNECT, MessageFlag.NONE, data, addr)
+            self.send_message(h.message())
+            r = self.recv_message()
+            h.inspect(r)
             self.disconnect(addr)
 
     def parent(self):
         parent = self.tree.next()
-        n_children = self.tree.fanout
-        children = self.pool.slice(verbose=True)
-        data = [ n_children, self.rate, self.duration ] + children
+        c = Command()
+        c.flag = Command.CommandFlag.PARENT
+        c.layer = 0
+        c.select = self.tree.fanout
+        c.data = self.rate 
+        c.dur = self.dur
+        c.addrs.extend([ c for c in self.pool.slice(verbose=True)])
+        h = MessageHandler()
+        h.fcommand(id=self.tick, dst=parent, src=self.hostaddr, command=c, flag=MessageType.PARENT)
         self.connect(parent)
-        r = self.handshake(self.tick, MessageType.COMMAND, MessageFlag.PARENT, data, parent)
-        rjob = Job(arr=r.data)
+        self.send_message(h.message())
+        r = self.recv_message()
         self.disconnect(parent)
+        report = h.inspect(r, field="report")
+        report.ts = self.timer.future_ts(2)
         self.reportsQ.push(self.reportsQ.make(job=rjob, ts=self.timer.future_ts(2), flag=MessageFlag.PARENT))
         self.stepQ.push(self.stepQ.make(action="REPORT", desc="Get reports on running jobs"))
 

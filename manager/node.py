@@ -1,100 +1,72 @@
-from .zmqsocket import Socket
-from .message   import Message, MessageType, MessageFlag
-from .ds        import Job, Timer, LOG_LEVEL
+from .message   import Message, MessageHandler
+from .message   import Job, JobHandler
+from .ds        import Timer
 
 import zmq
 import subprocess
 import threading
 
+from enum import Enum
 from collections import OrderedDict
 from typing import Callable
 
+class LOG_LEVEL(Enum):
+    NONE = 1 
+    DEBUG = 2 
+    ERROR = 3
+
 class Node():
-    def __init__(self, name:str, ip:str, port:str, type, LOG_LEVEL=LOG_LEVEL.NONE):
+    def __init__(self, name:str, ip:str, port:str, stype:int, verbosity=LOG_LEVEL.NONE):
         self.name       = name.upper()
         self.hostaddr   = f"{ip}:{port}"
         self.ip         = ip
         self.port       = port
         self.tick       = 0
-        self.socket     = Socket(self.name, type, LOG_LEVEL=LOG_LEVEL)
-        self.manageraddr = ""
+
+        self.verbosity  = verbosity
+
+        self.context    = zmq.Context()
+        self.socket     = self.context.socket(stype)
+        self.guard      = self.context.socket(zmq.REQ)
 
         self.timer      = Timer()
-        self.jobs = OrderedDict()
-        self.guards = OrderedDict()
+        self.jobs       = OrderedDict()
+        self.guards     = OrderedDict()
+
+    def log(self, string:str):
+        if (self.verbosity == LOG_LEVEL.NONE): 
+            return 
+        print(f"LOG::{self.name}: {string}")
+
+    def format(self, addr:str):
+        protocol="tcp"
+        ip = addr.split(":")[0]
+        port = addr.split(":")[1]
+        return f"{protocol}://{ip}:{port}"
+
+    def bind(self):
+        protocol="tcp"
+        ip = self.ip
+        port = self.port
+        format = f"{protocol}://{ip}:{port}"
+        self.socket.bind(format)
 
     def connect(self, addr:str):
-        ip = addr.split(":")[0]
-        port = addr.split(":")[1]
-        self.socket.connect(protocol="tcp", ip=ip, port=port)
+        format = self.format(addr)
+        self.socket.connect(format)
 
     def disconnect(self, addr:str):
-        ip = addr.split(":")[0]
-        port = addr.split(":")[1]
-        self.socket.disconnect(protocol="tcp", ip=ip, port=port)
-
-    def tag_message(self, id:int, t:MessageType, f:MessageFlag, data:list):
-        m = Message()
-        m.id    = id
-        m.ts    = self.timer.ts()
-        m.type  = t
-        m.flag  = f
-        if data: 
-            for d in data: 
-                m.data.append(str(d))
-        return m
-
-    def parse_message(self, m:Message):
-        id   = m.id
-        type = m.type
-        flag = m.flag
-        data = m.data
-        return id, type, flag, data
+        format = self.format(addr)
+        self.socket.disconnect(format)
 
     def recv_message(self) -> Message:
         m = Message()
         m.ParseFromString(self.socket.recv())
         return m
 
-    def send_message(self, id:int, t:MessageType, flag:MessageFlag, data:list=[]):
-        m = self.tag_message(id, t, flag, data)
+    def send_message(self, m:Message):
         self.socket.send(m.SerializeToString())
-        return m
-
-    def ack_message(self, m:Message, data:list=[]):
-        ack = self.tag_message(m.id, MessageType.ACK, m.flag, data)
-        self.socket.send(ack.SerializeToString())
-        return ack
-
-    def err_message(self, m:Message, data:list=[]):
-        r = self.tag_message(m.id, MessageType.ERR, m.flag, data)
-        self.socket.send(r.SerializeToString())
-        return r
-
-    def print_message(self, m:Message, header:str="X"):
-        lines = f"\n{m}".split("\n")
-        lines = "\n\t".join(lines)
-        print(f"MESSAGE[{header}]: {lines}")
-
-    def exit_message(self, m:Message, s:str):
-        self.print_message(m)
-        raise RuntimeError(f"{s}")
-
-    def handshake(self, id, type, flag, data, addr, verbose=True):
-        self.send_message(id, type, flag, data=data)
-        m = self.recv_message()
-
-        if not (m.id == id and m.type == MessageType.ACK and m.flag == flag):
-            self.exit_message(m, f"{MessageType.Name(type)}:{MessageFlag.Name(flag)} ACK ERR")
-
-        if verbose: 
-            print(f"{MessageType.Name(type)}[{MessageFlag.Name(flag)}] => {addr}")
-
-        return m
-
-    def _node(self, type, name:str="HELPER"):
-        h = Node(f"{self.name}::{name}", self.ip, f"{int(self.port) + 1000}", type, self.socket.LOG_LEVEL)
-        return h
+        return
 
     def _run(self, j:Job):
         print(f"RUNNING[{j.addr}] => {j.command}")
@@ -121,26 +93,25 @@ class Node():
 
     def _guard(self, job:Job, flag:MessageType):
         print(f"GUARDING[{job.id}] => DEPS={len(job.deps)}")
-        n = self._node(zmq.REQ)
         while True:
             self.timer.sleep_sec(2)
             if job.is_resolved(): break
             for idx, j in enumerate(job.deps):
                 if not j.complete:
-                    n.connect(j.addr)
+                    self.guard.connect(self.format(j.addr))
 
                     try:
-                        r = n.handshake(self.tick, MessageType.REPORT, flag, j.to_arr(), j.addr, verbose=False)
+                        # (self.tick, MessageType.REPORT, flag, j.to_arr(), j.addr, verbose=False)
+                        self.send_message(Message(), self.guard)
+                        r = self.recv_message(self.guard)
                         rjob = Job(arr=r.data)
                         job.deps[idx] = rjob
 
                     except RuntimeError as _:
-                        n.disconnect(j.addr)
-                        n.connect(self.manageraddr)
-                        n.disconnect(self.manageraddr)
+                        self.guard.disconnect(self.format(j.addr))
 
                     else:
-                        n.disconnect(j.addr)
+                        self.guard.disconnect(self.format(j.addr))
 
         t, _ = self.find(job, dct=self.guards)
         del self.guards[t]
@@ -159,4 +130,5 @@ class Node():
         for k, j in list(dct.items()):
             if rj.id == j.id:
                 return k, j
+
         raise RuntimeError(f"{self.hostaddr} => No Job matching {rj.id}")

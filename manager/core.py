@@ -3,7 +3,6 @@ from .worker  import Worker
 from .ds      import LOG_LEVEL
 
 import os
-import time
 import argparse
 
 def manager(args):
