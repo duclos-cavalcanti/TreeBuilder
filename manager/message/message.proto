@@ -4,21 +4,25 @@ enum Type {
     ACK = 0;
     CONNECT = 1;
     COMMAND = 2;
-    REPORT = 4;
+    REPORT = 3;
+    ORDER = 4;
     ERR = 5;
+    LOG = 6;
 }
 
 enum Flag {
     NONE = 0;
     PARENT = 1;
     MCAST = 2;
+    RAND = 3;
 }
 
 message Metadata {
     oneof data {
         Command command = 4;
         Job     job = 5;
-        Error   error = 6;
+        Order   order = 6;
+        Error   error = 7;
     }
 }
 
@@ -52,6 +56,12 @@ message Job {
     bool err = 6;
     int32 ret = 7;
     repeated string output = 8;
+}
+
+message Order {
+    string addr = 1;
+    string instr = 2;
+    repeated string addrs = 3;
 }
 
 message Error {

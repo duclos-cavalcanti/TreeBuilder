@@ -18,7 +18,7 @@ class Manager(Node):
 
         with open(plan, 'r') as file: self.plan = yaml.safe_load(file)
         self.workers    = self.plan["addrs"][1:]
-        self.pool       = Pool(self.workers, float(self.plan["hyperparameter"]), int(len(self.workers)))
+        self.pool       = Pool([p for p in self.workers], float(self.plan["hyperparameter"]), int(len(self.workers)))
         self.root       = self.pool.select(verbose=True)
         self.nodes      = [p for p in self.pool.pool]
 
@@ -33,7 +33,7 @@ class Manager(Node):
         self.stepQ      = SQueue(arr=["CONNECT", self.run['type']])
         self.tree       = Tree(name=self.run["name"], root=self.root, fanout=2, depth=2)
 
-        self.logger     = Logger(file="/volume/LOG.JSON")
+        self.logger     = Logger(file="/volume/manager.json")
 
     def go(self):
         self.logger.write(key="pool", data=self.pool.to_dict())
@@ -43,13 +43,17 @@ class Manager(Node):
                 if not step: break
 
                 print_color(f"------>", color=RED)
-                print_color(f"STEP[{self.tick}]: {step} => START", color=RED)
+                print_color(f"STEP[{self.tick}]: {step} => START", color=RED, end='')
+                if self.run: print_color(f" [RUN: {self.run['type']}:{self.run['name']}]", color=YLW)
+                else:        print_color(f" [RUN: NONE:NONE]", color=YLW)
 
                 match step:
                     case "CONNECT": self.establish()
                     case "REPORT":  self.report()
                     case "PARENT":  self.parent()
                     case "MCAST":   self.mcast()
+                    case "RAND":    self.rand()
+                    case "LOG":     self.dump()
                     case _:         raise NotImplementedError()
 
                 print_color(f"STEP[{self.tick}]: {step} => COMPLETE", color=GRN)
@@ -61,6 +65,9 @@ class Manager(Node):
         except KeyboardInterrupt:
             print("\n-------------------")
             print("Manually Cancelled!")
+
+        except Exception as e:
+            raise
 
         finally:
             self.socket.close()
@@ -107,7 +114,7 @@ class Manager(Node):
                 else:                
                     self.stepQ.push("PARENT")
 
-            if r.flag == Flag.MCAST:
+            elif r.flag == Flag.MCAST:
                 addr = ret.output[0].split("/")[0]
                 perc = ret.output[0].split("/")[1]
                 data = {
@@ -123,6 +130,11 @@ class Manager(Node):
                     self.pool.reset(self.nodes)
                     self.stepQ.push(self.run['type'])
                     self.logger.event(f"NEW RUN", self.run, verbosity=True)
+                else:
+                    self.stepQ.push("LOG")
+
+            else:
+                raise NotImplementedError()
 
         self.timer.sleep_sec(5)
 
@@ -149,4 +161,33 @@ class Manager(Node):
         self.stepQ.push("REPORT")
 
     def rand(self):
-        raise NotImplementedError()
+        addr = self.tree.next()
+        c = Command(addr=addr, layer=0, select=self.tree.fanout, largest=self.run['largest'], addrs=self.pool.slice(verbose=True))
+        m = Message(id=self.tick, ts=self.timer.ts(), src=self.addr, type=Type.COMMAND, flag=Flag.RAND, mdata=Metadata(command=c))
+        r = self.handshake(addr, m)
+        self.logger.event(f"COMMAND[{Flag.Name(m.flag)}]", MessageToDict(c), verbosity=True)
+
+        ret = self.verify(m, r, field="job")
+        if ret.err is True:
+            raise RuntimeError("JOB ERR")
+
+        if ret.ret != 0:
+            raise RuntimeError("JOB ERR")
+
+        self.tree.n_add(ret.output)
+        self.pool.n_remove(ret.output)
+        self.logger.event(f"RAND[{ret.addr}]", [ f"{child}" for child in ret.output], verbosity=True)
+
+        if self.tree.full(): 
+            self.logger.event("TREE COMPLETE", f"{self.tree.name}", verbosity=True)
+            self.logger.tree(key=self.tree.name, data=self.tree.to_dict())
+            self.stepQ.push("MCAST")
+        else:
+            self.stepQ.push("RAND")
+
+    def dump(self):
+        for addr in self.workers:
+            m = Message(id=self.tick, ts=self.timer.ts(), src=self.addr, type=Type.LOG)
+            r = self.handshake(addr, m)
+            self.verify(m, r)
+        self.logger.event("LOGGED", [ addr for addr in self.workers ] , verbosity=True)

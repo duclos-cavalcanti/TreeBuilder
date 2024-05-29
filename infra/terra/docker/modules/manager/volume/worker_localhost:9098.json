@@ -1,0 +1,1491 @@
+{
+    "runs": [
+        {
+            "PARENT[localhost:9098:CHILD]": {
+                "total": 100,
+                "recv": 100,
+                "perc": 351.0,
+                "shbuffer": []
+            }
+        },
+        {
+            "PARENT[localhost:9098:CHILD]": {
+                "total": 100,
+                "recv": 100,
+                "perc": 258.0,
+                "shbuffer": []
+            }
+        },
+        {
+            "PARENT[localhost:9098:CHILD]": {
+                "total": 100,
+                "recv": 100,
+                "perc": 196.0,
+                "shbuffer": []
+            }
+        },
+        {
+            "MCAST[localhost:9098:LEAF]": {
+                "total": 100,
+                "recv": 100,
+                "perc": 352.0,
+                "shbuffer": []
+            }
+        },
+        {
+            "PARENT[localhost:9098:CHILD]": {
+                "total": 100,
+                "recv": 100,
+                "perc": 316.0,
+                "shbuffer": []
+            }
+        },
+        {
+            "PARENT[localhost:9098:PARENT]": {
+                "raw:": [
+                    {
+                        "addr": "localhost:9092",
+                        "perc": "171.0"
+                    },
+                    {
+                        "addr": "localhost:9093",
+                        "perc": "201.0"
+                    },
+                    {
+                        "addr": "localhost:9094",
+                        "perc": "201.0"
+                    }
+                ],
+                "sel": [
+                    {
+                        "addr": "localhost:9094",
+                        "perc": 201.0
+                    },
+                    {
+                        "addr": "localhost:9093",
+                        "perc": 201.0
+                    }
+                ],
+                "shbuffer": [
+                    "localhost:9094",
+                    "localhost:9093"
+                ]
+            }
+        },
+        {
+            "MCAST[localhost:9098:LAYER=2]": {
+                "raw:": [
+                    {
+                        "addr": "localhost:9094",
+                        "perc": "351.0"
+                    },
+                    {
+                        "addr": "localhost:9093",
+                        "perc": "351.0"
+                    }
+                ],
+                "sel": {
+                    "addr": "localhost:9094",
+                    "perc": 351.0
+                },
+                "shbuffer": [
+                    "localhost:9094",
+                    "localhost:9093"
+                ]
+            }
+        },
+        {
+            "RAND[localhost:9098]": {
+                "raw:": [
+                    "localhost:9099"
+                ],
+                "sel": [
+                    {
+                        "addr": "localhost:9094"
+                    },
+                    {
+                        "addr": "localhost:9092"
+                    }
+                ],
+                "shbuffer": [
+                    "localhost:9094",
+                    "localhost:9092"
+                ]
+            }
+        },
+        {
+            "MCAST[localhost:9098:LAYER=2]": {
+                "raw:": [
+                    {
+                        "addr": "localhost:9094",
+                        "perc": "340.0"
+                    },
+                    {
+                        "addr": "localhost:9092",
+                        "perc": "359.0"
+                    }
+                ],
+                "sel": {
+                    "addr": "localhost:9092",
+                    "perc": 359.0
+                },
+                "shbuffer": [
+                    "localhost:9094",
+                    "localhost:9092"
+                ]
+            }
+        }
+    ],
+    "trees": [],
+    "events": [
+        {
+            "MSG[NONE]": {
+                "id": 1,
+                "ts": "1717020650484557",
+                "src": "localhost:9091",
+                "type": "CONNECT"
+            }
+        },
+        {
+            "RPL[NONE]": {
+                "id": 1,
+                "src": "localhost:9098"
+            }
+        },
+        {
+            "MSG[PARENT]": {
+                "id": 1,
+                "ts": "1717020650535255",
+                "src": "PARENT:SUPERVISOR:localhost:9098",
+                "type": "COMMAND",
+                "flag": "PARENT",
+                "mdata": {
+                    "command": {
+                        "addr": "localhost:9098",
+                        "layer": 6,
+                        "select": 2,
+                        "rate": 10,
+                        "dur": 10
+                    }
+                }
+            }
+        },
+        {
+            "RPL[NONE]": {
+                "id": 1,
+                "ts": "1717020650544317",
+                "src": "localhost:9098",
+                "mdata": {
+                    "job": {
+                        "addr": "localhost:9098",
+                        "instr": "./bin/child -i localhost -p 8098 -d 10",
+                        "id": "localhost:9098:./bin/child"
+                    }
+                }
+            }
+        },
+        {
+            "MSG[NONE]": {
+                "ts": "1717020655347213",
+                "src": "GUARD:localhost:9095",
+                "type": "REPORT",
+                "mdata": {
+                    "job": {
+                        "addr": "localhost:9098",
+                        "instr": "./bin/child -i localhost -p 8098 -d 10",
+                        "id": "localhost:9098:./bin/child"
+                    }
+                }
+            }
+        },
+        {
+            "RPL[PARENT]": {
+                "ts": "1717020655350657",
+                "src": "localhost:9098",
+                "flag": "PARENT",
+                "mdata": {
+                    "job": {
+                        "addr": "localhost:9098",
+                        "instr": "./bin/child -i localhost -p 8098 -d 10",
+                        "id": "localhost:9098:./bin/child"
+                    }
+                }
+            }
+        },
+        {
+            "MSG[NONE]": {
+                "id": 1,
+                "ts": "1717020660380888",
+                "src": "GUARD:localhost:9095",
+                "type": "REPORT",
+                "mdata": {
+                    "job": {
+                        "addr": "localhost:9098",
+                        "instr": "./bin/child -i localhost -p 8098 -d 10",
+                        "id": "localhost:9098:./bin/child"
+                    }
+                }
+            }
+        },
+        {
+            "RPL[PARENT]": {
+                "id": 1,
+                "ts": "1717020660384401",
+                "src": "localhost:9098",
+                "flag": "PARENT",
+                "mdata": {
+                    "job": {
+                        "addr": "localhost:9098",
+                        "instr": "./bin/child -i localhost -p 8098 -d 10",
+                        "id": "localhost:9098:./bin/child"
+                    }
+                }
+            }
+        },
+        {
+            "MSG[NONE]": {
+                "id": 2,
+                "ts": "1717020665401136",
+                "src": "GUARD:localhost:9095",
+                "type": "REPORT",
+                "mdata": {
+                    "job": {
+                        "addr": "localhost:9098",
+                        "instr": "./bin/child -i localhost -p 8098 -d 10",
+                        "id": "localhost:9098:./bin/child"
+                    }
+                }
+            }
+        },
+        {
+            "RPL[PARENT]": {
+                "id": 2,
+                "ts": "1717020665402535",
+                "src": "localhost:9098",
+                "flag": "PARENT",
+                "mdata": {
+                    "job": {
+                        "addr": "localhost:9098",
+                        "instr": "./bin/child -i localhost -p 8098 -d 10",
+                        "id": "localhost:9098:./bin/child"
+                    }
+                }
+            }
+        },
+        {
+            "MSG[NONE]": {
+                "id": 3,
+                "ts": "1717020670444083",
+                "src": "GUARD:localhost:9095",
+                "type": "REPORT",
+                "mdata": {
+                    "job": {
+                        "addr": "localhost:9098",
+                        "instr": "./bin/child -i localhost -p 8098 -d 10",
+                        "id": "localhost:9098:./bin/child"
+                    }
+                }
+            }
+        },
+        {
+            "RPL[PARENT]": {
+                "id": 3,
+                "ts": "1717020670446068",
+                "src": "localhost:9098",
+                "flag": "PARENT",
+                "mdata": {
+                    "job": {
+                        "addr": "localhost:9098",
+                        "instr": "./bin/child -i localhost -p 8098 -d 10",
+                        "id": "localhost:9098:./bin/child",
+                        "pid": 181,
+                        "end": true,
+                        "output": [
+                            "351.0"
+                        ]
+                    }
+                }
+            }
+        },
+        {
+            "MSG[PARENT]": {
+                "id": 1,
+                "ts": "1717020675641153",
+                "src": "PARENT:SUPERVISOR:localhost:9098",
+                "type": "COMMAND",
+                "flag": "PARENT",
+                "mdata": {
+                    "command": {
+                        "addr": "localhost:9098",
+                        "layer": 4,
+                        "select": 2,
+                        "rate": 10,
+                        "dur": 10
+                    }
+                }
+            }
+        },
+        {
+            "RPL[NONE]": {
+                "id": 1,
+                "ts": "1717020675649622",
+                "src": "localhost:9098",
+                "mdata": {
+                    "job": {
+                        "addr": "localhost:9098",
+                        "instr": "./bin/child -i localhost -p 8098 -d 10",
+                        "id": "localhost:9098:./bin/child"
+                    }
+                }
+            }
+        },
+        {
+            "MSG[NONE]": {
+                "id": 4,
+                "ts": "1717020679514746",
+                "src": "GUARD:localhost:9092",
+                "type": "REPORT",
+                "mdata": {
+                    "job": {
+                        "addr": "localhost:9098",
+                        "instr": "./bin/child -i localhost -p 8098 -d 10",
+                        "id": "localhost:9098:./bin/child"
+                    }
+                }
+            }
+        },
+        {
+            "RPL[PARENT]": {
+                "id": 4,
+                "ts": "1717020679517652",
+                "src": "localhost:9098",
+                "flag": "PARENT",
+                "mdata": {
+                    "job": {
+                        "addr": "localhost:9098",
+                        "instr": "./bin/child -i localhost -p 8098 -d 10",
+                        "id": "localhost:9098:./bin/child"
+                    }
+                }
+            }
+        },
+        {
+            "MSG[NONE]": {
+                "id": 5,
+                "ts": "1717020684536463",
+                "src": "GUARD:localhost:9092",
+                "type": "REPORT",
+                "mdata": {
+                    "job": {
+                        "addr": "localhost:9098",
+                        "instr": "./bin/child -i localhost -p 8098 -d 10",
+                        "id": "localhost:9098:./bin/child"
+                    }
+                }
+            }
+        },
+        {
+            "RPL[PARENT]": {
+                "id": 5,
+                "ts": "1717020684540002",
+                "src": "localhost:9098",
+                "flag": "PARENT",
+                "mdata": {
+                    "job": {
+                        "addr": "localhost:9098",
+                        "instr": "./bin/child -i localhost -p 8098 -d 10",
+                        "id": "localhost:9098:./bin/child"
+                    }
+                }
+            }
+        },
+        {
+            "MSG[NONE]": {
+                "id": 6,
+                "ts": "1717020689556806",
+                "src": "GUARD:localhost:9092",
+                "type": "REPORT",
+                "mdata": {
+                    "job": {
+                        "addr": "localhost:9098",
+                        "instr": "./bin/child -i localhost -p 8098 -d 10",
+                        "id": "localhost:9098:./bin/child"
+                    }
+                }
+            }
+        },
+        {
+            "RPL[PARENT]": {
+                "id": 6,
+                "ts": "1717020689559593",
+                "src": "localhost:9098",
+                "flag": "PARENT",
+                "mdata": {
+                    "job": {
+                        "addr": "localhost:9098",
+                        "instr": "./bin/child -i localhost -p 8098 -d 10",
+                        "id": "localhost:9098:./bin/child"
+                    }
+                }
+            }
+        },
+        {
+            "MSG[NONE]": {
+                "id": 7,
+                "ts": "1717020694581888",
+                "src": "GUARD:localhost:9092",
+                "type": "REPORT",
+                "mdata": {
+                    "job": {
+                        "addr": "localhost:9098",
+                        "instr": "./bin/child -i localhost -p 8098 -d 10",
+                        "id": "localhost:9098:./bin/child"
+                    }
+                }
+            }
+        },
+        {
+            "RPL[PARENT]": {
+                "id": 7,
+                "ts": "1717020694585675",
+                "src": "localhost:9098",
+                "flag": "PARENT",
+                "mdata": {
+                    "job": {
+                        "addr": "localhost:9098",
+                        "instr": "./bin/child -i localhost -p 8098 -d 10",
+                        "id": "localhost:9098:./bin/child",
+                        "pid": 186,
+                        "end": true,
+                        "output": [
+                            "258.0"
+                        ]
+                    }
+                }
+            }
+        },
+        {
+            "MSG[PARENT]": {
+                "id": 1,
+                "ts": "1717020700722439",
+                "src": "PARENT:SUPERVISOR:localhost:9098",
+                "type": "COMMAND",
+                "flag": "PARENT",
+                "mdata": {
+                    "command": {
+                        "addr": "localhost:9098",
+                        "layer": 2,
+                        "select": 2,
+                        "rate": 10,
+                        "dur": 10
+                    }
+                }
+            }
+        },
+        {
+            "RPL[NONE]": {
+                "id": 1,
+                "ts": "1717020700727330",
+                "src": "localhost:9098",
+                "mdata": {
+                    "job": {
+                        "addr": "localhost:9098",
+                        "instr": "./bin/child -i localhost -p 8098 -d 10",
+                        "id": "localhost:9098:./bin/child"
+                    }
+                }
+            }
+        },
+        {
+            "MSG[NONE]": {
+                "id": 4,
+                "ts": "1717020704684642",
+                "src": "GUARD:localhost:9093",
+                "type": "REPORT",
+                "mdata": {
+                    "job": {
+                        "addr": "localhost:9098",
+                        "instr": "./bin/child -i localhost -p 8098 -d 10",
+                        "id": "localhost:9098:./bin/child"
+                    }
+                }
+            }
+        },
+        {
+            "RPL[PARENT]": {
+                "id": 4,
+                "ts": "1717020704688510",
+                "src": "localhost:9098",
+                "flag": "PARENT",
+                "mdata": {
+                    "job": {
+                        "addr": "localhost:9098",
+                        "instr": "./bin/child -i localhost -p 8098 -d 10",
+                        "id": "localhost:9098:./bin/child"
+                    }
+                }
+            }
+        },
+        {
+            "MSG[NONE]": {
+                "id": 5,
+                "ts": "1717020709700803",
+                "src": "GUARD:localhost:9093",
+                "type": "REPORT",
+                "mdata": {
+                    "job": {
+                        "addr": "localhost:9098",
+                        "instr": "./bin/child -i localhost -p 8098 -d 10",
+                        "id": "localhost:9098:./bin/child"
+                    }
+                }
+            }
+        },
+        {
+            "RPL[PARENT]": {
+                "id": 5,
+                "ts": "1717020709703928",
+                "src": "localhost:9098",
+                "flag": "PARENT",
+                "mdata": {
+                    "job": {
+                        "addr": "localhost:9098",
+                        "instr": "./bin/child -i localhost -p 8098 -d 10",
+                        "id": "localhost:9098:./bin/child"
+                    }
+                }
+            }
+        },
+        {
+            "MSG[NONE]": {
+                "id": 6,
+                "ts": "1717020714717376",
+                "src": "GUARD:localhost:9093",
+                "type": "REPORT",
+                "mdata": {
+                    "job": {
+                        "addr": "localhost:9098",
+                        "instr": "./bin/child -i localhost -p 8098 -d 10",
+                        "id": "localhost:9098:./bin/child"
+                    }
+                }
+            }
+        },
+        {
+            "RPL[PARENT]": {
+                "id": 6,
+                "ts": "1717020714720492",
+                "src": "localhost:9098",
+                "flag": "PARENT",
+                "mdata": {
+                    "job": {
+                        "addr": "localhost:9098",
+                        "instr": "./bin/child -i localhost -p 8098 -d 10",
+                        "id": "localhost:9098:./bin/child"
+                    }
+                }
+            }
+        },
+        {
+            "MSG[NONE]": {
+                "id": 7,
+                "ts": "1717020719734596",
+                "src": "GUARD:localhost:9093",
+                "type": "REPORT",
+                "mdata": {
+                    "job": {
+                        "addr": "localhost:9098",
+                        "instr": "./bin/child -i localhost -p 8098 -d 10",
+                        "id": "localhost:9098:./bin/child"
+                    }
+                }
+            }
+        },
+        {
+            "RPL[PARENT]": {
+                "id": 7,
+                "ts": "1717020719737966",
+                "src": "localhost:9098",
+                "flag": "PARENT",
+                "mdata": {
+                    "job": {
+                        "addr": "localhost:9098",
+                        "instr": "./bin/child -i localhost -p 8098 -d 10",
+                        "id": "localhost:9098:./bin/child",
+                        "pid": 191,
+                        "end": true,
+                        "output": [
+                            "196.0"
+                        ]
+                    }
+                }
+            }
+        },
+        {
+            "MSG[MCAST]": {
+                "id": 1,
+                "ts": "1717020725834319",
+                "src": "MCAST:SUPERVISOR:localhost:9098",
+                "type": "COMMAND",
+                "flag": "MCAST",
+                "mdata": {
+                    "command": {
+                        "addr": "localhost:9098",
+                        "layer": 4,
+                        "select": 1,
+                        "rate": 10,
+                        "dur": 10
+                    }
+                }
+            }
+        },
+        {
+            "RPL[NONE]": {
+                "id": 1,
+                "ts": "1717020725839663",
+                "src": "localhost:9098",
+                "mdata": {
+                    "job": {
+                        "addr": "localhost:9098",
+                        "instr": "./bin/mcast -r 10 -d 10 -L -i localhost -p 7098",
+                        "id": "localhost:9098:./bin/mcast"
+                    }
+                }
+            }
+        },
+        {
+            "MSG[NONE]": {
+                "id": 8,
+                "ts": "1717020729753178",
+                "src": "GUARD:localhost:9093",
+                "type": "REPORT",
+                "mdata": {
+                    "job": {
+                        "addr": "localhost:9098",
+                        "instr": "./bin/mcast -r 10 -d 10 -L -i localhost -p 7098",
+                        "id": "localhost:9098:./bin/mcast"
+                    }
+                }
+            }
+        },
+        {
+            "RPL[MCAST]": {
+                "id": 8,
+                "ts": "1717020729755977",
+                "src": "localhost:9098",
+                "flag": "MCAST",
+                "mdata": {
+                    "job": {
+                        "addr": "localhost:9098",
+                        "instr": "./bin/mcast -r 10 -d 10 -L -i localhost -p 7098",
+                        "id": "localhost:9098:./bin/mcast"
+                    }
+                }
+            }
+        },
+        {
+            "MSG[NONE]": {
+                "id": 9,
+                "ts": "1717020734765081",
+                "src": "GUARD:localhost:9093",
+                "type": "REPORT",
+                "mdata": {
+                    "job": {
+                        "addr": "localhost:9098",
+                        "instr": "./bin/mcast -r 10 -d 10 -L -i localhost -p 7098",
+                        "id": "localhost:9098:./bin/mcast"
+                    }
+                }
+            }
+        },
+        {
+            "RPL[MCAST]": {
+                "id": 9,
+                "ts": "1717020734768154",
+                "src": "localhost:9098",
+                "flag": "MCAST",
+                "mdata": {
+                    "job": {
+                        "addr": "localhost:9098",
+                        "instr": "./bin/mcast -r 10 -d 10 -L -i localhost -p 7098",
+                        "id": "localhost:9098:./bin/mcast"
+                    }
+                }
+            }
+        },
+        {
+            "MSG[NONE]": {
+                "id": 10,
+                "ts": "1717020739777290",
+                "src": "GUARD:localhost:9093",
+                "type": "REPORT",
+                "mdata": {
+                    "job": {
+                        "addr": "localhost:9098",
+                        "instr": "./bin/mcast -r 10 -d 10 -L -i localhost -p 7098",
+                        "id": "localhost:9098:./bin/mcast"
+                    }
+                }
+            }
+        },
+        {
+            "RPL[MCAST]": {
+                "id": 10,
+                "ts": "1717020739780467",
+                "src": "localhost:9098",
+                "flag": "MCAST",
+                "mdata": {
+                    "job": {
+                        "addr": "localhost:9098",
+                        "instr": "./bin/mcast -r 10 -d 10 -L -i localhost -p 7098",
+                        "id": "localhost:9098:./bin/mcast"
+                    }
+                }
+            }
+        },
+        {
+            "MSG[NONE]": {
+                "id": 11,
+                "ts": "1717020744789483",
+                "src": "GUARD:localhost:9093",
+                "type": "REPORT",
+                "mdata": {
+                    "job": {
+                        "addr": "localhost:9098",
+                        "instr": "./bin/mcast -r 10 -d 10 -L -i localhost -p 7098",
+                        "id": "localhost:9098:./bin/mcast"
+                    }
+                }
+            }
+        },
+        {
+            "RPL[MCAST]": {
+                "id": 11,
+                "ts": "1717020744792630",
+                "src": "localhost:9098",
+                "flag": "MCAST",
+                "mdata": {
+                    "job": {
+                        "addr": "localhost:9098",
+                        "instr": "./bin/mcast -r 10 -d 10 -L -i localhost -p 7098",
+                        "id": "localhost:9098:./bin/mcast",
+                        "pid": 196,
+                        "end": true,
+                        "output": [
+                            "localhost:9098/352.0"
+                        ]
+                    }
+                }
+            }
+        },
+        {
+            "MSG[PARENT]": {
+                "id": 1,
+                "ts": "1717020750907805",
+                "src": "PARENT:SUPERVISOR:localhost:9098",
+                "type": "COMMAND",
+                "flag": "PARENT",
+                "mdata": {
+                    "command": {
+                        "addr": "localhost:9098",
+                        "layer": 6,
+                        "select": 2,
+                        "rate": 10,
+                        "dur": 10
+                    }
+                }
+            }
+        },
+        {
+            "RPL[NONE]": {
+                "id": 1,
+                "ts": "1717020750910516",
+                "src": "localhost:9098",
+                "mdata": {
+                    "job": {
+                        "addr": "localhost:9098",
+                        "instr": "./bin/child -i localhost -p 8098 -d 10",
+                        "id": "localhost:9098:./bin/child"
+                    }
+                }
+            }
+        },
+        {
+            "MSG[NONE]": {
+                "id": 8,
+                "ts": "1717020755577699",
+                "src": "GUARD:localhost:9095",
+                "type": "REPORT",
+                "mdata": {
+                    "job": {
+                        "addr": "localhost:9098",
+                        "instr": "./bin/child -i localhost -p 8098 -d 10",
+                        "id": "localhost:9098:./bin/child"
+                    }
+                }
+            }
+        },
+        {
+            "RPL[PARENT]": {
+                "id": 8,
+                "ts": "1717020755581687",
+                "src": "localhost:9098",
+                "flag": "PARENT",
+                "mdata": {
+                    "job": {
+                        "addr": "localhost:9098",
+                        "instr": "./bin/child -i localhost -p 8098 -d 10",
+                        "id": "localhost:9098:./bin/child"
+                    }
+                }
+            }
+        },
+        {
+            "MSG[NONE]": {
+                "id": 9,
+                "ts": "1717020760614423",
+                "src": "GUARD:localhost:9095",
+                "type": "REPORT",
+                "mdata": {
+                    "job": {
+                        "addr": "localhost:9098",
+                        "instr": "./bin/child -i localhost -p 8098 -d 10",
+                        "id": "localhost:9098:./bin/child"
+                    }
+                }
+            }
+        },
+        {
+            "RPL[PARENT]": {
+                "id": 9,
+                "ts": "1717020760618131",
+                "src": "localhost:9098",
+                "flag": "PARENT",
+                "mdata": {
+                    "job": {
+                        "addr": "localhost:9098",
+                        "instr": "./bin/child -i localhost -p 8098 -d 10",
+                        "id": "localhost:9098:./bin/child"
+                    }
+                }
+            }
+        },
+        {
+            "MSG[NONE]": {
+                "id": 10,
+                "ts": "1717020765648645",
+                "src": "GUARD:localhost:9095",
+                "type": "REPORT",
+                "mdata": {
+                    "job": {
+                        "addr": "localhost:9098",
+                        "instr": "./bin/child -i localhost -p 8098 -d 10",
+                        "id": "localhost:9098:./bin/child"
+                    }
+                }
+            }
+        },
+        {
+            "RPL[PARENT]": {
+                "id": 10,
+                "ts": "1717020765652354",
+                "src": "localhost:9098",
+                "flag": "PARENT",
+                "mdata": {
+                    "job": {
+                        "addr": "localhost:9098",
+                        "instr": "./bin/child -i localhost -p 8098 -d 10",
+                        "id": "localhost:9098:./bin/child"
+                    }
+                }
+            }
+        },
+        {
+            "MSG[NONE]": {
+                "id": 11,
+                "ts": "1717020770683164",
+                "src": "GUARD:localhost:9095",
+                "type": "REPORT",
+                "mdata": {
+                    "job": {
+                        "addr": "localhost:9098",
+                        "instr": "./bin/child -i localhost -p 8098 -d 10",
+                        "id": "localhost:9098:./bin/child"
+                    }
+                }
+            }
+        },
+        {
+            "RPL[PARENT]": {
+                "id": 11,
+                "ts": "1717020770687742",
+                "src": "localhost:9098",
+                "flag": "PARENT",
+                "mdata": {
+                    "job": {
+                        "addr": "localhost:9098",
+                        "instr": "./bin/child -i localhost -p 8098 -d 10",
+                        "id": "localhost:9098:./bin/child",
+                        "pid": 201,
+                        "end": true,
+                        "output": [
+                            "316.0"
+                        ]
+                    }
+                }
+            }
+        },
+        {
+            "MSG[PARENT]": {
+                "id": 38,
+                "ts": "1717020801020257",
+                "src": "localhost:9091",
+                "type": "COMMAND",
+                "flag": "PARENT",
+                "mdata": {
+                    "command": {
+                        "addr": "localhost:9098",
+                        "select": 2,
+                        "rate": 10,
+                        "dur": 10,
+                        "largest": true,
+                        "addrs": [
+                            "localhost:9092",
+                            "localhost:9093",
+                            "localhost:9094"
+                        ]
+                    }
+                }
+            }
+        },
+        {
+            "RPL[NONE]": {
+                "id": 38,
+                "ts": "1717020801061572",
+                "src": "localhost:9098",
+                "mdata": {
+                    "job": {
+                        "addr": "localhost:9098",
+                        "instr": "./bin/parent -a localhost:8092 localhost:8093 localhost:8094 -r 10 -d 10",
+                        "id": "localhost:9098:./bin/parent"
+                    }
+                }
+            }
+        },
+        {
+            "MSG[NONE]": {
+                "id": 39,
+                "ts": "1717020801062953",
+                "src": "localhost:9091",
+                "type": "REPORT",
+                "mdata": {
+                    "job": {
+                        "addr": "localhost:9098",
+                        "instr": "./bin/parent -a localhost:8092 localhost:8093 localhost:8094 -r 10 -d 10",
+                        "id": "localhost:9098:./bin/parent"
+                    }
+                }
+            }
+        },
+        {
+            "RPL[PARENT]": {
+                "id": 39,
+                "ts": "1717020801066667",
+                "src": "localhost:9098",
+                "flag": "PARENT",
+                "mdata": {
+                    "job": {
+                        "addr": "localhost:9098",
+                        "instr": "./bin/parent -a localhost:8092 localhost:8093 localhost:8094 -r 10 -d 10",
+                        "id": "localhost:9098:./bin/parent"
+                    }
+                }
+            }
+        },
+        {
+            "MSG[NONE]": {
+                "id": 40,
+                "ts": "1717020806069297",
+                "src": "localhost:9091",
+                "type": "REPORT",
+                "mdata": {
+                    "job": {
+                        "addr": "localhost:9098",
+                        "instr": "./bin/parent -a localhost:8092 localhost:8093 localhost:8094 -r 10 -d 10",
+                        "id": "localhost:9098:./bin/parent"
+                    }
+                }
+            }
+        },
+        {
+            "RPL[PARENT]": {
+                "id": 40,
+                "ts": "1717020806072230",
+                "src": "localhost:9098",
+                "flag": "PARENT",
+                "mdata": {
+                    "job": {
+                        "addr": "localhost:9098",
+                        "instr": "./bin/parent -a localhost:8092 localhost:8093 localhost:8094 -r 10 -d 10",
+                        "id": "localhost:9098:./bin/parent"
+                    }
+                }
+            }
+        },
+        {
+            "MSG[NONE]": {
+                "id": 41,
+                "ts": "1717020811073742",
+                "src": "localhost:9091",
+                "type": "REPORT",
+                "mdata": {
+                    "job": {
+                        "addr": "localhost:9098",
+                        "instr": "./bin/parent -a localhost:8092 localhost:8093 localhost:8094 -r 10 -d 10",
+                        "id": "localhost:9098:./bin/parent"
+                    }
+                }
+            }
+        },
+        {
+            "RPL[PARENT]": {
+                "id": 41,
+                "ts": "1717020811077280",
+                "src": "localhost:9098",
+                "flag": "PARENT",
+                "mdata": {
+                    "job": {
+                        "addr": "localhost:9098",
+                        "instr": "./bin/parent -a localhost:8092 localhost:8093 localhost:8094 -r 10 -d 10",
+                        "id": "localhost:9098:./bin/parent"
+                    }
+                }
+            }
+        },
+        {
+            "MSG[NONE]": {
+                "id": 42,
+                "ts": "1717020816083856",
+                "src": "localhost:9091",
+                "type": "REPORT",
+                "mdata": {
+                    "job": {
+                        "addr": "localhost:9098",
+                        "instr": "./bin/parent -a localhost:8092 localhost:8093 localhost:8094 -r 10 -d 10",
+                        "id": "localhost:9098:./bin/parent"
+                    }
+                }
+            }
+        },
+        {
+            "RPL[PARENT]": {
+                "id": 42,
+                "ts": "1717020816086996",
+                "src": "localhost:9098",
+                "flag": "PARENT",
+                "mdata": {
+                    "job": {
+                        "addr": "localhost:9098",
+                        "instr": "./bin/parent -a localhost:8092 localhost:8093 localhost:8094 -r 10 -d 10",
+                        "id": "localhost:9098:./bin/parent"
+                    }
+                }
+            }
+        },
+        {
+            "MSG[NONE]": {
+                "id": 43,
+                "ts": "1717020821093192",
+                "src": "localhost:9091",
+                "type": "REPORT",
+                "mdata": {
+                    "job": {
+                        "addr": "localhost:9098",
+                        "instr": "./bin/parent -a localhost:8092 localhost:8093 localhost:8094 -r 10 -d 10",
+                        "id": "localhost:9098:./bin/parent"
+                    }
+                }
+            }
+        },
+        {
+            "RPL[PARENT]": {
+                "id": 43,
+                "ts": "1717020821096386",
+                "src": "localhost:9098",
+                "flag": "PARENT",
+                "mdata": {
+                    "job": {
+                        "addr": "localhost:9098",
+                        "instr": "./bin/parent -a localhost:8092 localhost:8093 localhost:8094 -r 10 -d 10",
+                        "id": "localhost:9098:./bin/parent",
+                        "pid": 206,
+                        "end": true,
+                        "output": [
+                            "localhost:9094",
+                            "localhost:9093"
+                        ]
+                    }
+                }
+            }
+        },
+        {
+            "MSG[MCAST]": {
+                "id": 1,
+                "ts": "1717020826113931",
+                "src": "MCAST:SUPERVISOR:localhost:9098",
+                "type": "COMMAND",
+                "flag": "MCAST",
+                "mdata": {
+                    "command": {
+                        "addr": "localhost:9098",
+                        "layer": 2,
+                        "select": 1,
+                        "rate": 10,
+                        "dur": 10
+                    }
+                }
+            }
+        },
+        {
+            "RPL[NONE]": {
+                "id": 1,
+                "ts": "1717020826120965",
+                "src": "localhost:9098",
+                "mdata": {
+                    "job": {
+                        "addr": "localhost:9098",
+                        "instr": "./bin/mcast -a localhost:7094 localhost:7093 -r 10 -d 10 -i localhost -p 7098",
+                        "id": "localhost:9098:./bin/mcast"
+                    }
+                }
+            }
+        },
+        {
+            "MSG[NONE]": {
+                "id": 12,
+                "ts": "1717020830741020",
+                "src": "GUARD:localhost:9095",
+                "type": "REPORT",
+                "mdata": {
+                    "job": {
+                        "addr": "localhost:9098",
+                        "instr": "./bin/mcast -a localhost:7094 localhost:7093 -r 10 -d 10 -i localhost -p 7098",
+                        "id": "localhost:9098:./bin/mcast"
+                    }
+                }
+            }
+        },
+        {
+            "RPL[MCAST]": {
+                "id": 12,
+                "ts": "1717020830743586",
+                "src": "localhost:9098",
+                "flag": "MCAST",
+                "mdata": {
+                    "job": {
+                        "addr": "localhost:9098",
+                        "instr": "./bin/mcast -a localhost:7094 localhost:7093 -r 10 -d 10 -i localhost -p 7098",
+                        "id": "localhost:9098:./bin/mcast"
+                    }
+                }
+            }
+        },
+        {
+            "MSG[NONE]": {
+                "id": 13,
+                "ts": "1717020835753076",
+                "src": "GUARD:localhost:9095",
+                "type": "REPORT",
+                "mdata": {
+                    "job": {
+                        "addr": "localhost:9098",
+                        "instr": "./bin/mcast -a localhost:7094 localhost:7093 -r 10 -d 10 -i localhost -p 7098",
+                        "id": "localhost:9098:./bin/mcast"
+                    }
+                }
+            }
+        },
+        {
+            "RPL[MCAST]": {
+                "id": 13,
+                "ts": "1717020835756187",
+                "src": "localhost:9098",
+                "flag": "MCAST",
+                "mdata": {
+                    "job": {
+                        "addr": "localhost:9098",
+                        "instr": "./bin/mcast -a localhost:7094 localhost:7093 -r 10 -d 10 -i localhost -p 7098",
+                        "id": "localhost:9098:./bin/mcast"
+                    }
+                }
+            }
+        },
+        {
+            "MSG[NONE]": {
+                "id": 14,
+                "ts": "1717020840764500",
+                "src": "GUARD:localhost:9095",
+                "type": "REPORT",
+                "mdata": {
+                    "job": {
+                        "addr": "localhost:9098",
+                        "instr": "./bin/mcast -a localhost:7094 localhost:7093 -r 10 -d 10 -i localhost -p 7098",
+                        "id": "localhost:9098:./bin/mcast"
+                    }
+                }
+            }
+        },
+        {
+            "RPL[MCAST]": {
+                "id": 14,
+                "ts": "1717020840766826",
+                "src": "localhost:9098",
+                "flag": "MCAST",
+                "mdata": {
+                    "job": {
+                        "addr": "localhost:9098",
+                        "instr": "./bin/mcast -a localhost:7094 localhost:7093 -r 10 -d 10 -i localhost -p 7098",
+                        "id": "localhost:9098:./bin/mcast"
+                    }
+                }
+            }
+        },
+        {
+            "MSG[NONE]": {
+                "id": 15,
+                "ts": "1717020845772753",
+                "src": "GUARD:localhost:9095",
+                "type": "REPORT",
+                "mdata": {
+                    "job": {
+                        "addr": "localhost:9098",
+                        "instr": "./bin/mcast -a localhost:7094 localhost:7093 -r 10 -d 10 -i localhost -p 7098",
+                        "id": "localhost:9098:./bin/mcast"
+                    }
+                }
+            }
+        },
+        {
+            "RPL[MCAST]": {
+                "id": 15,
+                "ts": "1717020845775807",
+                "src": "localhost:9098",
+                "flag": "MCAST",
+                "mdata": {
+                    "job": {
+                        "addr": "localhost:9098",
+                        "instr": "./bin/mcast -a localhost:7094 localhost:7093 -r 10 -d 10 -i localhost -p 7098",
+                        "id": "localhost:9098:./bin/mcast",
+                        "pid": 211,
+                        "end": true,
+                        "output": [
+                            "localhost:9094/351.0"
+                        ]
+                    }
+                }
+            }
+        },
+        {
+            "MSG[RAND]": {
+                "id": 52,
+                "ts": "1717020851165050",
+                "src": "localhost:9091",
+                "type": "COMMAND",
+                "flag": "RAND",
+                "mdata": {
+                    "command": {
+                        "addr": "localhost:9098",
+                        "select": 2,
+                        "addrs": [
+                            "localhost:9092",
+                            "localhost:9094",
+                            "localhost:9099"
+                        ]
+                    }
+                }
+            }
+        },
+        {
+            "RPL[NONE]": {
+                "id": 52,
+                "ts": "1717020851166765",
+                "src": "localhost:9098",
+                "mdata": {
+                    "job": {
+                        "addr": "localhost:9098",
+                        "end": true,
+                        "output": [
+                            "localhost:9094",
+                            "localhost:9092"
+                        ]
+                    }
+                }
+            }
+        },
+        {
+            "MSG[MCAST]": {
+                "id": 1,
+                "ts": "1717020851176218",
+                "src": "MCAST:SUPERVISOR:localhost:9098",
+                "type": "COMMAND",
+                "flag": "MCAST",
+                "mdata": {
+                    "command": {
+                        "addr": "localhost:9098",
+                        "layer": 2,
+                        "select": 1,
+                        "rate": 10,
+                        "dur": 10
+                    }
+                }
+            }
+        },
+        {
+            "RPL[NONE]": {
+                "id": 1,
+                "ts": "1717020851187921",
+                "src": "localhost:9098",
+                "mdata": {
+                    "job": {
+                        "addr": "localhost:9098",
+                        "instr": "./bin/mcast -a localhost:7094 localhost:7092 -r 10 -d 10 -i localhost -p 7098",
+                        "id": "localhost:9098:./bin/mcast"
+                    }
+                }
+            }
+        },
+        {
+            "MSG[NONE]": {
+                "id": 16,
+                "ts": "1717020855789345",
+                "src": "GUARD:localhost:9095",
+                "type": "REPORT",
+                "mdata": {
+                    "job": {
+                        "addr": "localhost:9098",
+                        "instr": "./bin/mcast -a localhost:7094 localhost:7092 -r 10 -d 10 -i localhost -p 7098",
+                        "id": "localhost:9098:./bin/mcast"
+                    }
+                }
+            }
+        },
+        {
+            "RPL[MCAST]": {
+                "id": 16,
+                "ts": "1717020855792416",
+                "src": "localhost:9098",
+                "flag": "MCAST",
+                "mdata": {
+                    "job": {
+                        "addr": "localhost:9098",
+                        "instr": "./bin/mcast -a localhost:7094 localhost:7092 -r 10 -d 10 -i localhost -p 7098",
+                        "id": "localhost:9098:./bin/mcast"
+                    }
+                }
+            }
+        },
+        {
+            "MSG[NONE]": {
+                "id": 17,
+                "ts": "1717020860801261",
+                "src": "GUARD:localhost:9095",
+                "type": "REPORT",
+                "mdata": {
+                    "job": {
+                        "addr": "localhost:9098",
+                        "instr": "./bin/mcast -a localhost:7094 localhost:7092 -r 10 -d 10 -i localhost -p 7098",
+                        "id": "localhost:9098:./bin/mcast"
+                    }
+                }
+            }
+        },
+        {
+            "RPL[MCAST]": {
+                "id": 17,
+                "ts": "1717020860804120",
+                "src": "localhost:9098",
+                "flag": "MCAST",
+                "mdata": {
+                    "job": {
+                        "addr": "localhost:9098",
+                        "instr": "./bin/mcast -a localhost:7094 localhost:7092 -r 10 -d 10 -i localhost -p 7098",
+                        "id": "localhost:9098:./bin/mcast"
+                    }
+                }
+            }
+        },
+        {
+            "MSG[NONE]": {
+                "id": 18,
+                "ts": "1717020865812827",
+                "src": "GUARD:localhost:9095",
+                "type": "REPORT",
+                "mdata": {
+                    "job": {
+                        "addr": "localhost:9098",
+                        "instr": "./bin/mcast -a localhost:7094 localhost:7092 -r 10 -d 10 -i localhost -p 7098",
+                        "id": "localhost:9098:./bin/mcast"
+                    }
+                }
+            }
+        },
+        {
+            "RPL[MCAST]": {
+                "id": 18,
+                "ts": "1717020865816249",
+                "src": "localhost:9098",
+                "flag": "MCAST",
+                "mdata": {
+                    "job": {
+                        "addr": "localhost:9098",
+                        "instr": "./bin/mcast -a localhost:7094 localhost:7092 -r 10 -d 10 -i localhost -p 7098",
+                        "id": "localhost:9098:./bin/mcast"
+                    }
+                }
+            }
+        },
+        {
+            "MSG[NONE]": {
+                "id": 19,
+                "ts": "1717020870826314",
+                "src": "GUARD:localhost:9095",
+                "type": "REPORT",
+                "mdata": {
+                    "job": {
+                        "addr": "localhost:9098",
+                        "instr": "./bin/mcast -a localhost:7094 localhost:7092 -r 10 -d 10 -i localhost -p 7098",
+                        "id": "localhost:9098:./bin/mcast"
+                    }
+                }
+            }
+        },
+        {
+            "RPL[MCAST]": {
+                "id": 19,
+                "ts": "1717020870830168",
+                "src": "localhost:9098",
+                "flag": "MCAST",
+                "mdata": {
+                    "job": {
+                        "addr": "localhost:9098",
+                        "instr": "./bin/mcast -a localhost:7094 localhost:7092 -r 10 -d 10 -i localhost -p 7098",
+                        "id": "localhost:9098:./bin/mcast",
+                        "pid": 216,
+                        "end": true,
+                        "output": [
+                            "localhost:9092/359.0"
+                        ]
+                    }
+                }
+            }
+        },
+        {
+            "MSG[NONE]": {
+                "id": 59,
+                "ts": "1717020876277248",
+                "src": "localhost:9091",
+                "type": "LOG"
+            }
+        }
+    ]
+}

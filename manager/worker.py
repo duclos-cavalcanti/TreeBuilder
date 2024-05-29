@@ -2,6 +2,9 @@ from .node      import Node
 from .message   import *
 from .scheduler import Scheduler
 from .utils     import *
+from .ds        import Logger
+
+from google.protobuf.json_format import MessageToJson, MessageToDict
 
 import zmq
 
@@ -14,7 +17,8 @@ class Worker(Node):
         self.tick       = 1
 
         self.buffer = []
-        self.scheduler  = Scheduler(self.addr, self.buffer)
+        self.logger     = Logger(file=f"/volume/worker_{self.addr}.json")
+        self.scheduler  = Scheduler(self.addr, self.buffer, self.logger)
 
     def go(self):
         self.bind(protocol="tcp", ip=self.ip, port=self.port)
@@ -25,15 +29,20 @@ class Worker(Node):
                 print_color(f"------> RECEIVED", color=RED)
                 print(f"MSG => \n{m}")
 
+                self.logger.event(f"MSG[{Flag.Name(m.flag)}]", MessageToDict(m))
                 print_color(f"------>", color=YLW)
+
                 match m.type:
                     case Type.CONNECT: r = self.connectACK(m)
                     case Type.COMMAND: r = self.commandACK(m)
                     case Type.REPORT:  r = self.reportACK(m)
                     case Type.ERR:     r = self.errorACK(m)
+                    case Type.LOG:     r = self.logACK(m)
                     case _:                   raise NotImplementedError()
 
+                self.logger.event(f"RPL[{Flag.Name(r.flag)}]", MessageToDict(r))
                 print_color(f"<------", color=YLW)
+
                 print(f"RPL => \n{r}")
                 print_color(f"<------ PROCESSED", color=GRN)
                 self.tick += 1
@@ -41,7 +50,13 @@ class Worker(Node):
         except KeyboardInterrupt:
             print("\n-------------------")
             print("Manually Cancelled!")
-        self.socket.close()
+
+        except Exception as e:
+            raise
+
+        finally:
+            self.socket.close()
+            self.logger.dump()
 
     def connectACK(self, m:Message):
         r = Message(id=m.id, src=self.addr, type=Type.ACK)
@@ -73,3 +88,8 @@ class Worker(Node):
 
     def errorACK(self, m:Message):
         raise NotImplementedError()
+
+    def logACK(self, m:Message):
+        self.logger.dump()
+        r = Message(id=m.id, src=self.addr, type=Type.ACK)
+        return self.send_message(r)

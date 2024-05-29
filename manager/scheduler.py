@@ -1,5 +1,6 @@
 from .node      import Node
 from .message   import *
+from .ds        import Pool, Logger
 
 from abc    import ABC, abstractmethod
 from typing import List
@@ -21,13 +22,14 @@ def faddr(addr:str, diff:int=1000) -> str:
     return f"{ip}:{port}"
 
 class Supervisor(ABC):
-    def __init__(self, command:Command, shbuffer:List):
+    def __init__(self, command:Command, shbuffer:List, logger:Logger):
         self.command      = command
         self.dependencies = []
         self.shbuffer     = shbuffer
+        self.logger       = logger
 
     @abstractmethod
-    def make(self):
+    def make(self) -> bool:
         pass
 
     @abstractmethod
@@ -41,27 +43,49 @@ class Supervisor(ABC):
         return True
 
 class Random(Supervisor):
-    def __init__(self, command:Command, shbuffer:List):
-        super().__init__(command, shbuffer)
+    def __init__(self, command:Command, shbuffer:List, logger:Logger):
+        super().__init__(command, shbuffer, logger)
 
-    def make(self):
-        self.job = Job()
-        pass
+    def make(self) -> bool:
+        job = Job()
+        addrs = self.command.addrs
+        sel   = self.command.select
+        pool = Pool(elements=addrs, K=1.0, N=len(addrs))
+
+        ret = []
+        for _ in range(sel):
+            ret.append(pool.select())
+
+        job.ClearField('output')
+        job.output.extend(ret)
+        job.end = True
+        job.ret = 0
+        job.addr = self.command.addr
+        
+        self.shbuffer.extend(ret)
+        self.job = job
+
+        data = {
+                "raw:": [ a for a in addrs ] ,
+                "sel": [ { "addr": r } for r in ret ],
+                "shbuffer": [ b for b in self.shbuffer ]
+        }
+        self.logger.record(f"RAND[{self.command.addr}]", data=data, verbosity=True)
+        return False
 
     def resolve(self):
-        c = self.command
         job = self.job
-
         return job
 
 class Mcast(Supervisor):
-    def __init__(self, command:Command, shbuffer:List):
-        super().__init__(command, shbuffer)
+    def __init__(self, command:Command, shbuffer:List, logger:Logger):
+        super().__init__(command, shbuffer, logger)
 
     def make(self):
         N = Node(name=f"SUPERVISOR", stype=zmq.REQ)
         c = self.command
         children = self.shbuffer
+
         if not children:
             addr = faddr(c.addr, diff=2000)
             instr =  f"./bin/mcast -r {c.rate} -d {c.dur} -L"
@@ -84,7 +108,7 @@ class Mcast(Supervisor):
                 self.dependencies.append(d)
 
         self.job = job
-        return job.id
+        return True
 
     def resolve(self) -> Job:
         c = self.command
@@ -109,7 +133,14 @@ class Mcast(Supervisor):
 
             job.ClearField('output')
             job.output.append(f"{addr}/{perc}")
-            print(f"MCAST[{addr}] LEAF => PERC={perc} | RECV={recv}/{total}")
+
+            data = {
+                    "total": total, 
+                    "recv": recv, 
+                    "perc": perc,
+                    "shbuffer": [ b for b in self.shbuffer ]
+            }
+            self.logger.record(f"MCAST[{c.addr}:LEAF]", data=data, verbosity=True)
         else:
             percs    = [float(d.output[0].split("/")[1]) for d in self.dependencies]
             sorted   = heapq.nlargest(1, enumerate(percs), key=lambda x: x[1])
@@ -118,15 +149,22 @@ class Mcast(Supervisor):
             addr = self.dependencies[idx].output[0].split("/")[0]
             job.ClearField('output')
             job.output.append(f"{addr}/{perc}")
-            print(f"MCAST WORST LEAF OF {c.addr}: => {addr}: PERC={perc}")
 
+            data = {
+                    "raw:": [ {"addr": d.output[0].split("/")[0], "perc": d.output[0].split("/")[1]} for d in self.dependencies] ,
+                    "sel": {"addr": addr, "perc": perc},
+                    "shbuffer": [ b for b in self.shbuffer ]
+            }
+            self.logger.record(f"MCAST[{c.addr}:LAYER={c.layer}]", data=data, verbosity=True)
+
+        self.shbuffer.clear()
         return job
 
 class Parent(Supervisor):
-    def __init__(self, command:Command, shbuffer:List):
-        super().__init__(command, shbuffer)
+    def __init__(self, command:Command, shbuffer:List, logger:Logger):
+        super().__init__(command, shbuffer, logger)
 
-    def make(self):
+    def make(self) -> bool:
         N = Node(name=f"SUPERVISOR", stype=zmq.REQ)
         c = self.command
         if c.layer:
@@ -148,7 +186,7 @@ class Parent(Supervisor):
                 self.dependencies.append(d)
 
         self.job = job
-        return job.id
+        return True
 
     def resolve(self) -> Job:
         c = self.command
@@ -171,9 +209,14 @@ class Parent(Supervisor):
             
             job.ClearField('output')
             job.output.append(f"{perc}")
-            
-            self.shbuffer.clear()
-            print(f"CHILD[{job.addr}] => PERC={perc} | RECV={recv}/{total}")
+
+            data = {
+                    "total": total, 
+                    "recv": recv, 
+                    "perc": perc,
+                    "shbuffer": [ b for b in self.shbuffer ]
+            }
+            self.logger.record(f"PARENT[{c.addr}:CHILD]", data=data, verbosity=True)
             return job
 
         else: 
@@ -183,26 +226,32 @@ class Parent(Supervisor):
             if c.largest: items = [ w for w in reversed(sorted[(-1 * c.select):]) ]
             else:         items = sorted[:c.select]
 
+            sel = []
             res = []
             for item in items:
                 idx   = item[0]
                 perc  = item[1]
                 addr = self.dependencies[idx].addr
+                sel.append({"addr": addr, "perc": perc})
                 res.append(addr)
 
             job.ClearField('output')
             job.output.extend(res)
-
-            self.shbuffer.clear()
             self.shbuffer.extend(res)
 
-            print(f"PARENT[{job.addr}] CHOSE: {[a for a in job.output]}")
+            data = {
+                    "raw:": [ {"addr": d.addr, "perc": d.output[0]} for d in self.dependencies],
+                    "sel": sel,
+                    "shbuffer": [ b for b in self.shbuffer ]
+            }
+            self.logger.record(f"PARENT[{c.addr}:PARENT]", data=data, verbosity=True)
             return job
 
 class Scheduler():
-    def __init__(self, addr:str, buffer:List):
+    def __init__(self, addr:str, buffer:List, logger:Logger):
         self.addr       = addr
         self.shbuffer   = buffer
+        self.logger     = logger
         self.lock       = threading.Lock()
         self.threads    = {}
         self.jobs       = {}
@@ -211,8 +260,11 @@ class Scheduler():
         self.map = {
             Flag.PARENT: Parent,
             Flag.MCAST:  Mcast,
-            Parent: Flag.PARENT,
-            Mcast:  Flag.MCAST,
+            Flag.RAND:   Random,
+
+            Parent:      Flag.PARENT,
+            Mcast:       Flag.MCAST,
+            Random:      Flag.RAND,
         }
 
 
@@ -221,12 +273,13 @@ class Scheduler():
         if constructor is None:
             raise NotImplementedError()
 
-        I = constructor(command, self.shbuffer)
-        I.make()
-        self.jobs[I.job.id]    = I
-        self.threads[I.job.id] = self.launch(target=self.run, args=(I.job,))
+        I = constructor(command, self.shbuffer, self.logger)
+        ret = I.make()
+        if ret:
+            self.jobs[I.job.id]    = I
+            self.threads[I.job.id] = self.launch(target=self.run, args=(I.job,))
+            print(f"RUNNING[{I.job.addr}] => {I.job.instr}")
 
-        print(f"RUNNING[{I.job.addr}] => {I.job.instr}")
         return I.job
 
     def get(self, k, d:dict):

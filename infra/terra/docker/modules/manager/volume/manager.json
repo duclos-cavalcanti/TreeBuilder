@@ -4,8 +4,8 @@
         "N": 8,
         "NODES": [
             "localhost:9092",
+            "localhost:9093",
             "localhost:9094",
-            "localhost:9095",
             "localhost:9096",
             "localhost:9097",
             "localhost:9098",
@@ -15,14 +15,20 @@
     "runs": [
         {
             "TREE[BEST]": {
-                "leaf": "localhost:9098",
-                "perc": "312.0"
+                "leaf": "localhost:9097",
+                "perc": "364.0"
             }
         },
         {
             "TREE[WORST]": {
                 "leaf": "localhost:9096",
-                "perc": "333.0"
+                "perc": "365.0"
+            }
+        },
+        {
+            "TREE[RANDOM]": {
+                "leaf": "localhost:9092",
+                "perc": "359.0"
             }
         }
     ],
@@ -35,19 +41,19 @@
                 "DMAX": 2,
                 "MAX": 7,
                 "NODES": {
-                    "localhost:9093": [
+                    "localhost:9095": [
                         "localhost:9092",
-                        "localhost:9094"
+                        "localhost:9093"
                     ],
                     "localhost:9092": [
-                        "localhost:9095",
+                        "localhost:9094",
                         "localhost:9096"
                     ],
-                    "localhost:9094": [
+                    "localhost:9093": [
                         "localhost:9097",
                         "localhost:9098"
                     ],
-                    "localhost:9095": [],
+                    "localhost:9094": [],
                     "localhost:9096": [],
                     "localhost:9097": [],
                     "localhost:9098": []
@@ -62,7 +68,7 @@
                 "DMAX": 2,
                 "MAX": 7,
                 "NODES": {
-                    "localhost:9093": [
+                    "localhost:9095": [
                         "localhost:9099",
                         "localhost:9098"
                     ],
@@ -71,13 +77,40 @@
                         "localhost:9096"
                     ],
                     "localhost:9098": [
-                        "localhost:9095",
-                        "localhost:9094"
+                        "localhost:9094",
+                        "localhost:9093"
                     ],
                     "localhost:9097": [],
                     "localhost:9096": [],
-                    "localhost:9095": [],
-                    "localhost:9094": []
+                    "localhost:9094": [],
+                    "localhost:9093": []
+                }
+            }
+        },
+        {
+            "RANDOM": {
+                "NAME": "RANDOM",
+                "F": 2,
+                "D": 0,
+                "DMAX": 2,
+                "MAX": 7,
+                "NODES": {
+                    "localhost:9095": [
+                        "localhost:9097",
+                        "localhost:9098"
+                    ],
+                    "localhost:9097": [
+                        "localhost:9096",
+                        "localhost:9093"
+                    ],
+                    "localhost:9098": [
+                        "localhost:9094",
+                        "localhost:9092"
+                    ],
+                    "localhost:9096": [],
+                    "localhost:9093": [],
+                    "localhost:9094": [],
+                    "localhost:9092": []
                 }
             }
         }
@@ -86,6 +119,7 @@
         {
             "ESTABLISHED": [
                 "localhost:9092",
+                "localhost:9093",
                 "localhost:9094",
                 "localhost:9095",
                 "localhost:9096",
@@ -96,14 +130,14 @@
         },
         {
             "COMMAND[PARENT]": {
-                "addr": "localhost:9093",
+                "addr": "localhost:9095",
                 "select": 2,
                 "rate": 10,
                 "dur": 10,
                 "addrs": [
                     "localhost:9092",
+                    "localhost:9093",
                     "localhost:9094",
-                    "localhost:9095",
                     "localhost:9096",
                     "localhost:9097",
                     "localhost:9098",
@@ -113,21 +147,21 @@
         },
         {
             "REPORT[PARENT]": {
-                "addr": "localhost:9093",
-                "instr": "./bin/parent -a localhost:8092 localhost:8094 localhost:8095 localhost:8096 localhost:8097 localhost:8098 localhost:8099 -r 10 -d 10",
-                "id": "localhost:9093:./bin/parent",
+                "addr": "localhost:9095",
+                "instr": "./bin/parent -a localhost:8092 localhost:8093 localhost:8094 localhost:8096 localhost:8097 localhost:8098 localhost:8099 -r 10 -d 10",
+                "id": "localhost:9095:./bin/parent",
                 "pid": 181,
                 "end": true,
                 "output": [
                     "localhost:9092",
-                    "localhost:9094"
+                    "localhost:9093"
                 ]
             }
         },
         {
-            "PARENT[localhost:9093]": [
+            "PARENT[localhost:9095]": [
                 "localhost:9092",
-                "localhost:9094"
+                "localhost:9093"
             ]
         },
         {
@@ -137,7 +171,7 @@
                 "rate": 10,
                 "dur": 10,
                 "addrs": [
-                    "localhost:9095",
+                    "localhost:9094",
                     "localhost:9096",
                     "localhost:9097",
                     "localhost:9098",
@@ -148,25 +182,25 @@
         {
             "REPORT[PARENT]": {
                 "addr": "localhost:9092",
-                "instr": "./bin/parent -a localhost:8095 localhost:8096 localhost:8097 localhost:8098 localhost:8099 -r 10 -d 10",
+                "instr": "./bin/parent -a localhost:8094 localhost:8096 localhost:8097 localhost:8098 localhost:8099 -r 10 -d 10",
                 "id": "localhost:9092:./bin/parent",
                 "pid": 187,
                 "end": true,
                 "output": [
-                    "localhost:9095",
+                    "localhost:9094",
                     "localhost:9096"
                 ]
             }
         },
         {
             "PARENT[localhost:9092]": [
-                "localhost:9095",
+                "localhost:9094",
                 "localhost:9096"
             ]
         },
         {
             "COMMAND[PARENT]": {
-                "addr": "localhost:9094",
+                "addr": "localhost:9093",
                 "select": 2,
                 "rate": 10,
                 "dur": 10,
@@ -179,9 +213,9 @@
         },
         {
             "REPORT[PARENT]": {
-                "addr": "localhost:9094",
+                "addr": "localhost:9093",
                 "instr": "./bin/parent -a localhost:8097 localhost:8098 localhost:8099 -r 10 -d 10",
-                "id": "localhost:9094:./bin/parent",
+                "id": "localhost:9093:./bin/parent",
                 "pid": 187,
                 "end": true,
                 "output": [
@@ -191,7 +225,7 @@
             }
         },
         {
-            "PARENT[localhost:9094]": [
+            "PARENT[localhost:9093]": [
                 "localhost:9097",
                 "localhost:9098"
             ]
@@ -201,7 +235,7 @@
         },
         {
             "COMMAND[MCAST]": {
-                "addr": "localhost:9093",
+                "addr": "localhost:9095",
                 "select": 1,
                 "rate": 10,
                 "dur": 10,
@@ -210,18 +244,18 @@
         },
         {
             "REPORT[MCAST]": {
-                "addr": "localhost:9093",
-                "instr": "./bin/mcast -a localhost:7092 localhost:7094 -r 10 -d 10 -i localhost -p 7093 -R",
-                "id": "localhost:9093:./bin/mcast",
+                "addr": "localhost:9095",
+                "instr": "./bin/mcast -a localhost:7092 localhost:7093 -r 10 -d 10 -i localhost -p 7095 -R",
+                "id": "localhost:9095:./bin/mcast",
                 "pid": 186,
                 "end": true,
                 "output": [
-                    "localhost:9098/312.0"
+                    "localhost:9097/364.0"
                 ]
             }
         },
         {
-            "MCAST PERFORMANCE[BEST]": "localhost:9098:312.0"
+            "MCAST PERFORMANCE[BEST]": "localhost:9097:364.0"
         },
         {
             "NEW RUN": {
@@ -232,15 +266,15 @@
         },
         {
             "COMMAND[PARENT]": {
-                "addr": "localhost:9093",
+                "addr": "localhost:9095",
                 "select": 2,
                 "rate": 10,
                 "dur": 10,
                 "largest": true,
                 "addrs": [
                     "localhost:9092",
+                    "localhost:9093",
                     "localhost:9094",
-                    "localhost:9095",
                     "localhost:9096",
                     "localhost:9097",
                     "localhost:9098",
@@ -250,9 +284,9 @@
         },
         {
             "REPORT[PARENT]": {
-                "addr": "localhost:9093",
-                "instr": "./bin/parent -a localhost:8092 localhost:8094 localhost:8095 localhost:8096 localhost:8097 localhost:8098 localhost:8099 -r 10 -d 10",
-                "id": "localhost:9093:./bin/parent",
+                "addr": "localhost:9095",
+                "instr": "./bin/parent -a localhost:8092 localhost:8093 localhost:8094 localhost:8096 localhost:8097 localhost:8098 localhost:8099 -r 10 -d 10",
+                "id": "localhost:9095:./bin/parent",
                 "pid": 191,
                 "end": true,
                 "output": [
@@ -262,7 +296,7 @@
             }
         },
         {
-            "PARENT[localhost:9093]": [
+            "PARENT[localhost:9095]": [
                 "localhost:9099",
                 "localhost:9098"
             ]
@@ -276,8 +310,8 @@
                 "largest": true,
                 "addrs": [
                     "localhost:9092",
+                    "localhost:9093",
                     "localhost:9094",
-                    "localhost:9095",
                     "localhost:9096",
                     "localhost:9097"
                 ]
@@ -286,9 +320,9 @@
         {
             "REPORT[PARENT]": {
                 "addr": "localhost:9099",
-                "instr": "./bin/parent -a localhost:8092 localhost:8094 localhost:8095 localhost:8096 localhost:8097 -r 10 -d 10",
+                "instr": "./bin/parent -a localhost:8092 localhost:8093 localhost:8094 localhost:8096 localhost:8097 -r 10 -d 10",
                 "id": "localhost:9099:./bin/parent",
-                "pid": 202,
+                "pid": 201,
                 "end": true,
                 "output": [
                     "localhost:9097",
@@ -311,28 +345,28 @@
                 "largest": true,
                 "addrs": [
                     "localhost:9092",
-                    "localhost:9094",
-                    "localhost:9095"
+                    "localhost:9093",
+                    "localhost:9094"
                 ]
             }
         },
         {
             "REPORT[PARENT]": {
                 "addr": "localhost:9098",
-                "instr": "./bin/parent -a localhost:8092 localhost:8094 localhost:8095 -r 10 -d 10",
+                "instr": "./bin/parent -a localhost:8092 localhost:8093 localhost:8094 -r 10 -d 10",
                 "id": "localhost:9098:./bin/parent",
                 "pid": 206,
                 "end": true,
                 "output": [
-                    "localhost:9095",
-                    "localhost:9094"
+                    "localhost:9094",
+                    "localhost:9093"
                 ]
             }
         },
         {
             "PARENT[localhost:9098]": [
-                "localhost:9095",
-                "localhost:9094"
+                "localhost:9094",
+                "localhost:9093"
             ]
         },
         {
@@ -340,7 +374,7 @@
         },
         {
             "COMMAND[MCAST]": {
-                "addr": "localhost:9093",
+                "addr": "localhost:9095",
                 "select": 1,
                 "rate": 10,
                 "dur": 10,
@@ -349,18 +383,121 @@
         },
         {
             "REPORT[MCAST]": {
-                "addr": "localhost:9093",
-                "instr": "./bin/mcast -a localhost:7099 localhost:7098 -r 10 -d 10 -i localhost -p 7093 -R",
-                "id": "localhost:9093:./bin/mcast",
+                "addr": "localhost:9095",
+                "instr": "./bin/mcast -a localhost:7099 localhost:7098 -r 10 -d 10 -i localhost -p 7095 -R",
+                "id": "localhost:9095:./bin/mcast",
                 "pid": 196,
                 "end": true,
                 "output": [
-                    "localhost:9096/333.0"
+                    "localhost:9096/365.0"
                 ]
             }
         },
         {
-            "MCAST PERFORMANCE[WORST]": "localhost:9096:333.0"
+            "MCAST PERFORMANCE[WORST]": "localhost:9096:365.0"
+        },
+        {
+            "NEW RUN": {
+                "type": "RAND",
+                "name": "RANDOM",
+                "largest": false
+            }
+        },
+        {
+            "COMMAND[RAND]": {
+                "addr": "localhost:9095",
+                "select": 2,
+                "addrs": [
+                    "localhost:9092",
+                    "localhost:9093",
+                    "localhost:9094",
+                    "localhost:9096",
+                    "localhost:9097",
+                    "localhost:9098",
+                    "localhost:9099"
+                ]
+            }
+        },
+        {
+            "RAND[localhost:9095]": [
+                "localhost:9097",
+                "localhost:9098"
+            ]
+        },
+        {
+            "COMMAND[RAND]": {
+                "addr": "localhost:9097",
+                "select": 2,
+                "addrs": [
+                    "localhost:9092",
+                    "localhost:9093",
+                    "localhost:9094",
+                    "localhost:9096",
+                    "localhost:9099"
+                ]
+            }
+        },
+        {
+            "RAND[localhost:9097]": [
+                "localhost:9096",
+                "localhost:9093"
+            ]
+        },
+        {
+            "COMMAND[RAND]": {
+                "addr": "localhost:9098",
+                "select": 2,
+                "addrs": [
+                    "localhost:9092",
+                    "localhost:9094",
+                    "localhost:9099"
+                ]
+            }
+        },
+        {
+            "RAND[localhost:9098]": [
+                "localhost:9094",
+                "localhost:9092"
+            ]
+        },
+        {
+            "TREE COMPLETE": "RANDOM"
+        },
+        {
+            "COMMAND[MCAST]": {
+                "addr": "localhost:9095",
+                "select": 1,
+                "rate": 10,
+                "dur": 10,
+                "largest": true
+            }
+        },
+        {
+            "REPORT[MCAST]": {
+                "addr": "localhost:9095",
+                "instr": "./bin/mcast -a localhost:7097 localhost:7098 -r 10 -d 10 -i localhost -p 7095 -R",
+                "id": "localhost:9095:./bin/mcast",
+                "pid": 201,
+                "end": true,
+                "output": [
+                    "localhost:9092/359.0"
+                ]
+            }
+        },
+        {
+            "MCAST PERFORMANCE[RANDOM]": "localhost:9092:359.0"
+        },
+        {
+            "LOGGED": [
+                "localhost:9092",
+                "localhost:9093",
+                "localhost:9094",
+                "localhost:9095",
+                "localhost:9096",
+                "localhost:9097",
+                "localhost:9098",
+                "localhost:9099"
+            ]
         }
     ]
 }

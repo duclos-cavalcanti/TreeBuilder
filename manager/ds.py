@@ -72,8 +72,7 @@ class Pool():
     def select(self, verbose=False):
         pool = self.pool
         size = len(pool)
-        # idx = random.randint(0, size - 1)
-        idx = 1
+        idx = random.randint(0, size - 1)
         el = self.pool[idx]
         self.pool.pop(idx)
 

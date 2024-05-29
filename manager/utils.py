@@ -7,8 +7,8 @@ GRN = "\033[92m"
 YLW = "\033[33m"
 CLR = "\033[0m"
 
-def print_color(text:str, color:str):
-    print(f"{color}{text}{CLR}")
+def print_color(text:str, color:str, end='\n'):
+    print(f"{color}{text}{CLR}", end=end)
 
 def print_LR(a, b, c, d, f=sys.stdout):
     left  = [ f"{c}" ] + f"{a}".split('\n')

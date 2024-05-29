@@ -20,3 +20,6 @@ runs:
   - type: "PARENT"
     name: "WORST"
     largest: True
+  - type: "RAND"
+    name: "RANDOM"
+    largest: False
