@@ -51,9 +51,16 @@ class Mcast(Handler):
 
         if not children:
             addr = faddr(c.addr)
+            instr =  f"./bin/mcast -r {c.rate} -d {c.dur} -L"
+            instr += f" -i {addr.split(':')[0]} -p {addr.split(':')[1]}"
+            id = f"{c.addr}:{instr.split()[0]}"
+            job = Job(id=id, addr=c.addr, instr=instr)
+        else:
+            addr = faddr(c.addr)
             faddrs = [ faddr(a) for a in children ]
             instr =  f"./bin/mcast -a " + " ".join(f"{a}" for a in faddrs) + f" -r {c.rate} -d {c.dur}"
-            instr += f" -i {addr.split(':')[0]} -p {addr.split(':')[1]}" + " -R" if c.layer == 0 else ""
+            instr += f" -i {addr.split(':')[0]} -p {addr.split(':')[1]}"
+            instr += " -R" if c.layer == 0 else ""
             id = f"{c.addr}:{instr.split()[0]}"
             job = Job(id=id, addr=c.addr, instr=instr)
             for a in children:
@@ -62,12 +69,6 @@ class Mcast(Handler):
                 r = N.handshake(addr=a, m=m)
                 d = N.verify(m, r, field="job")
                 self.dependencies.append(d)
-        else:
-            addr = faddr(c.addr)
-            instr =  f"./bin/mcast -r {c.rate} -d {c.dur} -L"
-            instr += f" -i {addr.split(':')[0]} -p {addr.split(':')[1]}"
-            id = f"{c.addr}:{instr.split()[0]}"
-            job = Job(id=id, addr=c.addr, instr=instr)
 
         self.job = job
         return job.id
@@ -94,10 +95,10 @@ class Mcast(Handler):
             perc = float(job.output[1])
 
             job.ClearField('output')
-            job.out.append(f"{addr}/{perc}")
+            job.output.append(f"{addr}/{perc}")
             print(f"MCAST[{addr}] LEAF => PERC={perc} | RECV={recv}/{total}")
         else:
-            percs    = [float(d.split("/")[1]) for d in self.dependencies]
+            percs    = [float(d.output[0].split("/")[1]) for d in self.dependencies]
             sorted   = heapq.nlargest(1, enumerate(percs), key=lambda x: x[1])
             idx = sorted[0][0]
             perc = sorted[0][1]
@@ -106,7 +107,7 @@ class Mcast(Handler):
             job.output.append(f"{addr}/{perc}")
             print(f"MCAST WORST LEAF OF {c.addr}: => {addr}: PERC={perc}")
 
-        return Job()
+        return job
 
 class Parent(Handler):
     def __init__(self, command:Command, shbuffer:List):

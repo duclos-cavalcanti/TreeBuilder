@@ -70,7 +70,7 @@ class Manager(Node):
         if job.id != ret.id:
             raise RuntimeError("INCORRECT JOB REPORT")
 
-        if job.err == True:
+        if job.err is True:
             raise RuntimeError("JOB ERR")
 
         if not ret.end:
@@ -87,7 +87,7 @@ class Manager(Node):
                     self.stepQ.push("PARENT")
 
             if r.flag == Flag.MCAST:
-                result = rjob.output[0]
+                result = ret.output[0]
                 addr = result.split("/")[0]
                 perc = result.split("/")[1]
                 print(f"MCAST PERFORMANCE: LEAF[{addr}] => {perc}")
