@@ -13,6 +13,10 @@ addrs:
   - "localhost:9097"
   - "localhost:9098"
   - "localhost:9099"
-steps:
-  - action: "CONNECT"
-  - action: "PARENT"
+runs:
+  - type: "PARENT"
+    name: "BEST"
+    largest: False
+  - type: "PARENT"
+    name: "WORST"
+    largest: True

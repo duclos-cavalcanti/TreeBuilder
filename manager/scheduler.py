@@ -59,19 +59,18 @@ class Mcast(Supervisor):
         super().__init__(command, shbuffer)
 
     def make(self):
-        N = Node(name="TASK", stype=zmq.REQ)
+        N = Node(name=f"SUPERVISOR", stype=zmq.REQ)
         c = self.command
         children = self.shbuffer
-
         if not children:
-            addr = faddr(c.addr)
+            addr = faddr(c.addr, diff=2000)
             instr =  f"./bin/mcast -r {c.rate} -d {c.dur} -L"
             instr += f" -i {addr.split(':')[0]} -p {addr.split(':')[1]}"
             id = f"{c.addr}:{instr.split()[0]}"
             job = Job(id=id, addr=c.addr, instr=instr)
         else:
-            addr = faddr(c.addr)
-            faddrs = [ faddr(a) for a in children ]
+            addr = faddr(c.addr, diff=2000)
+            faddrs = [ faddr(a, diff=2000) for a in children ]
             instr =  f"./bin/mcast -a " + " ".join(f"{a}" for a in faddrs) + f" -r {c.rate} -d {c.dur}"
             instr += f" -i {addr.split(':')[0]} -p {addr.split(':')[1]}"
             instr += " -R" if c.layer == 0 else ""
@@ -79,7 +78,7 @@ class Mcast(Supervisor):
             job = Job(id=id, addr=c.addr, instr=instr)
             for a in children:
                 c = Command(addr=a, layer=(c.layer + 1), select=c.select, rate=c.rate, dur=c.dur)
-                m = Message(id=1, ts=N.timer.ts(), type=Type.COMMAND, flag=Flag.MCAST, mdata=Metadata(command=c))
+                m = Message(id=1, ts=N.timer.ts(), src=f"MCAST:SUPERVISOR:{c.addr}", type=Type.COMMAND, flag=Flag.MCAST, mdata=Metadata(command=c))
                 r = N.handshake(addr=a, m=m)
                 d = N.verify(m, r, field="job")
                 self.dependencies.append(d)
@@ -128,25 +127,25 @@ class Parent(Supervisor):
         super().__init__(command, shbuffer)
 
     def make(self):
-        N = Node(name="TASK", stype=zmq.REQ)
+        N = Node(name=f"SUPERVISOR", stype=zmq.REQ)
         c = self.command
-        if c.layer == 0:
+        if c.layer:
+            faddrs = faddr(c.addr)
+            instr = f"./bin/child -i {faddrs.split(':')[0]} -p {faddrs.split(':')[1]} -d {c.dur}"
+            id = f"{c.addr}:{instr.split()[0]}"
+            job = Job(id=id, addr=c.addr, instr=instr)
+
+        else:
             faddrs = [ faddr(a) for a in c.addrs ]
             instr =  "./bin/parent -a " + " ".join(f"{a}" for a in faddrs) + f" -r {c.rate} -d {c.dur}"
             id = f"{c.addr}:{instr.split()[0]}"
             job = Job(id=id, addr=c.addr, instr=instr)
             for a in c.addrs:
                 c = Command(addr=a, layer=(c.layer + 1), select=c.select, rate=c.rate, dur=c.dur)
-                m = Message(id=1, ts=N.timer.ts(), type=Type.COMMAND, flag=Flag.PARENT, mdata=Metadata(command=c))
+                m = Message(id=1, ts=N.timer.ts(), src=f"PARENT:SUPERVISOR:{c.addr}", type=Type.COMMAND, flag=Flag.PARENT, mdata=Metadata(command=c))
                 r = N.handshake(addr=a, m=m)
                 d = N.verify(m, r, field="job")
                 self.dependencies.append(d)
-
-        else:
-            faddrs = faddr(c.addr)
-            instr = f"./bin/child -i {faddrs.split(':')[0]} -p {faddrs.split(':')[1]} -d {c.dur}"
-            id = f"{c.addr}:{instr.split()[0]}"
-            job = Job(id=id, addr=c.addr, instr=instr)
 
         self.job = job
         return job.id
@@ -173,6 +172,7 @@ class Parent(Supervisor):
             job.ClearField('output')
             job.output.append(f"{perc}")
             
+            self.shbuffer.clear()
             print(f"CHILD[{job.addr}] => PERC={perc} | RECV={recv}/{total}")
             return job
 
@@ -200,7 +200,8 @@ class Parent(Supervisor):
             return job
 
 class Scheduler():
-    def __init__(self, buffer:List):
+    def __init__(self, addr:str, buffer:List):
+        self.addr       = addr
         self.shbuffer   = buffer
         self.lock       = threading.Lock()
         self.threads    = {}
@@ -298,7 +299,7 @@ class Scheduler():
 
                     for i, job in enumerate(dependencies):
                         if job.end: continue 
-                        m = Message(id=cnt, ts=N.timer.ts(), type=Type.REPORT, mdata=Metadata(job=job))
+                        m = Message(id=cnt, ts=N.timer.ts(), src=f"GUARD:{self.addr}", type=Type.REPORT, mdata=Metadata(job=job))
                         r = N.handshake(job.addr, m)
                         ret = N.verify(m, r, field="job")
                         if ret.end: 

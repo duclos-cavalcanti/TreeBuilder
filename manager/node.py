@@ -50,17 +50,6 @@ class Node():
         e = Message(id=m.id, ts=self.timer.ts(), type=Type.ERR, mdata=Metadata(error=Error(desc=desc)))
         return self.send_message(e)
 
-    def ack_message(self, m:Message, f=None, mdata:Optional[Metadata]=None):
-        if mdata is not None: 
-            md = Metadata()
-            md.CopyFrom(mdata)
-            a = Message(id=m.id, ts=self.timer.ts(), type=Type.ACK, mdata=md)
-        else:
-            a = Message(id=m.id, ts=self.timer.ts(), type=Type.ACK)
-
-        if f is not None: a.flag = f
-        return self.send_message(a)
-
     def handshake(self, addr:str, m:Message) -> Message:
         self.connect(addr)
         self.send_message(m)

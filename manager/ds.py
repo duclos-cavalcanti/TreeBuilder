@@ -1,5 +1,6 @@
 import time
 import random
+import json
 
 from collections import deque
 from typing import List, Callable
@@ -7,6 +8,11 @@ from typing import List, Callable
 class SQueue():
     def __init__(self, arr:List=[]):
         self.Q = arr
+
+    def peak(self):
+        if len(self.Q) == 0: 
+            return None
+        return self.Q[0]
 
     def pop(self):
         if len(self.Q) == 0: 
@@ -17,6 +23,9 @@ class SQueue():
 
     def push(self, el) -> None:
         self.Q.append(el)
+
+    def __str__(self):
+        return self.Q.__str__()
 
 class Timer():
     def __init__(self):
@@ -56,6 +65,10 @@ class Pool():
         self.K = K 
         self.N = N
 
+    def reset(self, elements:List):
+        self.pool.clear()
+        self.pool.extend(elements)
+
     def select(self, verbose=False):
         pool = self.pool
         size = len(pool)
@@ -64,11 +77,14 @@ class Pool():
         el = self.pool[idx]
         self.pool.pop(idx)
 
-        if verbose: self.show(header=f"CHOSEN: {idx} => {el}")
+        if verbose: 
+            print(f"CHOSEN: {idx} => {el}")
+            print(self)
+
         return el
 
     def slice(self, param:int=0, verbose=False):
-        if verbose: self.show()
+        if verbose: print(self)
         return self.pool
 
     def n_remove(self, elements:List, verbose=False):
@@ -84,13 +100,23 @@ class Pool():
                 return
         raise RuntimeError(f"ATTEMPT TO REMOVE[{el}] NOT IN POOL")
 
-    def show(self, header:str=""):
-        if header:
-            print(f"{header}")
-        print("POOL: {")
+    def to_dict(self):
+        data = {}
+        data["K"]       = self.K
+        data["N"]       = self.N
+        data["NODES"]   = [ p for p in self.pool ]
+
+        return data
+
+    def __str__(self):
+        buf = []
+        buf.append("POOL: {")
         for i,el in enumerate(self.pool): 
-            print(f"\t{i} => {el}")
-        print("}")
+            buf.append(f"\t{i} => {el}")
+        buf.append("}")
+        ret = "\n".join(buf)
+        return ret
+
 
 class Tree():
     class Node():
@@ -99,7 +125,8 @@ class Tree():
             self.parent = parent
             self.children = []
 
-    def __init__(self, root:str, fanout:int=2, depth:int=2):
+    def __init__(self, name:str, root:str, fanout:int=2, depth:int=2):
+        self.name   = name
         self.root   = self.Node(root)
         self.fanout = fanout
         self.d      = 0
@@ -171,30 +198,102 @@ class Tree():
 
         return True
 
-    def traverse(self, callback:Callable):
+    def traverse(self, callback:Callable, buf:List):
         queue = deque([self.root])
         while queue:
             node = queue.popleft()
-            callback(self, node)
+            callback(self, node, buf)
             queue.extend(node.children)
 
     def leaves(self) -> List:
-        self.arr = []
-        def callback(self, node):
+        buf = []
+        def callback(_, node, buf):
             if len(node.children) == 0: 
-                self.arr.append(node)
+                buf.append(node)
 
-        self.traverse(callback)
-        return self.arr
+        self.traverse(callback, buf)
+        return buf
 
-    def show(self, header:str=""):
-        def callback(_, node):
+    def to_dict(self):
+        data = {}
+        buf  = []
+
+        def callback(_, node, buf):
+            name     = node.id
+            children = [child.id for child in node.children]
+            buf.append([name, children])
+        self.traverse(callback, buf)
+
+        data["NAME"]    = self.name
+        data["F"]       = self.fanout
+        data["D"]       = self.d
+        data["DMAX"]    = self.dmax
+        data["MAX"]     = self.max
+        data["NODES"]   = {}
+
+        for arr in buf:
+            name     = arr[0]
+            children = arr[1]
+            data["NODES"][name] = children
+
+        return data
+
+    def __str__(self):
+        buf = ["TREE:"]
+        def callback(_, node, buf):
             n_children = len(node.children)
             if node.parent == None: name = "ROOT"
             elif n_children > 0:    name = "NODE"
             else:                   name = "LEAF"
+            buf.append(f"{name}: {node.id} \t=> CHILDREN: {[child.id for child in node.children]}")
 
-            print(f"{name}: {node.id} \t=> CHILDREN: {[child.id for child in node.children]}")
+        self.traverse(callback, buf)
+        ret = "\n".join(buf)
+        return  ret
 
-        if header: print(f"{header}")
-        self.traverse(callback)
+class Logger():
+    def __init__(self, file:str="LOG.JSON"):
+        self.file    = file
+        self.buf     = {}
+        self.events  = []
+        self.trees  = []
+        self.runs    = []
+
+    def event(self, key, data, verbosity=False):
+        self.events.append({key: data})
+        if verbosity: 
+            print(f"{key} => {data}")
+
+    def record(self, key, data, verbosity=False):
+        self.runs.append({key: data})
+        if verbosity: 
+            print(f"{key} => {data}")
+
+    def tree(self, key, data, verbosity=False):
+        self.trees.append({key: data})
+        if verbosity: 
+            print(f"{key} => {data}")
+
+    def get(self, key, default):
+        ret = self.buf.get(key, default)
+        return ret
+
+    def write(self, key, data):
+        self.buf[key] = data
+
+    def update(self):
+        self.buf["runs"]   = self.runs
+        self.buf["trees"]  = self.trees
+        self.buf["events"] = self.events
+
+    def dump(self):
+        self.update()
+        with open(self.file, 'w') as f:
+            json.dump(self.buf, f, indent=4)
+
+    def __str__(self):
+        self.update()
+        ret = json.dumps(self.buf, indent=4)
+        return ret
+
+

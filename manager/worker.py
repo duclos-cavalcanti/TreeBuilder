@@ -14,7 +14,7 @@ class Worker(Node):
         self.tick       = 1
 
         self.buffer = []
-        self.scheduler  = Scheduler(self.buffer)
+        self.scheduler  = Scheduler(self.addr, self.buffer)
 
     def go(self):
         self.bind(protocol="tcp", ip=self.ip, port=self.port)
@@ -44,25 +44,32 @@ class Worker(Node):
         self.socket.close()
 
     def connectACK(self, m:Message):
-        return self.ack_message(m)
+        r = Message(id=m.id, src=self.addr, type=Type.ACK)
+        return self.send_message(r)
 
     def commandACK(self, m:Message):
         if not m.mdata.HasField("command"): 
-            return self.err_message(m, f"COMMAND[{self.addr}] FORMAT ERR")
+            error = Error(desc=f"COMMAND[{self.addr}] FORMAT ERR")
+            e = Message(id=m.id, src=self.addr, ts=self.timer.ts(), type=Type.ERR, mdata=Metadata(error=error))
+            return self.send_message(e)
 
         command = m.mdata.command
         job = self.scheduler.add(command, m.flag)
-        r = self.ack_message(m, mdata=Metadata(job=job))
-        return r
+
+        r = Message(id=m.id, src=self.addr, ts=self.timer.ts(), type=Type.ACK, mdata=Metadata(job=job))
+        return self.send_message(r)
 
     def reportACK(self, m:Message):
         if not m.mdata.HasField("job"): 
-            return self.err_message(m, f"REPORT[{self.addr}] FORMAT ERR")
+            error = Error(desc=f"REPORT[{self.addr}] FORMAT ERR")
+            e = Message(id=m.id, src=self.addr, ts=self.timer.ts(), type=Type.ERR, mdata=Metadata(error=error))
+            return self.send_message(e)
         
         job = m.mdata.job
         job, flag = self.scheduler.report(job)
-        r = self.ack_message(m, f=flag, mdata=Metadata(job=job))
-        return r
+
+        r = Message(id=m.id, src=self.addr, ts=self.timer.ts(), type=Type.ACK, flag=flag, mdata=Metadata(job=job))
+        return self.send_message(r)
 
     def errorACK(self, m:Message):
         raise NotImplementedError()
