@@ -51,6 +51,7 @@ block-beta
         W4["W<sub>4</sub>"]
         W5["W<sub>5</sub>"]
         W6["W<sub>6</sub>"]
+        W7["W<sub>7</sub>"]
     end
     M-->P
     P-->workers

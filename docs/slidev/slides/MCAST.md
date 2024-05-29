@@ -2,17 +2,20 @@
 layout: two-cols-header
 ---
 
-# Parent x Child UDP
+# MCAST Tree Performance
 
-- Parent sends messages to multiple children
-- Child: 
-    - Waits for stream start 
+- Root: 
+    - Sends messages to children
+- Proxies: 
+    - Forwards messages from parent to children
+- Leaves: 
     - Stores latency difference
     - prints to `stdout` 90% percentile latency
 
 <div 
     alt="WorkerSM"
-    class="absolute bottom-10% left-10%"
+    style="transform: scale(1.9)"
+    class="absolute bottom-10% left-20%"
 >
 
 ```mermaid
@@ -24,8 +27,11 @@ sequenceDiagram
     P->>C1: M0
     P->>C2: M0
 
-    P->>C1: M1
-    P->>C2: M1
+    C1->>L1: M0
+    C1->>L2: M0
+
+    C2->>L3: M0
+    C2->>L4: M0
 ```
 </div>
 

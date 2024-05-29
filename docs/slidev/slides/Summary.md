@@ -1,25 +1,40 @@
 ---
-layout: two-cols-header
+layout: default
 ---
 
-# Testbench and Heuristic
+# Summary
 
+1. Establish connection to workers
+2. Do for [ `best`, `worst`, `random`] trees:
+    1. Choose `root`
+    2. Until Tree is complete
+        1. Start `parent x child` jobs
+        2. Probe for results
+        3. When done: modify `Tree` and `Pool` accordingly
+    2. Store results
 
-::left::
-1. Allocate __N__ VMs.
-2. Run Jasper on Vanilla Setup
-    1. Terminate
-    1. Store Results
-3. Apply Proposed Heuristic
-4. Evaluate Performance
+<div 
+    alt="States"
+    style="transform: scale(1.1)"
+    class="absolute bottom-13% left-16%"
+>
+```mermaid
+graph LR 
+    C[<font color=white>CONN]
+    R[<font color=white>ROOT]
+    P[<font color=white>MCST]
 
-<img 
-    alt="Heuristic"
-    width=300px
-    src="/images/MethodHeuristic.png"
-/>
+    C --> R
+    R --> R
+    R --> P
+    P --> R
 
-::right::
+    style C fill:#000000
+    style R fill:#000000
+    style P fill:#000000
+```
+
+</diV>
 
 <div
     alt="Pool"

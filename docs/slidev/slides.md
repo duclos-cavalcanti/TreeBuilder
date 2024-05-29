@@ -29,6 +29,10 @@ src: ./slides/UDP.md
 ---
 
 ---
+src: ./slides/MCAST.md
+---
+
+---
 src: ./slides/WorkerSM.md
 ---
 
@@ -58,4 +62,20 @@ src: ./slides/Workflow-3.0.md
 
 ---
 src: ./slides/Workflow-3.1.md
+---
+
+---
+src: ./slides/Workflow-4.0.md
+---
+
+---
+src: ./slides/Summary.md
+---
+
+---
+src: ./slides/Draw.md
+---
+
+---
+src: ./slides/End.md
 ---

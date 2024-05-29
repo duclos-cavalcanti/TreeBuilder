@@ -5,29 +5,29 @@ layout: two-cols-header
 # Manager x Worker: Data Structures
 
 - Manager and Workers inherit Node Class
-- Nodes own jobs, mapped via a dictionary of threads
-- `exec(j:Job)`: 
-    - Runs `j.command` in separate thread and returns handler
-    - Thread ultimately modifies overloaded Job
+- Nodes: 
+    - own jobs, mapped via a dictionary of threads
+    - are able of runnig jobs in separate threads 
+    - are able of guarding against job dependencies
 
 <div 
     alt="Node"
-    style="transform: scale(1.0)"
-    class="absolute top-15% right-10%"
+    style="transform: scale(0.6)"
+    class="absolute top-0% right-14%"
 >
 
 ```mermaid
 classDiagram
     class Node{
-            +string ip
-            +int port
+            ...
             +dict jobs: thread -> Job
 
-            +exec(j:Job, callback, args) -> Thread
-            +find(j:Job, d:dict)
+            +exec(callback, args) -> Thread
+            +find(j:Job) -> Thread
 
             _run(j:Job)
             _guard(j:Job)
+            _launch(t:Thread, args=(,))
     }
 
     class Manager{
@@ -35,22 +35,6 @@ classDiagram
 
     class Worker{
     }
-
-    class Job{
-            +string: id
-            +string: addr
-
-            +string command
-            +int: ret
-            +bool: end
-            +string: output
-
-            +list: deps[]
-
-            +to_arr() -> char[]
-            +from_arr(char[])
-    }
-
 
     Node --|> Manager
     Node --|> Worker
@@ -62,14 +46,13 @@ classDiagram
 
 <div 
     alt="Node"
-    style="transform: scale(1.0)"
-    class="absolute bottom-8% right-12%"
+    style="transform: scale(0.9)"
+    class="absolute bottom-10% right-12%"
 >
 
 ```mermaid
 block-beta
     N("Node"):1
-    space
     block:G
         columns 2
         J("<font color=white>Jobs"):1
@@ -86,7 +69,7 @@ block-beta
         end
     end
 
-    N --> G
+    G --> N
 
     style J fill:#000000
     style Guard fill:#000000
@@ -107,7 +90,7 @@ classDiagram
             +ts   = 1715280981565948
             +type = REPORT/ACK
             +flag = NONE
-            +data = [ Job ]
+            +data = Report
     }
     %% style Message fill:#0070C0,color:#fff
 ```

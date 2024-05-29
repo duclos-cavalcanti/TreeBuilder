@@ -8,10 +8,9 @@ layout: two-cols-header
 
 1. Pops next report
 2. Sleeps until trigger timestamp
-3. Asks Report on pending job to owner
-    1. Parent has received reports on children 
-    2. Parent has also finished its job
-    3. Parent sends results
+3. Probes report on pending job to owner
+    1. Parent also probes for reports 
+    2. Parent aggregates results and reports
 
 <div
     alt="StepQ"
@@ -56,6 +55,7 @@ block-beta
         W4["W<sub>4</sub>"]
         W5["W<sub>5</sub>"]
         W6["W<sub>6</sub>"]
+        W7["W<sub>7</sub>"]
         style P fill:#0070C0
         style W2 fill:#FF0000
         style W0 fill:#00FF00
@@ -90,7 +90,7 @@ block-beta
 
     block:pitems
         columns 1
-        C["<del>JP: ./parent [args]</del>"] 
+        C["JP: ./parent [args]"] 
         D["____"] 
         Y["____"] 
     end
@@ -98,9 +98,9 @@ block-beta
     space
     block:citems
         columns 1
-        E["<del>JC0: ./child [args]</del>"] 
-        F["<del>JC1: ./child [args]</del>"] 
-        G["<del>JC2: ./child [args]</del>"] 
+        E["JC0: ./child [args]"] 
+        F["JC1: ./child [args]"] 
+        G["JC2: ./child [args]"] 
     end
 
     J --> items
@@ -126,7 +126,7 @@ classDiagram
             +ts   = 1715280981565948
             +type = REPORT
             +flag = PARENT
-            +data = [ ]
+            +data = Report
     }
 
     class Message_ACK{
@@ -134,7 +134,7 @@ classDiagram
             +ts   = 1715280981565948
             +type = ACK
             +flag = NONE
-            +data = [ Results ]
+            +data = Report
     }
 ```
 
@@ -157,12 +157,15 @@ sequenceDiagram
     participant C2 as C2
 
     Note right of M: Sleep...
-    C0->>P: JOB_END[C0]
-    C1->>P: JOB_END[C1]
-    C2->>P: JOB_END[C2]
-    P->>P:  JOB_END[P]
-    M->>P: COMM=REPORT
-    P->>M: RESULTS
+    P->>C0: REPORT[C0]
+    C0->>P: REPORT[C0]
+    P->>C1: REPORT[C1]
+    C1->>P: REPORT[C1]
+    P->>C2: REPORT[C2]
+    C2->>P: REPORT[C2]
+    P->>P:  JOB[P]
+    M->>P: REPORT[P]
+    P->>M: REPORT[P]
 ```
 </div>
 

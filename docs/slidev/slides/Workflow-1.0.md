@@ -54,6 +54,7 @@ block-beta
         W4["W<sub>4</sub>"]
         W5["W<sub>5</sub>"]
         W6["W<sub>6</sub>"]
+        W7["W<sub>7</sub>"]
     end
     M-->P
     P-->workers
@@ -97,16 +98,12 @@ classDiagram
             +id   = 0
             +ts   = 1715280981565948
             +type = CONNECT
-            +flag = NONE
-            +data = [ worker_addr_i, host_addr ]
     }
 
     class Message_ACK{
             +id   = 0
             +ts   = 1715280981565948
             +type = CONNECT
-            +flag = NONE
-            +data = [ ]
     }
     %% style Message fill:#0070C0,color:#fff
 ```

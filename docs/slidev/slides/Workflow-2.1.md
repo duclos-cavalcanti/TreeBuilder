@@ -55,6 +55,7 @@ block-beta
         W4["W<sub>4</sub>"]
         W5["W<sub>5</sub>"]
         W6["W<sub>6</sub>"]
+        W7["W<sub>7</sub>"]
         style P fill:#0070C0
         style W2 fill:#FF0000
         style W0 fill:#00FF00
@@ -113,8 +114,8 @@ block-beta
 
 <div 
     alt="Message"
-    style="transform: scale(1.0)"
-    class="absolute left-9% bottom-22%"
+    style="transform: scale(0.7)"
+    class="absolute left-9% bottom-17%"
 >
 
 ```mermaid
@@ -124,15 +125,15 @@ classDiagram
             +ts   = 1715280981565948
             +type = COMMAND
             +flag = PARENT
-            +data = [ rate, dur, w_addr_0, w_addr_1, w_addr_3 ]
+            +data = CommandP
     }
 
     class Message_C{
             +id   = 1
             +ts   = 1715280981565948
             +type = COMMAND
-            +flag = CHILD
-            +data = [ child_addr_i, host_addr ]
+            +flag = PARENT
+            +data = CommandC
     }
 
     %% style Message fill:#0070C0,color:#fff
@@ -143,7 +144,7 @@ classDiagram
 <div 
     alt="Message_ACK"
     style="transform: scale(0.6)"
-    class="absolute left-12% bottom-0%"
+    class="absolute left-8% bottom-0%"
 >
 
 ```mermaid
@@ -152,16 +153,14 @@ classDiagram
             +id   = 1
             +ts   = 1715280981565948
             +type = ACK
-            +flag = NONE
-            +data = [ JP ]
+            +data = JP
     }
 
     class Message_C_ACK{
             +id   = 1
             +ts   = 1715280981565948
             +type = ACK
-            +flag = NONE
-            +data = [ JC ]
+            +data = JC
     }
     %% style Message fill:#0070C0,color:#fff
 ```
