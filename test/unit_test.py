@@ -1,8 +1,7 @@
 import pytest
 import ipdb
 
-from manager import Tree, Node, LOG_LEVEL
-from manager import Message, MessageType, MessageFlag
+from manager import *
 
 import zmq
 import threading
@@ -51,41 +50,38 @@ def test_node():
     Q = Queue()
 
     def callback_n0():
-        n = Node(name="N0", ip="localhost", port="7070", type=zmq.REQ, LOG_LEVEL=LOG_LEVEL.DEBUG)
-        n.socket.setsockopt(zmq.RCVTIMEO, 5000)
-        n.connect(f"localhost:7071")
+        N = Node(name="REQ", stype=zmq.REQ, verbosity=True)
+        N.socket.setsockopt(zmq.RCVTIMEO, 5000)
+        N.connect(f"localhost:8090")
 
-        m =  Message()
-        m.id = 0 
-        m.ts = n.timer.ts()
-        m.type = Message::MessageType.COMMAND
-        m.flag = MessageFlag.NONE
+        c = Command(addr="FOOBAR", layer=(10), select=12, rate=5, dur=4)
+        m = Message(id=1, ts=N.timer.ts(), type=Type.COMMAND, flag=Flag.PARENT, mdata=Metadata(command=c))
 
         try: 
-            n.socket.send(m.SerializeToString())
+            N.send_message(m)
 
         except zmq.Again: 
             print(f"SOCKET N0 TIMED OUT")
 
         finally:
-            n.disconnect(f"localhost:7071")
-            n.socket.close()
+            N.disconnect(f"localhost:8090")
+            N.socket.close()
             return
 
     def callback_n1():
-        n = Node(name="N0", ip="localhost", port="7071", type=zmq.REP, LOG_LEVEL=LOG_LEVEL.DEBUG)
-        n.socket.bind(protocol="tcp", ip=n.ip, port=n.port)
-        n.socket.setsockopt(zmq.RCVTIMEO, 5000)
+        N = Node(name="REP", stype=zmq.REP, verbosity=True)
+        N.bind(protocol="tcp", ip="localhost", port="8090")
+        N.socket.setsockopt(zmq.RCVTIMEO, 5000)
 
         try: 
-            m = n.recv_message()
+            m = N.recv_message()
             Q.put(m)
 
         except zmq.Again: 
             print(f"SOCKET N1 TIMED OUT")
 
         finally:
-            n.socket.close()
+            N.socket.close()
 
     t0 = threading.Thread(target=callback_n0, args=())
     t1 = threading.Thread(target=callback_n1, args=())
@@ -99,4 +95,5 @@ def test_node():
     # test something was put into the Q
     assert not Q.empty()
 
-    _ = Q.get_nowait()
+    m = Q.get_nowait()
+    print(m)
