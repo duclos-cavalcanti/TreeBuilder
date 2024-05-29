@@ -87,9 +87,8 @@ class Manager(Node):
                     self.stepQ.push("PARENT")
 
             if r.flag == Flag.MCAST:
-                result = ret.output[0]
-                addr = result.split("/")[0]
-                perc = result.split("/")[1]
+                addr = ret.output[0].split("/")[0]
+                perc = ret.output[0].split("/")[1]
                 print(f"MCAST PERFORMANCE: LEAF[{addr}] => {perc}")
 
         self.timer.sleep_sec(5)

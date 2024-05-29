@@ -20,7 +20,7 @@ def faddr(addr:str, diff:int=1000) -> str:
     port  = fport(split[1], diff=diff)
     return f"{ip}:{port}"
 
-class Handler(ABC):
+class Supervisor(ABC):
     def __init__(self, command:Command, shbuffer:List):
         self.command      = command
         self.dependencies = []
@@ -40,7 +40,21 @@ class Handler(ABC):
                 return False
         return True
 
-class Mcast(Handler):
+class Random(Supervisor):
+    def __init__(self, command:Command, shbuffer:List):
+        super().__init__(command, shbuffer)
+
+    def make(self):
+        self.job = Job()
+        pass
+
+    def resolve(self):
+        c = self.command
+        job = self.job
+
+        return job
+
+class Mcast(Supervisor):
     def __init__(self, command:Command, shbuffer:List):
         super().__init__(command, shbuffer)
 
@@ -109,7 +123,7 @@ class Mcast(Handler):
 
         return job
 
-class Parent(Handler):
+class Parent(Supervisor):
     def __init__(self, command:Command, shbuffer:List):
         super().__init__(command, shbuffer)
 

@@ -47,8 +47,7 @@ class Node():
         return m
 
     def err_message(self, m:Message, desc:str):
-        mdata = Metadata(error=Error(desc=desc))
-        e = Message(id=m.id, ts=self.timer.ts(), type=Type.ERR, mdata=mdata)
+        e = Message(id=m.id, ts=self.timer.ts(), type=Type.ERR, mdata=Metadata(error=Error(desc=desc)))
         return self.send_message(e)
 
     def ack_message(self, m:Message, f=None, mdata:Optional[Metadata]=None):
