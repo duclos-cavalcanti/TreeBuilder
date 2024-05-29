@@ -1,64 +1,56 @@
 syntax = "proto3";
 
+enum Type {
+    ACK = 0;
+    CONNECT = 1;
+    COMMAND = 2;
+    REPORT = 4;
+    ERR = 5;
+}
+
+enum Flag {
+    NONE = 0;
+    PARENT = 1;
+    MCAST = 2;
+}
+
+message Metadata {
+    oneof data {
+        Command command = 4;
+        Job     job = 5;
+        Error   error = 6;
+    }
+}
+
 message Message {
     int32 id = 1;
     int64 ts = 2;
-
-    enum MessageType {
-        ACK = 0;
-        CONNECT = 1;
-        COMMAND = 2;
-        REPORT = 3;
-        ERR = 4;
-    }
-    MessageType type = 3;
-
-    enum MessageFlag {
-        NONE = 0;
-        PARENT = 1;
-        MCAST = 3;
-    }
-
-    MessageFlag flag = 4;
-
-    message MessageMetadata {
-        string src = 1; 
-        string dst = 2;
-        oneof data {
-            Command  command = 3;
-            Report   report = 5;
-            Error    error = 6;
-        }
-    }
-    MessageMetadata mdata = 5;
+    Type type = 3;
+    Flag flag = 4;
+    Metadata mdata = 5;
 }
 
 message Command {
+    string addr = 1;
     string instr = 2;
     int32 layer = 3;
     int32 select = 4;
     int32 rate = 5;
     int32 dur = 6;      // in seconds
     int32 timeout = 7;  // in seconds
-    repeated string addrs = 8;
-}
-
-message Report {
-    int64 trigger_ts = 1;
-    bool complete = 2;
-    Job job = 3;
+    bool largest = 8;
+    repeated string addrs = 9;
 }
 
 message Job {
-    string owner = 1;
-    string id = 2;
-    int32 pid = 3;
-    string command = 4;
+    string addr = 1;
+    string instr = 2;
+    string id = 3;
+    int32 pid = 4;
     bool end = 5;
+    bool err = 6;
     int32 ret = 7;
-    string output = 8;
-    repeated Job deps = 9;
-    repeated int32 params = 10;
+    repeated string output = 8;
 }
 
 message Error {

@@ -15,8 +15,4 @@ addrs:
   - "localhost:9099"
 steps:
   - action: "CONNECT"
-    desc: "Establish connection workers."
-    data: 0
   - action: "PARENT"
-    desc: "Choose next node for tree."
-    data: 0

@@ -1,6 +1,5 @@
 from .manager import Manager
 from .worker  import Worker
-from .ds      import LOG_LEVEL
 
 import os
 import argparse
@@ -9,11 +8,11 @@ def manager(args):
     plan = os.path.join(os.getcwd(), "plans", "default.yaml")
     if args.yaml: plan = args.yaml
 
-    M = Manager(plan, args.name, ip=args.addr, port=args.port, LOG_LEVEL=LOG_LEVEL.NONE) 
+    M = Manager(plan, ip=args.addr, port=args.port, verbosity=False) 
     M.go()
 
 def worker(args):
-    W = Worker(args.name, ip=args.addr, port=args.port, LOG_LEVEL=LOG_LEVEL.NONE) 
+    W = Worker(ip=args.addr, port=args.port, verbosity=False) 
     W.go()
 
 def parse(rem=None):
