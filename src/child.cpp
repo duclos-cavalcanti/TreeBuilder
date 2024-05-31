@@ -18,7 +18,7 @@
 FILE* LOG=stdout;
 std::vector<int64_t> latencies;
 std::string ip = "";
-int duration=0, port = 0;
+int rate=0, duration=0, port = 0;
 bool verbose = false;
 
 void log(const char* format, ...) {
@@ -40,7 +40,7 @@ void usage(int e) {
 int parse(int argc, char **argv) {
     int opt = 0;
     int ret = 0;
-    while ( (opt = getopt (argc, argv, "hi:p:t:d:v") ) != -1 ) {
+    while ( (opt = getopt (argc, argv, "hi:p:t:d:r:v") ) != -1 ) {
         switch (opt) {
         case 'h':
             usage(EXIT_SUCCESS);
@@ -56,6 +56,10 @@ int parse(int argc, char **argv) {
 
         case 'p':
             port = atoi(optarg);
+            break;
+
+        case 'r':
+            rate = atoi(optarg);
             break;
 
         case 'd':

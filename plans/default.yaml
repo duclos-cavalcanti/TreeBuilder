@@ -2,7 +2,7 @@ name: DEFAULT
 infra: docker
 hyperparameter: 0.5
 rate: 10 
-duration: 2
+duration: 10
 addrs:
   - "localhost:9091"
   - "localhost:9092"
@@ -13,13 +13,7 @@ addrs:
   - "localhost:9097"
   - "localhost:9098"
   - "localhost:9099"
-runs:
+steps:
   - step: "PARENT"
     name: "BEST"
     best: True
-  # - step: "PARENT"
-  #   name: "WORST"
-  #   best: False
-  # - step: "RAND"
-  #   name: "RANDOM"
-  #   best: True

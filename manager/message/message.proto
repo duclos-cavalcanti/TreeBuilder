@@ -5,9 +5,8 @@ enum Type {
     CONNECT = 1;
     COMMAND = 2;
     REPORT = 3;
-    ORDER = 4;
+    LOG = 4;
     ERR = 5;
-    LOG = 6;
 }
 
 enum Flag {
@@ -20,8 +19,7 @@ message Metadata {
     oneof data {
         Command command = 4;
         Job     job = 5;
-        Order   order = 6;
-        Error   error = 7;
+        Error   error = 6;
     }
 }
 
@@ -29,40 +27,37 @@ message Message {
     int32 id = 1;
     int64 ts = 2;
     string src = 3;
-    Type type = 4;
-    Metadata mdata = 5;
+    string dst = 4;
+    Type type = 5;
+    Metadata mdata = 6;
 }
 
 message Command {
     Flag flag = 1;
-    string addr = 2;
-    string instr = 3;
-    int32 layer = 4;
-    int32 select = 5;
-    int32 rate = 6;
-    int32 dur = 7;      // in seconds
-    int32 timeout = 8;  // in seconds
-    repeated string data = 9;
+    string id = 2;
+    string addr = 3;
+    string instr = 4;
+    int32 layer = 5;
+    int32 select = 6;
+    int32 rate = 7;
+    int32 dur = 8;      // in seconds
+    int32 timeout = 9;  // in seconds
+    int32 depth = 10;
+    int32 fanout = 11;
+    repeated string data = 12;
 }
 
 message Job {
     Flag flag = 1;
-    string addr = 2;
-    string instr = 3;
-    string id = 4;
+    string id = 2;
+    string addr = 3;
+    string instr = 4;
     int32  pid = 5;
     bool   end = 6;
     int32  ret = 7;
-    int32  select = 8;
-    repeated int32  integers = 9;
-    repeated float  floats = 10;
-    repeated string data = 11;
-}
-
-message Order {
-    Flag flag = 1;
-    string addr = 2;
-    repeated string data = 3;
+    repeated int32  integers = 8;
+    repeated float  floats = 9;
+    repeated string data = 10;
 }
 
 message Error {
