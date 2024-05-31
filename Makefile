@@ -39,7 +39,7 @@ build:
 
 docker:
 	@./run.sh --build docker
-	@./run.sh --deploy docker --mode manager
+	@./run.sh --deploy docker --mode manager --yaml "./plans/default.yaml"
 
 vagrant:
 	@./run.sh --build  vagrant
