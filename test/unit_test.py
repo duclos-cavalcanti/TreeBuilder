@@ -35,7 +35,7 @@ def test_tree():
         # print(f"\tQUEUE:{qprev} => {q}")
         # print(f"\tNODE[{cur.id}] => PARENT[{parent}] | CHILDREN: {[child.id for child in cur.children]}")
 
-    t.show()
+    print(t)
 
     # test if tree correctly reached complete state
     assert max == t.n
