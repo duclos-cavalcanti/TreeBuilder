@@ -15,10 +15,6 @@ class Node():
         self.socket     = self.context.socket(stype)
         self.timer      = Timer()
 
-    def log(self, string:str):
-        if (self.verbosity): 
-            print(f"LOG[{self.name}]: {string}")
-
     def format(self, addr:str):
         protocol="tcp"
         ip = addr.split(":")[0]

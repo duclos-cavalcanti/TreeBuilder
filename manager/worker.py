@@ -16,9 +16,10 @@ class Worker(Node):
         self.addr       = f"{ip}:{port}"
         self.tick       = 1
 
-        self.buffer = []
         self.logger     = Logger(file=f"/volume/worker_{self.addr}.json")
-        self.scheduler  = Scheduler(self.addr, self.buffer, self.logger)
+        self.scheduler  = Scheduler(self.addr, self.logger)
+
+        self.children = []
 
     def go(self):
         self.bind(protocol="tcp", ip=self.ip, port=self.port)
@@ -29,18 +30,19 @@ class Worker(Node):
                 print_color(f"------> RECEIVED", color=RED)
                 print(f"MSG => \n{m}")
 
-                self.logger.event(f"MSG[{Flag.Name(m.flag)}]", MessageToDict(m))
+                self.logger.event(f"MSG", MessageToDict(m))
                 print_color(f"------>", color=YLW)
 
                 match m.type:
                     case Type.CONNECT: r = self.connectACK(m)
                     case Type.COMMAND: r = self.commandACK(m)
                     case Type.REPORT:  r = self.reportACK(m)
+                    case Type.ORDER:   r = self.orderACK(m)
                     case Type.ERR:     r = self.errorACK(m)
                     case Type.LOG:     r = self.logACK(m)
                     case _:                   raise NotImplementedError()
 
-                self.logger.event(f"RPL[{Flag.Name(r.flag)}]", MessageToDict(r))
+                self.logger.event(f"RPL", MessageToDict(r))
                 print_color(f"<------", color=YLW)
 
                 print(f"RPL => \n{r}")
@@ -52,11 +54,11 @@ class Worker(Node):
             print("Manually Cancelled!")
 
         except Exception as e:
-            raise
+            raise e
 
         finally:
-            self.socket.close()
             self.logger.dump()
+            self.socket.close()
 
     def connectACK(self, m:Message):
         r = Message(id=m.id, src=self.addr, type=Type.ACK)
@@ -69,8 +71,9 @@ class Worker(Node):
             return self.send_message(e)
 
         command = m.mdata.command
-        job = self.scheduler.add(command, m.flag)
+        if command.flag == Flag.MCAST: command.data.extend([c for c in self.children])
 
+        job = self.scheduler.add(command)
         r = Message(id=m.id, src=self.addr, ts=self.timer.ts(), type=Type.ACK, mdata=Metadata(job=job))
         return self.send_message(r)
 
@@ -81,9 +84,25 @@ class Worker(Node):
             return self.send_message(e)
         
         job = m.mdata.job
-        job, flag = self.scheduler.report(job)
+        job = self.scheduler.report(job)
 
-        r = Message(id=m.id, src=self.addr, ts=self.timer.ts(), type=Type.ACK, flag=flag, mdata=Metadata(job=job))
+        r = Message(id=m.id, src=self.addr, ts=self.timer.ts(), type=Type.ACK, mdata=Metadata(job=job))
+        return self.send_message(r)
+
+    def orderACK(self, m:Message):
+        if not m.mdata.HasField("order"): 
+            error = Error(desc=f"ORDER[{self.addr}] FORMAT ERR")
+            e = Message(id=m.id, src=self.addr, ts=self.timer.ts(), type=Type.ERR, mdata=Metadata(error=error))
+            return self.send_message(e)
+
+        order = m.mdata.order
+        if order.flag == Flag.PARENT: 
+            self.children = [a for a in order.data] if order.data else []
+            self.logger.record(f"CHILDREN[{self.addr}]", [a for a in order.data], verbosity=True)
+        else:                         
+            raise NotImplementedError()
+
+        r = Message(id=m.id, src=self.addr, ts=self.timer.ts(), type=Type.ACK)
         return self.send_message(r)
 
     def errorACK(self, m:Message):

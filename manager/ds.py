@@ -1,6 +1,7 @@
 import time
 import random
 import json
+import threading
 
 from collections import deque
 from typing import List, Callable
@@ -61,13 +62,14 @@ class Timer():
 
 class Pool():
     def __init__(self, elements:List, K:float, N:int):
+        self.base = [ e for e in elements ]
         self.pool = elements
         self.K = K 
         self.N = N
 
-    def reset(self, elements:List):
+    def reset(self):
         self.pool.clear()
-        self.pool.extend(elements)
+        self.pool.extend(self.base)
 
     def select(self, verbose=False):
         pool = self.pool
@@ -255,44 +257,52 @@ class Logger():
         self.file    = file
         self.buf     = {}
         self.events  = []
-        self.trees  = []
-        self.runs    = []
+        self.trees   = []
+        self.records = []
+        self.lock    = threading.Lock()
 
     def event(self, key, data, verbosity=False):
-        self.events.append({key: data})
-        if verbosity: 
-            print(f"{key} => {data}")
+        with self.lock:
+            self.events.append({key: data})
+            if verbosity: 
+                print(f"{key} => {data}")
 
     def record(self, key, data, verbosity=False):
-        self.runs.append({key: data})
-        if verbosity: 
-            print(f"{key} => {data}")
+        with self.lock:
+            self.records.append({key: data})
+            if verbosity: 
+                print(f"{key} => {data}")
 
     def tree(self, key, data, verbosity=False):
-        self.trees.append({key: data})
-        if verbosity: 
-            print(f"{key} => {data}")
+        with self.lock:
+            self.trees.append({key: data})
+            if verbosity: 
+                print(f"{key} => {data}")
 
     def get(self, key, default):
-        ret = self.buf.get(key, default)
-        return ret
+        with self.lock:
+            ret = self.buf.get(key, default)
+            return ret
 
     def write(self, key, data):
-        self.buf[key] = data
+        with self.lock:
+            self.buf[key] = data
 
     def update(self):
-        self.buf["runs"]   = self.runs
-        self.buf["trees"]  = self.trees
-        self.buf["events"] = self.events
+        self.buf["records"] = self.records
+        self.buf["trees"]   = self.trees
+        self.buf["events"]  = self.events
 
     def dump(self):
-        self.update()
-        with open(self.file, 'w') as f:
-            json.dump(self.buf, f, indent=4)
+        with self.lock:
+            self.update()
+            with open(self.file, 'w') as f:
+                json.dump(self.buf, f, indent=4)
 
     def __str__(self):
-        self.update()
-        ret = json.dumps(self.buf, indent=4)
-        return ret
+        with self.lock:
+            self.update()
+            ret = json.dumps(self.buf, indent=4)
+            return ret
 
 

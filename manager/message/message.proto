@@ -14,7 +14,6 @@ enum Flag {
     NONE = 0;
     PARENT = 1;
     MCAST = 2;
-    RAND = 3;
 }
 
 message Metadata {
@@ -31,40 +30,43 @@ message Message {
     int64 ts = 2;
     string src = 3;
     Type type = 4;
-    Flag flag = 5;
-    Metadata mdata = 6;
+    Metadata mdata = 5;
 }
 
 message Command {
-    string addr = 1;
-    string instr = 2;
-    int32 layer = 3;
-    int32 select = 4;
-    int32 rate = 5;
-    int32 dur = 6;      // in seconds
-    int32 timeout = 7;  // in seconds
-    bool largest = 8;
-    repeated string addrs = 9;
+    Flag flag = 1;
+    string addr = 2;
+    string instr = 3;
+    int32 layer = 4;
+    int32 select = 5;
+    int32 rate = 6;
+    int32 dur = 7;      // in seconds
+    int32 timeout = 8;  // in seconds
+    repeated string data = 9;
 }
 
 message Job {
-    string addr = 1;
-    string instr = 2;
-    string id = 3;
-    int32 pid = 4;
-    bool end = 5;
-    bool err = 6;
-    int32 ret = 7;
-    repeated string output = 8;
+    Flag flag = 1;
+    string addr = 2;
+    string instr = 3;
+    string id = 4;
+    int32  pid = 5;
+    bool   end = 6;
+    int32  ret = 7;
+    int32  select = 8;
+    repeated int32  integers = 9;
+    repeated float  floats = 10;
+    repeated string data = 11;
 }
 
 message Order {
-    string addr = 1;
-    string instr = 2;
-    repeated string addrs = 3;
+    Flag flag = 1;
+    string addr = 2;
+    repeated string data = 3;
 }
 
 message Error {
-    string desc = 1;
+    Flag flag = 1;
+    string desc = 2;
 }
 
