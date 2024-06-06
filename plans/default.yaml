@@ -20,7 +20,9 @@ runs:
   - name: "BEST"
     strategy: 
       best: True
-      
   - name: "WORST"
     strategy: 
       best: False
+  - name: "RAND"
+    strategy: 
+      best: True

@@ -111,6 +111,7 @@ class Mcast(Task):
         sorted = heapq.nlargest(len(percs), enumerate(percs), key=lambda x: x[1])
 
         data = {
+                "root": self.command.addr,
                 "data": [{"addr": a, "perc": p, "recv": r} for a,p,r in zip(addrs, percs, recvs)], 
                 "selected": []
         }

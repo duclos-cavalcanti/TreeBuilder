@@ -84,6 +84,7 @@ class Parent(Task):
         else:                items = [ w for w in reversed(sorted[(-1 * self.command.select):]) ]
 
         data = {
+                "root": self.command.addr,
                 "data": [{"addr": a, "perc": p, "recv": r} for a,p,r in zip(addrs, percs, recvs)], 
                 "selected": []
         }

@@ -7,7 +7,7 @@ from .logger import Logger
 class Pool():
     def __init__(self, elements:List, K:float, N:int):
         self.base = [ e for e in elements ]
-        self.pool = elements
+        self.pool = [ e for e in elements ]
         self.K = K 
         self.N = N
         self.L = Logger()
@@ -16,12 +16,12 @@ class Pool():
         self.pool.clear()
         self.pool.extend(self.base)
 
-    def select(self):
+    def select(self, remove:bool=True):
         pool = self.pool
         size = len(pool)
         idx = random.randint(0, size - 1)
         el = self.pool[idx]
-        self.pool.pop(idx)
+        if remove: self.pool.pop(idx)
         return el
 
     def slice(self, param:int=0):

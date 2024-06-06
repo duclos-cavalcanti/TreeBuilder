@@ -30,11 +30,8 @@ class Worker(Node):
                     case Type.ERR:     self.errorACK(m)
                     case _:                   raise NotImplementedError()
 
-        except KeyboardInterrupt:
-            print("\n-------------------")
-            print("Manually Cancelled!")
-
         except Exception as e:
+            self.L.log("INTERRUPTED!")
             raise e
 
         finally:

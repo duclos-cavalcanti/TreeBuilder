@@ -44,28 +44,33 @@ class Manager(Node):
             while(not self.runQ.empty()):
                 self.run = self.runQ.get_nowait()
                 self.L.record(f"RUN[{self.run.name}]")
+
                 while(not self.run.tree.full()):
-                    c = self.parent()
-                    data = self.report()
+                    if self.run.name == "RAND": 
+                        data = self.rand()
+                    else:
+                        self.parent()
+                        data = self.report()
+
+                    root  = data["root"]
                     addrs = [ d["addr"] for d in data["selected"] ]
                     self.run.tree.n_add(addrs)
                     self.run.pool.n_remove(addrs)
-                    self.L.record(f"TREE[{self.run.tree.name}] SELECTION[{self.run.tree.n}/{self.run.tree.max}]: PARENT[{c.addr}] => CHILDREN {[c for c in addrs]}")
-                    self.L.stats(message=f"{self.run.tree}")
+                    self.L.record(f"TREE[{self.run.tree.name}] SELECTION[{self.run.tree.n}/{self.run.tree.max}]: PARENT[{root}] => CHILDREN {[c for c in addrs]}")
+                    self.L.debug(message=f"{self.run.tree}")
 
-                c = self.mcast()
+                self.mcast()
                 data = self.report()
                 self.L.record(f"TREE[{self.run.tree.name}] PERFORMANCE[{data['selected'][0]['addr']}]: {data['selected'][0]['perc']}")
+                self.L.stats(message=f"{self.run.tree}")
 
-
-        except KeyboardInterrupt:
-            self.L.log("MANUALLY CANCELLED!")
+            self.L.log("FINISHED!")
 
         except Exception as e:
+            self.L.log("INTERRUPTED!")
             raise e
 
         finally:
-            self.L.log("FINISHED!")
             self.L.flush()
             self.socket.close()
 
@@ -94,8 +99,13 @@ class Manager(Node):
         self.tasks.put(Mcast(c, job))
         return c
 
-    def rand(self):
-        pass
+    def rand(self) -> dict:
+        data = { "root": self.run.tree.next(), "selected": [] }
+        for _ in range(self.run.tree.fanout): 
+            addr = self.run.pool.select()
+            data["selected"].append({"addr": addr})
+            self.run.pool.pool.append(addr)
+        return data
 
     def report(self, dur:int=5) -> dict:
         task = self.tasks.get_nowait()
