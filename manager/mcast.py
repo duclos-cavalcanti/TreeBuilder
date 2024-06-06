@@ -121,5 +121,5 @@ class Mcast(Task):
         recv  = recvs[idx]
         data["selected"].append({"addr": addr, "perc": perc, "recv": recv})
 
-        self.L.debug(message=f"TASK[{Flag.Name(job.flag)}][{job.id}:{job.addr}]", data=data)
+        self.L.stats(message=f"TASK[{Flag.Name(job.flag)}][{job.id}:{job.addr}]", data=data)
         return data

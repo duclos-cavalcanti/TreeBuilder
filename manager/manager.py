@@ -51,7 +51,7 @@ class Manager(Node):
                     self.run.tree.n_add(addrs)
                     self.run.pool.n_remove(addrs)
                     self.L.record(f"TREE[{self.run.tree.name}] SELECTION[{self.run.tree.n}/{self.run.tree.max}]: PARENT[{c.addr}] => CHILDREN {[c for c in addrs]}")
-                    self.L.debug(message=f"{self.run.tree}")
+                    self.L.stats(message=f"{self.run.tree}")
 
                 c = self.mcast()
                 data = self.report()
