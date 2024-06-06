@@ -62,7 +62,16 @@ class Logger():
     def info(self, message: str):
         _logger.log(logging.INFO, message)
     
-    def debug(self, message: str):
+    def debug(self, message: str, data=None):
+        if not (data is None):
+            if isinstance(data, dict):
+                data = json.dumps(data, indent=4)
+                message = f"{message}: {data}"
+            else:
+                data = MessageToDict(data)
+                data = json.dumps(data, indent=4)
+                message = f"{message}: {data}"
+
         _logger.log(logging.DEBUG, message)
     
     def error(self, message: str):
@@ -74,18 +83,17 @@ class Logger():
     def record(self, message: str):
         _logger.log(RECORD, message)
 
+    def log(self, message: str, data=None, level=logging.INFO):
+        if not (data is None):
+            if isinstance(data, dict):
+                data = json.dumps(data, indent=4)
+                message = f"{message}: {data}"
+            else:
+                data = json.dumps(MessageToDict(data), indent=4)
+                message = f"{message}: {data}"
 
-    def log(self, message: str, level=logging.INFO):
         _logger.log(level, message)
     
-    def logd(self, message:str, d:dict, level=logging.INFO):
-        data = json.dumps(d, indent=4)
-        _logger.log(level, f"{message}: {data}")
-    
-    def logm(self,  message:str, m, level=logging.INFO):
-        data = MessageToDict(m)
-        self.logd(message, data, level)
-
     def flush(self):
         for handler in _logger.handlers:
             handler.flush()

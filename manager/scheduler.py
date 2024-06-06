@@ -24,7 +24,7 @@ class Scheduler():
         job = task.make()
         self.tasks[job.id] = { "task": task, "thread": self.launch(self.execute, args=(task,)) }
 
-        self.L.log(message=f"SCHEDULER DISPATCHED JOB[{job.id}:{job.addr}]")
+        self.L.log(message=f"DISPATCHED JOB[{job.id}:{job.addr}]")
         return job
 
     def report(self, job:Job):
@@ -44,8 +44,8 @@ class Scheduler():
             del task 
             del thread
 
-            self.L.log(message=f"SCHEDULER FINISHED JOB[{ret.id}:{ret.addr}]")
-            self.L.logm(message=f"", m=ret, level=logging.DEBUG)
+            self.L.log(message=f"FINALIZED JOB[{ret.id}:{ret.addr}]")
+            self.L.debug(message=f"", data=ret)
             return ret
 
     def execute(self, t:Task):
@@ -67,13 +67,13 @@ class Scheduler():
             t.job.ClearField('data')
             t.job.data.extend(data)
             t.job.end = True
-            self.L.logm(message=f"SCHEDULER DISPATCHED JOB[{t.job.id}:{t.job.addr}]", m=t.job, level=logging.DEBUG)
+            self.L.debug(message=f"DISPATCHED JOB[{t.job.id}:{t.job.addr}]", data=t.job)
 
         self.resolve(t)
         return
 
     def resolve(self, t:Task, sleep_sec:int=1):
-        self.L.log(message=f"SCHEDULER RESOLVING JOB[{t.job.id}:{t.job.addr}] DEPENDENCIES")
+        self.L.log(message=f"RESOLVING JOB[{t.job.id}:{t.job.addr}] DEPENDENCIES...")
         if len(t.dependencies) == 0: 
             return
 
@@ -92,8 +92,7 @@ class Scheduler():
 
                 if ret.end: 
                     t.dependencies[i] = ret
-                    self.L.log(message=f"SCHEDULER RESOLVED DEPENDENCY[{job.id}:{job.addr}]")
-                    self.L.logm(message=f"", m=r, level=logging.DEBUG)
+                    self.L.log(message=f"RESOLVED DEPENDENCY[{i}][{job.id}:{job.addr}]")
 
     def launch(self, target, args=()):
         t = threading.Thread(target=target, args=args)

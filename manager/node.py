@@ -1,8 +1,8 @@
 from .message   import *
-from .types     import Timer
+from .types     import Timer, Logger
 
 import zmq
-import sys
+import logging
 import random 
 import string
 
@@ -14,6 +14,7 @@ class Node():
         self.socket     = self.context.socket(stype)
         self.timer      = Timer()
         self.tick       = 1
+        self.L          = Logger()
 
     def id(self, length:int=10):
         ret = ''.join(random.choice(string.ascii_letters) for _ in range(length))
@@ -45,11 +46,29 @@ class Node():
     def recv_message(self) -> Message:
         m = Message()
         m.ParseFromString(self.socket.recv())
+
+        match m.type:
+            case Type.CONNECT: self.L.log(f"CONNECT[{m.src}]: RECV")
+            case Type.COMMAND: self.L.log(f"COMMAND[{Flag.Name(m.mdata.command.flag)}][{m.mdata.command.addr}]: RECV")
+            case Type.REPORT:  self.L.log(f"REPORT[{Flag.Name(m.mdata.job.flag)}][{m.mdata.job.addr}] RECV")
+            case Type.ACK:     pass
+            case _:            self.L.log(f"{Type.Name(m.type)}[{m.src}] RECV")
+
+
+        self.L.debug(f"RECV", data=m)
         return m
 
     def send_message(self, m:Message) -> Message:
         self.socket.send(m.SerializeToString())
         self.tick += 1
+
+        match m.type:
+            case Type.CONNECT: self.L.log(f"CONNECT[{m.dst}]: SENT")
+            case Type.COMMAND: self.L.log(f"COMMAND[{Flag.Name(m.mdata.command.flag)}][{m.mdata.command.addr}]: SENT")
+            case Type.REPORT:  self.L.log(f"REPORT[{Flag.Name(m.mdata.job.flag)}][{m.mdata.job.addr}] PROBE SENT")
+            case _:            self.L.log(f"{Type.Name(m.type)}[{m.dst}] SENT")
+
+        self.L.debug(f"SENT", data=m)
         return m
 
     def ack_message(self, m:Message, mdata:Optional[Metadata]=None):

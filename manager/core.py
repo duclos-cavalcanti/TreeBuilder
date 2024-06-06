@@ -2,11 +2,16 @@ from .manager import Manager
 from .worker  import Worker
 
 import os
+import yaml
 import argparse
 
 def manager(args):
     plan = os.path.join(os.getcwd(), "plans", "default.yaml")
-    if args.yaml: plan = args.yaml
+    if args.yaml: 
+        plan = args.yaml
+
+    with open(plan, 'r') as file: 
+        plan = yaml.safe_load(file)
 
     M = Manager(plan, ip=args.addr, port=args.port, verbosity=False) 
     M.go()

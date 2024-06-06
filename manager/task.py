@@ -28,7 +28,7 @@ class Task(ABC):
         pass
 
     @abstractmethod
-    def process(self) -> List:
+    def process(self, job:Optional[Job]=None, strategy:dict={}) -> dict:
         pass
 
     def complete(self) -> bool:

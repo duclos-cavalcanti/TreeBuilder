@@ -5,8 +5,7 @@ enum Type {
     CONNECT = 1;
     COMMAND = 2;
     REPORT = 3;
-    LOG = 4;
-    ERR = 5;
+    ERR = 4;
 }
 
 enum Flag {

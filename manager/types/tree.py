@@ -35,8 +35,7 @@ class Tree():
         if arr:
             for i,a in enumerate(arr):
                 if not self.add(a):
-                    ret = f"DEPTH={depth} / MAX={self.max} / CUR N={self.n} / IDX={i}"
-                    raise RuntimeError(f"List exceeds tree dimensions: {ret}")
+                    raise RuntimeError(f"List[{i}] exceeds tree dimensions: {self}")
 
     def _state(self):
         ret = "[ "
@@ -68,7 +67,7 @@ class Tree():
             n = self.peak()
             return n.id
         else:
-            raise RuntimeError("Tree Queue is empty")
+            raise RuntimeError("Tree queue is empty")
 
     def depth(self, node):
         d = 0 

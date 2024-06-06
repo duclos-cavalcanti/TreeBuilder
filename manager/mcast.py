@@ -4,7 +4,7 @@ from .task      import Task
 from .types     import Tree
 from .utils     import *
 
-from typing import List
+from typing import List, Optional
 
 import zmq
 import heapq
@@ -98,12 +98,15 @@ class Mcast(Task):
                 for drecv in d.integers: self.job.integers.append(drecv)
                 for dperc in d.floats:   self.job.floats.append(dperc)
 
-        return self.job
+        return self.copy()
 
-    def process(self) -> List:
-        percs  = [f for f in self.job.floats]
-        recvs  = [i for i in self.job.integers]
-        addrs  = [a for a in self.job.data]
+    def process(self, job:Optional[Job]=None, strategy:dict={}) -> dict:
+        if job is None:  job = self.job
+        if job.ret != 0: raise RuntimeError()
+
+        percs  = [f for f in job.floats]
+        recvs  = [i for i in job.integers]
+        addrs  = [a for a in job.data]
 
         sorted = heapq.nlargest(len(percs), enumerate(percs), key=lambda x: x[1])
 
@@ -111,7 +114,6 @@ class Mcast(Task):
                 "data": [{"addr": a, "perc": p, "recv": r} for a,p,r in zip(addrs, percs, recvs)], 
                 "selected": []
         }
-        ret = []
 
         idx  = sorted[0][0]
         perc = sorted[0][1]
@@ -119,8 +121,5 @@ class Mcast(Task):
         recv  = recvs[idx]
         data["selected"].append({"addr": addr, "perc": perc, "recv": recv})
 
-        ret.append(addr)
-        ret.append(perc)
-
-        self.L.logd(message=f"MCAST JOB[{self.job.id}:{self.job.addr}] RESULT", d=data, level=logging.DEBUG)
-        return ret
+        self.L.debug(message=f"TASK[{Flag.Name(job.flag)}][{job.id}:{job.addr}]", data=data)
+        return data

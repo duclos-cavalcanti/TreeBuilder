@@ -3,7 +3,7 @@ from .message   import *
 from .task      import Task
 from .utils     import *
 
-from typing import List
+from typing import List, Optional
 
 import zmq
 import heapq
@@ -70,30 +70,30 @@ class Parent(Task):
 
         return self.copy()
 
-    def process(self, best:bool=True) -> List:
-        addrs  = [a for a in self.job.data]
-        percs  = [f for f in self.job.floats]
-        recvs  = [i for i in self.job.integers]
+    def process(self, job:Optional[Job]=None, strategy:dict={}) -> dict:
+        if job is None:  job = self.job
+        if job.ret != 0: raise RuntimeError()
+
+        addrs  = [a for a in job.data]
+        percs  = [f for f in job.floats]
+        recvs  = [i for i in job.integers]
 
         sorted = heapq.nsmallest(len(percs), enumerate(percs), key=lambda x: x[1])
 
-        if best: items = sorted[:self.command.select]
-        else:    items = [ w for w in reversed(sorted[(-1 * self.command.select):]) ]
+        if strategy["best"]: items = sorted[:self.command.select]
+        else:                items = [ w for w in reversed(sorted[(-1 * self.command.select):]) ]
 
         data = {
                 "data": [{"addr": a, "perc": p, "recv": r} for a,p,r in zip(addrs, percs, recvs)], 
                 "selected": []
         }
-        ret  = []
-
         for item in items:
             idx   = item[0]
             perc  = item[1]
             addr  = addrs[idx]
             recv  = recvs[idx]
             data["selected"].append({"addr": addr, "perc": perc, "recv": recv})
-            ret.append(addr)
 
 
-        self.L.logd(message=f"PARENT JOB[{self.job.id}:{self.job.addr}] RESULT", d=data, level=logging.DEBUG)
-        return ret
+        self.L.debug(message=f"TASK[{Flag.Name(job.flag)}][{job.id}:{job.addr}]", data=data)
+        return data
