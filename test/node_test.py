@@ -8,8 +8,8 @@ import threading
 
 from queue import Queue
 
-N0_ADDR=f"localhost:8091"
-N1_ADDR=f"localhost:8090"
+N0_ADDR=f"localhost:7091"
+N1_ADDR=f"localhost:7090"
 
 L = Logger()
 
@@ -35,16 +35,19 @@ class TestNodeClass:
         N = Node(stype=zmq.REQ)
         N.socket.setsockopt(zmq.RCVTIMEO, 5000)
         L.log(message=f"SENDER NODE UP")
-
+        
         N.connect(N1_ADDR)
         L.log(message=f"SENDER NODE CONNECTED")
 
-        m = N.message(src=N0_ADDR, dst=N1_ADDR, t=Type.CONNECT)
+        s = 10000 
+        c = Command(addr=N1_ADDR, data=[f"STRING_{i}" for i in range(s)])
+        m = N.message(src=N0_ADDR, dst=N1_ADDR, t=Type.COMMAND, mdata=Metadata(command=c))
         self.Q.put(m)
 
         try: 
             N.send_message(m)
-            L.logm("SENT MESSAGE:", m)
+            L.log("SENT MESSAGE")
+            L.debug(message=f"SENT", data=m)
 
             N.recv_message()
             L.log(message=f"RECV ACK")
@@ -67,7 +70,8 @@ class TestNodeClass:
 
         try: 
             m = N.recv_message()
-            L.logm("RECV MESSAGE:", m)
+            L.log("RECV MESSAGE")
+            L.debug(message=f"RECV", data=m)
 
             self.Q.put(m)
             N.ack_message(m)
