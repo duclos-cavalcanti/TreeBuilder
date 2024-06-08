@@ -2,6 +2,8 @@
 
 deploy/*.yaml
 
+*.csv 
+
 *.log 
 *.aux
 *.bbl 
