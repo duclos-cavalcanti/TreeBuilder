@@ -1,4 +1,4 @@
-<h1 align="center">Master Thesis</h1>
+<h1 align="center">TreeFinder - Master Thesis</h1>
 <p align="center">
    VM Selection Heuristic for Financial Exchanges in the Cloud
 </p>
