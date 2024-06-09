@@ -1,27 +1,117 @@
 from .node      import Node
 from .message   import *
 from .types     import Logger
-from .scheduler import Scheduler
+from .task      import Task
+from .parent    import Parent
+from .mcast     import Mcast
 
 import zmq
+import threading
+import subprocess
 
-class Worker(Node):
-    def __init__(self, ip:str, port:str, verbosity=False):
-        super().__init__(stype=zmq.REP)
+class Controller(Node):
+    def __init__(self, name:str, ip:str, port:str):
+        super().__init__(name=name, stype=zmq.REQ)
         self.ip         = ip
         self.port       = port
         self.addr       = f"{ip}:{port}"
-        self.verbosity  = verbosity
+        self.task       = None
+        self.job        = None
+        self.thread     = None
 
-        self.scheduler  = Scheduler(self.addr)
-        self.L          = Logger(name=f"worker:{self.addr}")
+    def start(self, command:Command):
+        if   command.flag == Flag.PARENT: Constructor = Parent
+        elif command.flag == Flag.MCAST:  Constructor = Mcast
+        else:                             raise RuntimeError()
+
+        self.task   = Constructor(command)
+        self.job    = self.task.make()
+
+        self.L.log(message=f"STARTED JOB[{self.job.id}:{self.job.addr}]")
+        self.thread = threading.Thread(target=self.execute, args=(self.task,))
+        self.thread.start()
+
+        return self.job
+
+    def report(self, job:Job):
+        if self.job is None or self.task is None: 
+            raise RuntimeError()
+
+        if job.id != self.job.id:
+            raise RuntimeError()
+
+        # if job and/or it's dependencies haven't finished
+        if not self.task.complete() or self.thread.is_alive():
+            return job
+        else:
+            ret = self.task.resolve()
+            self.task   = None
+            self.job    = None
+            self.thread = None
+
+            self.L.log(message=f"FINISHED JOB[{ret.id}:{ret.addr}]")
+            return ret
+
+    def execute(self, t:Task):
+        try:
+            p = subprocess.Popen(
+                t.job.instr, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True
+            )
+            stdout, stderr = p.communicate()
+
+            data = [ s for s in (stdout if stdout else stderr).split("\n") if s ]
+            t.job.pid = p.pid
+            t.job.ret = int(p.returncode)
+
+        except Exception as e:
+            data = [ f"ERROR: {e}" ]
+            t.job.ret = -1
+
+        finally:
+            t.job.ClearField('data')
+            t.job.data.extend(data)
+            t.job.end = True
+
+        self.collect(t)
+
+    def collect(self, t:Task):
+        if len(t.dependencies) == 0: 
+            return
+
+        while True:
+            self.timer.sleep_sec(1)
+
+            if t.complete(): 
+                break
+        
+            for i, job in enumerate(t.dependencies):
+                if job.end: continue 
+        
+                m   = self.message(src=self.addr, dst=job.addr, t=Type.REPORT, mdata=Metadata(job=job))
+                r   = self.handshake(m)
+                ret = self.verify(m, r, field="job")
+
+                if ret.end: 
+                    t.dependencies[i] = ret
+                    self.L.log(message=f"COLLECTED DEPENDENCY[{i}][{job.id}:{job.addr}]")
+
+
+class Worker(Node):
+    def __init__(self, name:str, ip:str, port:str):
+        super().__init__(name=name, stype=zmq.REP)
+        self.ip         = ip
+        self.port       = port
+        self.addr       = f"{ip}:{port}"
+
+        self.controller = Controller(name="CONTROLLER", ip=ip, port=port)
+        self.L          = Logger(name=f"{name}:{self.addr}")
 
     def go(self):
         self.bind(protocol="tcp", ip=self.ip, port=self.port)
         try:
             while(True):
                 m = self.recv_message()
-                self.L.state(f"RECV[{Type.Name(m.type)}]")
+                self.L.state(f"STATE[{Type.Name(m.type)}]")
 
                 match m.type:
                     case Type.CONNECT: self.connectACK(m)
@@ -45,8 +135,11 @@ class Worker(Node):
         if not m.mdata.HasField("command"): 
             return self.err_message(m, desc=f"COMMAND[{self.addr}] FORMAT ERR")
 
+        if not self.controller.task is None:
+            return self.err_message(m, desc=f"COMMAND[{self.addr}] WORKER BUSY ERR")
+
         c = m.mdata.command
-        job = self.scheduler.add(c)
+        job = self.controller.start(c)
         return self.ack_message(m, mdata=Metadata(job=job))
 
     def reportACK(self, m:Message):
@@ -54,7 +147,7 @@ class Worker(Node):
             return self.err_message(m, desc=f"REPORT[{self.addr}] FORMAT ERR")
         
         job = m.mdata.job
-        job = self.scheduler.report(job)
+        job = self.controller.report(job)
         return self.ack_message(m, mdata=Metadata(job=job))
 
     def errorACK(self, m:Message):

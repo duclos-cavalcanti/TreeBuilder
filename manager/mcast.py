@@ -12,7 +12,7 @@ import logging
 
 class Mcast(Task):
     def make(self):
-        N = Node(stype=zmq.REQ)
+        N = Node(name=f"TASK[{Flag.Name(self.command.flag)}]", stype=zmq.REQ)
         if self.command.layer:
             if self.command.layer == self.command.depth: 
                 self.job.instr = self.rinstr(self.command.addr, 
@@ -40,8 +40,8 @@ class Mcast(Task):
                 c.layer = self.command.layer - 1
                 c.ClearField('data')
                 c.data.extend(data[i])
-                m = N.message(src=f"MCAST_TASK:{self.command.addr}", dst=a, t=Type.COMMAND, mdata=Metadata(command=c))
-                r = N.handshake(addr=a, m=m)
+                m = N.message(src=self.command.addr, dst=a, t=Type.COMMAND, mdata=Metadata(command=c))
+                r = N.handshake(m=m)
                 d = N.verify(m, r, field="job")
                 self.dependencies.append(d)
 
@@ -71,7 +71,7 @@ class Mcast(Task):
         ret += " -R"
         return ret
 
-    def summarize(self) -> Job:
+    def resolve(self) -> Job:
         if self.failed():
             return self.job
 
@@ -122,5 +122,4 @@ class Mcast(Task):
         recv  = recvs[idx]
         data["selected"].append({"addr": addr, "perc": perc, "recv": recv})
 
-        self.L.stats(message=f"TASK[{Flag.Name(job.flag)}][{job.id}:{job.addr}]", data=data)
         return data

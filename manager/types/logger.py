@@ -5,7 +5,8 @@ import sys
 from typing import List
 from google.protobuf.json_format import MessageToDict
 
-STATS  = 19
+STATS  = 18
+TREES  = 19
 # INFO = 20
 STATE  = 25
 RECORD = 26
@@ -17,6 +18,7 @@ _logger = logging.getLogger('LOGGER')
 logging.addLevelName(STATE,  "STATE")
 logging.addLevelName(RECORD, "RECORD")
 logging.addLevelName(STATS,  "STATS")
+logging.addLevelName(TREES,  "TREES")
 
 class Formatter(logging.Formatter):
     GREEN   = '\033[92m'
@@ -73,11 +75,17 @@ class Logger():
         rf.setFormatter(logging.Formatter(format))
         rf.addFilter(LevelFilter([ STATS ]))
 
+        tf = logging.FileHandler(f"{path}/trees.log", mode='w')
+        tf.setLevel(TREES)
+        tf.setFormatter(logging.Formatter(format))
+        tf.addFilter(LevelFilter([ TREES ]))
+
         logging.basicConfig(level=logging.DEBUG,
                             handlers=[ 
                                 f, 
                                 ch, 
-                                rf
+                                rf,
+                                tf
                             ]
         )
     
@@ -104,6 +112,9 @@ class Logger():
 
     def record(self, message: str):
         _logger.log(RECORD, message)
+
+    def trees(self, message: str):
+        _logger.log(TREES, message)
 
     def stats(self, message: str, data=None):
         if not (data is None):

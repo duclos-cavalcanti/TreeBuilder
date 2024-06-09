@@ -13,11 +13,11 @@ def manager(args):
     with open(plan, 'r') as file: 
         plan = yaml.safe_load(file)
 
-    M = Manager(plan, ip=args.addr, port=args.port, verbosity=False) 
+    M = Manager(plan, name=args.name, ip=args.addr, port=args.port) 
     M.go()
 
 def worker(args):
-    W = Worker(ip=args.addr, port=args.port, verbosity=False) 
+    W = Worker(name=args.name, ip=args.addr, port=args.port) 
     W.go()
 
 def parse(rem=None):

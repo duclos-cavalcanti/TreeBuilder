@@ -17,11 +17,13 @@ class Pool():
         self.pool.extend(self.base)
 
     def select(self, remove:bool=True):
+        self.L.log(f"{self}")
         pool = self.pool
         size = len(pool)
         idx = random.randint(0, size - 1)
         el = self.pool[idx]
         if remove: self.pool.pop(idx)
+        self.L.log(f"{self}")
         return el
 
     def slice(self, param:int=0):

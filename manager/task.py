@@ -24,7 +24,7 @@ class Task(ABC):
         pass
 
     @abstractmethod
-    def summarize(self) -> Job:
+    def resolve(self) -> Job:
         pass
 
     @abstractmethod

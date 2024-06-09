@@ -11,7 +11,7 @@ import logging
 
 class Parent(Task):
     def make(self):
-        N = Node(stype=zmq.REQ)
+        N = Node(name=f"TASK[{Flag.Name(self.command.flag)}]", stype=zmq.REQ)
         if self.command.layer:
             self.job.instr = self.pinstr(self.command.data, self.command.rate, self.command.dur)
             for a in self.command.data:
@@ -20,10 +20,9 @@ class Parent(Task):
                 c.addr = a
                 c.layer = self.command.layer - 1
                 c.ClearField('data')
-                m = N.message(src=f"TASK[{Flag.Name(c.flag)}:{self.command.addr}]", dst=a, t=Type.COMMAND, mdata=Metadata(command=c))
-                r = N.handshake(addr=a, m=m)
+                m = N.message(src=self.command.addr, dst=a, t=Type.COMMAND, mdata=Metadata(command=c))
+                r = N.handshake(m=m)
                 d = N.verify(m, r, field="job")
-                self.L.log(message=f"TASK[{Flag.Name(c.flag)}:{self.command.addr}] RECEIVED DEPENDENCY", level=logging.DEBUG)
                 self.dependencies.append(d)
         else:
             self.job.instr = self.cinstr(self.command.addr, self.command.rate, self.command.dur)
@@ -43,7 +42,7 @@ class Parent(Task):
         ret   += f" -r {rate} -d {dur}"
         return ret
 
-    def summarize(self) -> Job:
+    def resolve(self) -> Job:
         if self.failed():
             return self.job
 
@@ -96,5 +95,4 @@ class Parent(Task):
             data["selected"].append({"addr": addr, "perc": perc, "recv": recv})
 
 
-        self.L.stats(message=f"TASK[{Flag.Name(job.flag)}][{job.id}:{job.addr}]", data=data)
         return data

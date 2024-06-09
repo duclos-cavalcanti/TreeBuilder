@@ -25,10 +25,11 @@ message Metadata {
 message Message {
     int32 id = 1;
     int64 ts = 2;
-    string src = 3;
-    string dst = 4;
-    Type type = 5;
-    Metadata mdata = 6;
+    string ref = 3;
+    string src = 4;
+    string dst = 5;
+    Type type = 6;
+    Metadata mdata = 7;
 }
 
 message Command {

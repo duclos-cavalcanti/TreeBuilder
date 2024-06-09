@@ -9,14 +9,15 @@ import string
 from typing import Optional
 
 class Node():
-    def __init__(self, stype:int):
+    def __init__(self, name:str, stype:int):
+        self.name       = name.upper()
         self.context    = zmq.Context()
         self.socket     = self.context.socket(stype)
         self.timer      = Timer()
         self.tick       = 1
         self.L          = Logger()
 
-    def id(self, length:int=10):
+    def gen(self, length:int=10):
         ret = ''.join(random.choice(string.ascii_letters) for _ in range(length))
         return ret
 
@@ -39,7 +40,7 @@ class Node():
         self.socket.disconnect(format)
 
     def message(self, src:str, dst:str, t=Type.ACK, mdata:Optional[Metadata]=None) -> Message:
-        m = Message(id=self.tick, ts=self.timer.ts(), src=src, dst=dst, type=t)
+        m = Message(id=self.tick, ts=self.timer.ts(), ref=f"{self.name}:{src}", src=src, dst=dst, type=t)
         if not mdata is None: m.mdata.CopyFrom(mdata)
         return m
 
@@ -55,7 +56,7 @@ class Node():
             case _:            self.L.log(f"{Type.Name(m.type)}[{m.src}] RECV")
 
 
-        self.L.debug(f"RECV", data=m)
+        self.L.debug(f"{self.name} RECV", data=m)
         return m
 
     def send_message(self, m:Message) -> Message:
@@ -65,10 +66,10 @@ class Node():
         match m.type:
             case Type.CONNECT: self.L.log(f"CONNECT[{m.dst}]: SENT")
             case Type.COMMAND: self.L.log(f"COMMAND[{Flag.Name(m.mdata.command.flag)}][{m.mdata.command.addr}]: SENT")
-            case Type.REPORT:  self.L.log(f"REPORT[{Flag.Name(m.mdata.job.flag)}][{m.mdata.job.addr}] PROBE SENT")
+            case Type.REPORT:  self.L.log(f"REPORT[{Flag.Name(m.mdata.job.flag)}][{m.mdata.job.addr}] SENT")
             case _:            self.L.log(f"{Type.Name(m.type)}[{m.dst}] SENT")
 
-        self.L.debug(f"SENT", data=m)
+        self.L.debug(f"{self.name} SENT", data=m)
         return m
 
     def ack_message(self, m:Message, mdata:Optional[Metadata]=None):
@@ -80,11 +81,11 @@ class Node():
         e = Message(id=m.id, ts=self.timer.ts(), type=Type.ERR, mdata=Metadata(error=Error(desc=desc)))
         return self.send_message(e)
 
-    def handshake(self, addr:str, m:Message) -> Message:
-        self.connect(addr)
+    def handshake(self, m:Message) -> Message:
+        self.connect(m.dst)
         self.send_message(m)
         r = self.recv_message()
-        self.disconnect(addr)
+        self.disconnect(m.dst)
         return r
 
     def verify(self, m:Message, r:Message, field:str=""):

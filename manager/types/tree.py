@@ -1,3 +1,5 @@
+import hashlib 
+
 from collections import deque
 from typing import List, Callable, Optional
 from enum import Enum, auto
@@ -36,6 +38,12 @@ class Tree():
             for i,a in enumerate(arr):
                 if not self.add(a):
                     raise RuntimeError(f"List[{i}] exceeds tree dimensions: {self}")
+
+    def hash(self):
+        string = "".join(self.ids())
+        H = hashlib.sha256()
+        H.update(string.encode())
+        return H.hexdigest()
 
     def _state(self):
         ret = "[ "
@@ -89,6 +97,7 @@ class Tree():
         new  = TreeNode(id, parent=node)
         node.children.append(new)
         self.n += 1
+        self.d = self.depth(new)
 
         if verbose:
             print(f"ADDED {id} TO TREE")
@@ -98,7 +107,9 @@ class Tree():
             if not self.queue and self.n < self.max:
                 self.queue.extend(self.leaves())
 
-        self.d = self.depth(new)
+        if self.full(): 
+            self.L.trees(f"{self}")
+
         return True
 
     def find(self, id:str):
