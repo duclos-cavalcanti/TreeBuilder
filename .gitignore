@@ -3,6 +3,7 @@
 deploy/*.yaml
 
 *.csv 
+*.plan 
 
 *.log 
 *.aux
