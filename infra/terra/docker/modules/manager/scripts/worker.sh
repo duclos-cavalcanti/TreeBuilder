@@ -8,7 +8,8 @@ id="$4"
 export ROLE="$role"
 
 TAR="/work/project.tar.gz"
-mkdir /work/project
+mkdir -p /work/logs
+mkdir -p /work/project
 tar -xzf ${TAR} -C /work/project
 
 mkdir /work/project/build

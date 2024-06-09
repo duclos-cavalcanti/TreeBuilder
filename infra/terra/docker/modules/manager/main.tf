@@ -25,17 +25,13 @@ variable "ports" {
     default     = ["9092", "9093", "9094", "9095", "9096", "9097", "9098", "9099"]
 }
 
-# resource "docker_volume" "shared_volume" {
-#     name = "shared_volume"
-# }
-
 resource "docker_container" "manager" {
     name  = "manager"
     image = "ubuntu-base:jammy"
 
     volumes {
         host_path = "${var.pwd}/modules/manager/volume/"
-        container_path = "/volume"
+        container_path = "/work/logs"
         # volume_name    = docker_volume.shared_volume.name
     }
 
@@ -67,7 +63,7 @@ resource "docker_container" "workers" {
 
     volumes {
         host_path = "${var.pwd}/modules/manager/volume/"
-        container_path = "/volume"
+        container_path = "/work/logs"
         # volume_name    = docker_volume.shared_volume.name
     }
 

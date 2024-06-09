@@ -29,4 +29,5 @@ commands = [
     # "cd /work/dpdk-23.07 && sudo meson setup build && sudo ninja -C build install",
     # "export RTE_SDK=/work/dpdk-23.07",
     "sudo ldconfig",
+    "sudo pip install pyzmq protobuf",
 ]

@@ -12,6 +12,11 @@ variable "name" {
     default = "ubuntu-base-disk"
 }
 
+variable "source" {
+    type    = string
+    default = ""
+}
+
 variable "commands" {
     description = "Commands to build image"
     type        = list(string)
@@ -20,6 +25,7 @@ variable "commands" {
 source "googlecompute" "ubuntu" {
     project_id                = "multicast1"
     source_image_family       = "ubuntu-2204-lts"
+    source_image              = var.source
     zone                      = "us-east4-a"
     disk_size                 = 10
     machine_type              = "e2-standard-4"

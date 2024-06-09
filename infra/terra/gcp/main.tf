@@ -7,16 +7,28 @@ terraform {
     }
 }
 
-variable "pwd" {
-    description = "Path to present working directory"
-    type        = string
-    default     = "/path"
-}
-
 variable "mode" {
   description = "Deployment mode."
   type        = string
   default     = "default"
+}
+
+variable "machine" {
+    description = "Machine Type"
+    type        = string
+    default     = "e2-standard-4"
+}
+
+variable "image" {
+    description = "Machine Image"
+    type        = string
+    default     = "treefinder-image"
+}
+
+variable "bucket" {
+    description = "Bucket Name"
+    type        = string
+    default     = "treefinder-nyu-systems"
 }
 
 provider "google" {
@@ -28,11 +40,26 @@ provider "google" {
 module "default" {
     source = "./modules/default/"
     count = (var.mode == "default") ? 1 : 0
-    pwd = var.pwd
+
+    image   = var.image
+    machine = var.machine
+    bucket  = var.bucket
 }
 
 module "test" {
     source = "./modules/test/"
-    count = (var.mode == "test") ? 1 : 0
-    pwd = var.pwd
+    count  = (var.mode == "test") ? 1 : 0
+
+    image   = var.image
+    machine = var.machine
+    bucket  = var.bucket
+}
+
+module "jasper" {
+    source = "./modules/jasper/"
+    count = (var.mode == "jasper") ? 1 : 0
+
+    image   = var.image
+    machine = var.machine
+    bucket  = var.bucket
 }
