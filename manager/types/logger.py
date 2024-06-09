@@ -57,7 +57,7 @@ class LevelFilter(logging.Filter):
         return False
 
 class Logger():
-    def __init__(self, name:str="", path:str="/volume"):
+    def __init__(self, name:str="", path:str="/work"):
             if name: self.setup(name, path)
 
     def setup(self, name:str, path:str):

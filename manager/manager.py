@@ -86,12 +86,14 @@ class Manager(Node):
 
         self.plan       = plan
         self.workers    = self.plan["addrs"][1:]
-        self.tasks      = SimpleQueue()
+        self.tasks      = Queue()
         self.runner     = Runner(self.workers[0], self.workers[1:], plan["params"], plan["runs"])
         self.L          = Logger(name=f"manager:{self.addr}")
 
     def go(self):
         try:
+            self.L.state(f"{self.name} UP")
+
             self.establish()
             self.L.record(f"CONNECTED[{len(self.workers)}]")
 
@@ -145,12 +147,12 @@ class Manager(Node):
         return data
 
     def rand(self) -> dict:
-        data = { "root": self.run.tree.next(), "selected": [] }
-        for _ in range(self.run.tree.fanout): 
-            addr = self.run.pool.select()
-            data["selected"].append({"addr": addr})
-
-        self.run.pool.pool.extend([d["addr"] for d in data["selected"]])
+        data = { 
+            "root": self.run.tree.next(), 
+            "selected": [ 
+                         {"addr": a } for a in self.run.pool.slice(param=self.run.tree.fanout)
+            ]
+        }
         return data
 
     def report(self, dur:int=2) -> dict:

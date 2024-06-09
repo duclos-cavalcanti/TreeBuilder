@@ -2,7 +2,10 @@ from .message   import *
 from .types     import Logger
 
 from abc        import ABC, abstractmethod
-from typing     import List, Optional
+from typing     import TypedDict, List, Optional
+
+class Result(TypedDict):
+    selected: List[int]
 
 class Task(ABC):
     def __init__(self, command:Command, job:Optional[Job]=None):

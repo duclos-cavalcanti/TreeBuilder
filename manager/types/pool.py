@@ -1,11 +1,10 @@
-from typing import List
-
 import random
 
+from typing import List, Optional
 from .logger import Logger
 
 class Pool():
-    def __init__(self, elements:List, K:float, N:int):
+    def __init__(self, elements:List, K:int, N:int):
         self.base = [ e for e in elements ]
         self.pool = [ e for e in elements ]
         self.K = K 
@@ -14,21 +13,24 @@ class Pool():
 
     def reset(self):
         self.pool.clear()
-        self.pool.extend(self.base)
+        self.pool.extend([b for b in self.base])
 
-    def select(self, remove:bool=True):
-        self.L.log(f"{self}")
-        pool = self.pool
-        size = len(pool)
-        idx = random.randint(0, size - 1)
-        el = self.pool[idx]
-        if remove: self.pool.pop(idx)
-        self.L.log(f"{self}")
+    def select(self, pool:Optional[List]):
+        if pool is None: 
+            pool = self.pool
+        idx = random.randint(0, len(pool) - 1)
+        el = pool[idx]
+        pool.pop(idx)
         return el
 
-    def slice(self, param:int=0):
-        self.L.log(f"{self}")
-        return self.pool
+    def slice(self, param:int=-1):
+        if param < 0: param = self.K
+
+        if len(self.pool) <= param: 
+            return self.pool
+        else:
+            pseudo = [ p for p in self.pool ]
+            return [ self.select(pool=pseudo) for _ in range(param) ]
 
     def n_remove(self, elements:List):
         for el in elements: 
@@ -38,17 +40,8 @@ class Pool():
         for i,p in enumerate(self.pool):
             if p == el: 
                 self.pool.pop(i)
-                self.L.log(f"POOL REMOVED: {i} => {el}")
                 return
-        raise RuntimeError(f"ATTEMPT TO REMOVE[{el}] NOT IN POOL")
-
-    def to_dict(self):
-        data = {}
-        data["K"]       = self.K
-        data["N"]       = self.N
-        data["NODES"]   = [ p for p in self.pool ]
-
-        return data
+        raise RuntimeError(f"{el} NOT IN POOL")
 
     def __str__(self):
         ret =  ""
