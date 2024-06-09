@@ -11,7 +11,7 @@ addrs:
   - "localhost:9098"
   - "localhost:9099"
 params:
-  hyperparameter: 0.5
+  hyperparameter: 4
   rate: 10 
   duration: 10
   fanout: 2
