@@ -1,0 +1,22 @@
+name: DEFAULT
+infra: docker
+addrs:
+  - "localhost:9091"
+  - "localhost:9092"
+  - "localhost:9093"
+  - "localhost:9094"
+  - "localhost:9095"
+  - "localhost:9096"
+  - "localhost:9097"
+  - "localhost:9098"
+  - "localhost:9099"
+params:
+  hyperparameter: 0.5
+  rate: 10 
+  duration: 10
+  fanout: 2
+  depth: 2
+runs:
+  - name: "RAND"
+    strategy: 
+      best: True
