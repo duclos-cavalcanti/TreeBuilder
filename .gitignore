@@ -2,6 +2,10 @@
 
 deploy/*.yaml
 
+analysis/data
+analysis/data/
+analysis/data/*
+
 *.csv 
 *.plan 
 
