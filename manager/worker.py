@@ -108,9 +108,8 @@ class Worker(Node):
 
     def go(self):
         self.bind(protocol="tcp", ip=self.ip, port=self.port)
+        self.L.state(f"{self.name} UP")
         try:
-            self.L.state(f"{self.name} UP")
-
             while(True):
                 m = self.recv_message()
                 self.L.state(f"STATE[{Type.Name(m.type)}]")

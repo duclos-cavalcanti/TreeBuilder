@@ -57,7 +57,7 @@ class LevelFilter(logging.Filter):
         return False
 
 class Logger():
-    def __init__(self, name:str="", path:str="/work"):
+    def __init__(self, name:str="", path:str="/work/logs"):
             if name: self.setup(name, path)
 
     def setup(self, name:str, path:str):
@@ -70,12 +70,12 @@ class Logger():
         ch.setLevel(logging.INFO)
         ch.setFormatter(Formatter(format))
 
-        rf = logging.FileHandler(f"{path}/stats.log", mode='w')
+        rf = logging.FileHandler(f"{path}/stats-{name.split(':')[0]}.log", mode='w')
         rf.setLevel(STATS)
         rf.setFormatter(logging.Formatter(format))
         rf.addFilter(LevelFilter([ STATS ]))
 
-        tf = logging.FileHandler(f"{path}/trees.log", mode='w')
+        tf = logging.FileHandler(f"{path}/trees-{name.split(':')[0]}.log", mode='w')
         tf.setLevel(TREES)
         tf.setFormatter(logging.Formatter(format))
         tf.addFilter(LevelFilter([ TREES ]))

@@ -107,9 +107,6 @@ class Tree():
             if not self.queue and self.n < self.max:
                 self.queue.extend(self.leaves())
 
-        if self.full(): 
-            self.L.trees(f"{self}")
-
         return True
 
     def find(self, id:str):

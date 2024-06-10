@@ -3,6 +3,7 @@ from .message   import *
 from .types     import Pool, Tree, Logger
 from .parent    import Parent
 from .mcast     import Mcast
+from .utils     import *
 
 from queue      import Queue, SimpleQueue
 from typing     import List
@@ -23,12 +24,13 @@ class Run():
         self.data       = []
 
 class Runner():
-    def __init__(self, root:str, nodes:List, params:dict, runs:List):
-        self.runQ = SimpleQueue()
-        self.runs = [ Run(run, params, root, nodes) for run in runs ]
-        self.run  = self.runs[0]
-        self.data = []
-        self.L    = Logger()
+    def __init__(self, root:str, nodes:List, params:dict, runs:List, infra:str):
+        self.runQ   = SimpleQueue()
+        self.runs   = [ Run(run, params, root, nodes) for run in runs ]
+        self.run    = self.runs[0]
+        self.data   = []
+        self.infra  = infra
+        self.L      = Logger()
 
         for run in self.runs: self.runQ.put(run)
 
@@ -62,7 +64,7 @@ class Runner():
         self.L.record(f"TREE[{self.run.tree.name}] PERFORMANCE[{data['selected'][0]['addr']}]: {data['selected'][0]['perc']}")
 
     def flush(self):
-        file = f"/volume/results.csv"
+        file = f"/work/logs/results.csv"
         headers = ['NAME', 
                    'LATENCY', 
                    'ID',
@@ -77,6 +79,17 @@ class Runner():
             writer.writerow(headers)
             for d in self.data: writer.writerow(d)
 
+    def upload(self):
+        bucket = "exp-results-nyu-systems-multicast"
+        timestamp = datetime.now().strftime("%m-%d-%H:%M:%S")
+        compress  = "tar -zcvf results.tar.gz ./logs"
+        execute(f"{compress}", wdir="/work")
+
+        if self.infra == "gcp":
+            print(f"RESULTS[{bucket}] => treefinder-{timestamp}/results.tar.gz")
+            execute(f"gcloud storage cp results.tar.gz gs://{bucket}/treefinder-{timestamp}/results.tar.gz", wdir="/work")
+            execute(f"gcloud storage cp plans/default.yaml gs://{bucket}/treefinder-{timestamp}/default.yaml", wdir="/work/project")
+
 class Manager(Node):
     def __init__(self, plan:dict, name:str, ip:str, port:str):
         super().__init__(name=name, stype=zmq.REQ)
@@ -87,13 +100,12 @@ class Manager(Node):
         self.plan       = plan
         self.workers    = self.plan["addrs"][1:]
         self.tasks      = Queue()
-        self.runner     = Runner(self.workers[0], self.workers[1:], plan["params"], plan["runs"])
+        self.runner     = Runner(self.workers[0], self.workers[1:], plan["params"], plan["runs"], plan["infra"])
         self.L          = Logger(name=f"manager:{self.addr}")
 
     def go(self):
+        self.L.state(f"{self.name} UP")
         try:
-            self.L.state(f"{self.name} UP")
-
             self.establish()
             self.L.record(f"CONNECTED[{len(self.workers)}]")
 
@@ -105,10 +117,13 @@ class Manager(Node):
                     else:                       data = self.parent()
                     self.runner.build(data)
 
+                self.L.trees(f"{self.run.tree}")
+
                 data = self.mcast()
                 self.runner.log(self.run, data)
 
             self.runner.flush()
+            self.runner.upload()
             self.L.record("FINISHED!")
 
         except Exception as e:
