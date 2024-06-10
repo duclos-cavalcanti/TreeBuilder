@@ -23,40 +23,23 @@ all: build
 
 proto:
 	cd manager/message && protoc --python_out . message.proto
-	@#cd src/utils && protoc --cpp_out . message.proto
-
-udp: build
-	@./run.sh --build docker
-	@./run.sh --deploy docker --mode udp
-
-mcast: build
-	@./run.sh --build docker
-	@./run.sh --deploy docker --mode mcast
 
 build:
 	@cd build && cmake ..
 	@cd build && make
 
+udp: build
+	@./run.sh --deploy docker --mode udp
+
+mcast: build
+	@./run.sh --deploy docker --mode mcast
+
 docker:
 	@./run.sh --build docker
-	@./run.sh --deploy docker --mode manager --yaml "./plans/default.yaml"
-
-vagrant:
-	@./run.sh --build  vagrant
-	@./run.sh --deploy vagrant
-
-gcp:
-	@./run.sh --deploy gcp --mode default
-
-image:
-	@./run.sh --build gcp
+	@./run.sh --deploy docker --mode manager --yaml "./plans/docker.yaml"
 
 clean:
-	@./run.sh --clean
 	@find . -path ./jasper -prune -type f -name "*.tar.gz" -print0 | xargs -0 -I {} rm -v {}
-
-rm: clean
-	@./run.sh --remove docker
 
 docs:
 	$(MAKE) -C docs/slidev
