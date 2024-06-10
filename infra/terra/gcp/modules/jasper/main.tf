@@ -104,7 +104,7 @@ resource "google_compute_instance" "custom_instance" {
 
     metadata = {
         "enable-oslogin" = "TRUE"
-        "startup-script" = templatefile("${path.cwd}/modules/default/scripts/start.sh", {
+        "startup-script" = templatefile("${path.cwd}/modules/jasper/scripts/start.sh", {
             ROLE         = "TEST",
             CLOUD        = "GCP",
             BUCKET       = var.bucket

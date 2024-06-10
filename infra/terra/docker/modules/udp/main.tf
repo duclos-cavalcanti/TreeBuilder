@@ -7,12 +7,6 @@ terraform {
     }
 }
 
-variable "pwd" {
-    description = "Path to present working directory"
-    type        = string
-    default     = "/path"
-}
-
 variable "addrs" {
     description = "List of addrs"
     type        = list(string)
@@ -29,13 +23,13 @@ resource "docker_container" "parent" {
 
     upload {
         file = "/parent.sh"
-        source = "${var.pwd}/modules/udp/scripts/parent.sh"
+        source = "${path.cwd}/modules/udp/scripts/parent.sh"
         executable = true
     }
 
     upload {
         file = "/work/project.tar.gz"
-        source = "${var.pwd}/extract/project.tar.gz"
+        source = "${path.cwd}/extract/project.tar.gz"
         executable = false
     }
 
@@ -55,13 +49,13 @@ resource "docker_container" "children" {
 
     upload {
         file = "/child.sh"
-        source = "${var.pwd}/modules/udp/scripts/child.sh"
+        source = "${path.cwd}/modules/udp/scripts/child.sh"
         executable = true
     }
 
     upload {
         file = "/work/project.tar.gz"
-        source = "${var.pwd}/extract/project.tar.gz"
+        source = "${path.cwd}/extract/project.tar.gz"
         executable = false
     }
 

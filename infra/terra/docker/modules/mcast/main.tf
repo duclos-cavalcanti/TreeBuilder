@@ -7,12 +7,6 @@ terraform {
     }
 }
 
-variable "pwd" {
-    description = "Path to present working directory"
-    type        = string
-    default     = "/path"
-}
-
 variable "rargs" {
     description = "List of addrs"
     type        = list(string)
@@ -66,13 +60,13 @@ resource "docker_container" "root0" {
 
     upload {
         file = "/root.sh"
-        source = "${var.pwd}/modules/mcast/scripts/root.sh"
+        source = "${path.cwd}/modules/mcast/scripts/root.sh"
         executable = true
     }
 
     upload {
         file = "/work/project.tar.gz"
-        source = "${var.pwd}/extract/project.tar.gz"
+        source = "${path.cwd}/extract/project.tar.gz"
         executable = false
     }
 
@@ -91,13 +85,13 @@ resource "docker_container" "children" {
 
     upload {
         file = "/child.sh"
-        source = "${var.pwd}/modules/mcast/scripts/child.sh"
+        source = "${path.cwd}/modules/mcast/scripts/child.sh"
         executable = true
     }
 
     upload {
         file = "/work/project.tar.gz"
-        source = "${var.pwd}/extract/project.tar.gz"
+        source = "${path.cwd}/extract/project.tar.gz"
         executable = false
     }
 

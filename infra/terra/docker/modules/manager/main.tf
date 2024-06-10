@@ -7,12 +7,6 @@ terraform {
     }
 }
 
-variable "pwd" {
-    description = "Path to present working directory"
-    type        = string
-    default     = "/path"
-}
-
 variable "yaml" {
     description = "Path to present working directory"
     type        = string
@@ -30,20 +24,20 @@ resource "docker_container" "manager" {
     image = "ubuntu-base:jammy"
 
     volumes {
-        host_path = "${var.pwd}/modules/manager/volume/"
+        host_path = "${path.cwd}/modules/manager/volume/"
         container_path = "/work/logs"
         # volume_name    = docker_volume.shared_volume.name
     }
 
     upload {
         file = "/manager.sh"
-        source = "${var.pwd}/modules/manager/scripts/manager.sh"
+        source = "${path.cwd}/modules/manager/scripts/manager.sh"
         executable = true
     }
 
     upload {
         file = "/work/project.tar.gz"
-        source = "${var.pwd}/extract/project.tar.gz"
+        source = "${path.cwd}/extract/project.tar.gz"
         executable = false
     }
 
@@ -62,20 +56,20 @@ resource "docker_container" "workers" {
     image = "ubuntu-base:jammy"
 
     volumes {
-        host_path = "${var.pwd}/modules/manager/volume/"
+        host_path = "${path.cwd}/modules/manager/volume/"
         container_path = "/work/logs"
         # volume_name    = docker_volume.shared_volume.name
     }
 
     upload {
         file = "/worker.sh"
-        source = "${var.pwd}/modules/manager/scripts/worker.sh"
+        source = "${path.cwd}/modules/manager/scripts/worker.sh"
         executable = true
     }
 
     upload {
         file = "/work/project.tar.gz"
-        source = "${var.pwd}/extract/project.tar.gz"
+        source = "${path.cwd}/extract/project.tar.gz"
         executable = false
     }
 

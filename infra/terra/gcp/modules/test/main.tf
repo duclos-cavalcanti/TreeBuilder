@@ -29,6 +29,7 @@ resource "google_storage_bucket" "bucket" {
     name     = var.bucket
     location = "us-east4"
     uniform_bucket_level_access = true
+    force_destroy = true
 
     lifecycle_rule {
         condition {
@@ -115,7 +116,7 @@ resource "google_compute_firewall" "ttcs-multicast-management-ingress" {
     source_ranges = ["0.0.0.0/0"]
 
     log_config {
-        metadata = "EXCLUDE_ALL_METADATA"
+        metadata = "INCLUDE_ALL_METADATA"
     }
 }
 
@@ -139,7 +140,7 @@ resource "google_compute_firewall" "ttcs-multicast-management-egress" {
     destination_ranges = ["0.0.0.0/0"]
 
     log_config {
-        metadata = "EXCLUDE_ALL_METADATA"
+        metadata = "INCLUDE_ALL_METADATA"
     }
 }
 
@@ -155,6 +156,7 @@ resource "google_compute_instance" "instance" {
         "startup-script" = templatefile("${path.cwd}/modules/test/scripts/start.sh", {
             ROLE         = "TEST",
             CLOUD        = "GCP",
+            IP_ADDR      = "10.0.255.245",
             BUCKET       = var.bucket
         })
     }

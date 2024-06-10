@@ -31,6 +31,12 @@ variable "bucket" {
     default     = "treefinder-nyu-systems"
 }
 
+variable "pool" {
+    description = "Number of workers"
+    type        = number
+    default     = 9
+}
+
 provider "google" {
     project = "multicast1"
     region  = "us-east4"
@@ -44,6 +50,7 @@ module "default" {
     image   = var.image
     machine = var.machine
     bucket  = var.bucket
+    pool    = var.pool
 }
 
 module "test" {
