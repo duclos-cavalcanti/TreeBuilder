@@ -6,6 +6,10 @@ analysis/data
 analysis/data/
 analysis/data/*
 
+analysis/plot
+analysis/plot/
+analysis/plot/*
+
 *.csv 
 *.plan 
 
