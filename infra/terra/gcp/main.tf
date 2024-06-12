@@ -31,10 +31,14 @@ variable "bucket" {
     default     = "treefinder-nyu-systems"
 }
 
-variable "pool" {
-    description = "Number of workers"
-    type        = number
-    default     = 9
+locals {
+    data = jsondecode(file("${path.cwd}/data.json"))
+}
+
+locals {
+    addrs   = local.data.addrs
+    saddrs  = local.data.saddrs
+    port    = local.data.port
 }
 
 provider "google" {
@@ -50,7 +54,9 @@ module "default" {
     image   = var.image
     machine = var.machine
     bucket  = var.bucket
-    pool    = var.pool
+    addrs   = local.addrs
+    saddrs  = local.saddrs
+    port    = local.port
 }
 
 module "test" {
@@ -62,9 +68,9 @@ module "test" {
     bucket  = var.bucket
 }
 
-module "jasper" {
-    source = "./modules/jasper/"
-    count = (var.mode == "jasper") ? 1 : 0
+module "new" {
+    source = "./modules/new/"
+    count = (var.mode == "new") ? 1 : 0
 
     image   = var.image
     machine = var.machine

@@ -1,13 +1,12 @@
-from .node      import Node
-from .message   import *
-from .task      import Task
-from .utils     import *
+from ..message import *
+from ..task    import Task
+from ..node    import Node
+from ..utils   import *
 
 from typing import List, Optional
 
 import zmq
 import heapq
-import logging
 
 class Parent(Task):
     def make(self):

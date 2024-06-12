@@ -1,5 +1,5 @@
-from .message   import *
-from .types     import Logger
+from ..message   import *
+from ..types     import Logger
 
 from abc        import ABC, abstractmethod
 from typing     import TypedDict, List, Optional

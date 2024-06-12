@@ -40,5 +40,5 @@ popd
 echo "RUNNING PROGRAM"
 pushd /work/project
     echo "-- ROLE: $ROLE --"
-    python3 main.py -m manager -a worker -n $ROLE  -i $IP_ADDR -p $PORT
+    python3 -m manager -a worker -n $ROLE  -i $IP_ADDR -p $PORT
 popd

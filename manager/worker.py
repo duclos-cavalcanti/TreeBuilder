@@ -1,9 +1,7 @@
-from .node      import Node
 from .message   import *
 from .types     import Logger
-from .task      import Task
-from .parent    import Parent
-from .mcast     import Mcast
+from .node      import Node
+from .task      import Task, Parent, Mcast
 
 import zmq
 import threading
@@ -12,9 +10,7 @@ import subprocess
 class Controller(Node):
     def __init__(self, name:str, ip:str, port:str):
         super().__init__(name=name, stype=zmq.REQ)
-        self.ip         = ip
-        self.port       = port
-        self.addr       = f"{ip}:{port}"
+        self.addr       = f"{ip}"
         self.task       = None
         self.job        = None
         self.thread     = None
@@ -104,7 +100,7 @@ class Worker(Node):
         self.addr       = f"{ip}:{port}"
 
         self.controller = Controller(name="CONTROLLER", ip=ip, port=port)
-        self.L          = Logger(name=f"{name}:{self.addr}")
+        self.L          = Logger(name=f"{name}:{self.ip}")
 
     def go(self):
         self.bind(protocol="tcp", ip=self.ip, port=self.port)
@@ -134,10 +130,10 @@ class Worker(Node):
 
     def commandACK(self, m:Message):
         if not m.mdata.HasField("command"): 
-            return self.err_message(m, desc=f"COMMAND[{self.addr}] FORMAT ERR")
+            return self.err_message(m, desc=f"COMMAND[{self.ipaddr(self.addr)}] FORMAT ERR")
 
         if not self.controller.task is None:
-            return self.err_message(m, desc=f"COMMAND[{self.addr}] WORKER BUSY ERR")
+            return self.err_message(m, desc=f"COMMAND[{self.ipaddr(self.addr)}] WORKER BUSY ERR")
 
         c = m.mdata.command
         job = self.controller.start(c)

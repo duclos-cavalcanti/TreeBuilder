@@ -7,22 +7,26 @@ terraform {
     }
 }
 
+locals {
+    data = jsondecode(file("${path.cwd}/data.json"))
+}
+
 variable "mode" {
-  description = "Deployment mode."
-  type        = string
-  default     = "manager"
-}
-
-variable "yaml" {
-    description = "Path to present working directory"
+    description = "Deployment mode."
     type        = string
-    default     = "./plans/default.yaml"
+    default     = "manager"
 }
 
-module "manager" {
-    source = "./modules/manager/"
-    count = (var.mode == "manager") ? 1 : 0
-    yaml = var.yaml
+locals {
+    addrs = local.data.addrs
+    port  = local.data.port
+}
+
+module "default" {
+    source  = "./modules/default/"
+    count   = (var.mode == "default") ? 1 : 0
+    addrs   = local.addrs
+    port    = local.port
 }
 
 module "udp" {

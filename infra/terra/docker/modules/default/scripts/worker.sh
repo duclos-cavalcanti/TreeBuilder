@@ -3,7 +3,6 @@
 role="$1"
 addr="$2"
 port="$3"
-id="$4"
 
 export ROLE="$role"
 
@@ -20,8 +19,6 @@ popd
 
 pushd /work/project
     echo "-- ROLE: $role [ ${addr}:${port} ] --"
-    python3 main.py -m manager -a worker -n ${role}  -i ${addr} -p ${port}
-    # PID=$!
-    # echo "PID: ${PID}"
+    python3 -m manager -a worker -n ${role}  -i ${addr} -p ${port}
     bash
 popd

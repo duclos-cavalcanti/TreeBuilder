@@ -3,7 +3,6 @@
 role="$1"
 addr="$2"
 port="$3"
-yaml="$4"
 
 export ROLE="$role"
 
@@ -20,8 +19,6 @@ popd
 
 pushd /work/project
     echo "-- ROLE: $role --"
-    python3 main.py -m manager -a manager -n ${role}  -i ${addr} -p ${port} -y ${yaml}
-    # PID=$!
-    # echo "PID: ${PID}"
+    python3 -m manager -a manager -n ${role}  -i ${addr} -p ${port} -y plans/docker.yaml
     bash
 popd

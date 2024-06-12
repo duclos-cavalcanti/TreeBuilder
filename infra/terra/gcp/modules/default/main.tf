@@ -25,20 +25,22 @@ variable "bucket" {
     default     = "treefinder-nyu-systems"
 }
 
-variable "pool" {
-    description = "Number of workers"
-    type        = number
-    default     = 9
+variable "addrs" {
+    description = "List of ip addresses"
+    type        = list(string)
+    default     = ["localhost"]
 }
 
-locals {
-    instances = [
-        for i in range(var.pool) : {
-            name = "worker${i}"
-            service_ip = "10.0.1.${i + 1}"
-            management_ip = "10.1.1.${i + 1}"
-        }
-    ]
+variable "port" {
+    description = "List of ports"
+    type        = number
+    default     = 9091
+}
+
+variable "saddrs" {
+    description = "List of service ip addresses"
+    type        = list(string)
+    default     = ["localhost"]
 }
 
 resource "google_storage_bucket" "bucket" {
@@ -93,8 +95,8 @@ resource "google_compute_instance" "manager_instance" {
         "startup-script" = templatefile("${path.cwd}/modules/default/scripts/manager.sh", {
             ROLE         = "manager",
             CLOUD        = "GCP",
-            IP_ADDR      = "10.0.1.0",
-            PORT         = 9091,
+            IP_ADDR      = var.addrs[0],
+            PORT         = var.port,
             BUCKET       = var.bucket
         })
     }
@@ -102,7 +104,7 @@ resource "google_compute_instance" "manager_instance" {
     network_interface {
         network     = data.google_compute_network.multicast-management.name
         subnetwork  = data.google_compute_subnetwork.multicast-management-subnet.name
-        network_ip  = "10.1.1.0"
+        network_ip  = var.addrs[0]
         nic_type    = "GVNIC"
         stack_type  = "IPV4_ONLY"
     }
@@ -110,7 +112,7 @@ resource "google_compute_instance" "manager_instance" {
     network_interface {
         network     = data.google_compute_network.multicast-service.name
         subnetwork  = data.google_compute_subnetwork.multicast-service-subnet.name
-        network_ip  = "10.0.1.0"
+        network_ip  = var.saddrs[0]
         nic_type    = "GVNIC"
         stack_type  = "IPV4_ONLY"
     }
@@ -132,8 +134,8 @@ resource "google_compute_instance" "manager_instance" {
 }
 
 resource "google_compute_instance" "worker_instance" {
-    for_each     = { for inst in local.instances : inst.name => inst }
-    name         = each.value.name
+    count = length(var.addrs) - 1
+    name  = "worker${count.index}"
     machine_type = var.machine
     zone         = "us-east4-c"
 
@@ -142,10 +144,10 @@ resource "google_compute_instance" "worker_instance" {
     metadata = {
         "enable-oslogin" = "TRUE"
         "startup-script" = templatefile("${path.cwd}/modules/default/scripts/worker.sh", {
-            ROLE         = each.value.name,
+            ROLE         = "worker${count.index}",
             CLOUD        = "GCP",
-            IP_ADDR      = each.value.management_ip,
-            PORT         = 9091,
+            IP_ADDR      = var.addrs[count + 1],
+            PORT         = var.port,
             BUCKET       = var.bucket
         })
     }
@@ -153,7 +155,7 @@ resource "google_compute_instance" "worker_instance" {
     network_interface {
         network     = data.google_compute_network.multicast-management.name
         subnetwork  = data.google_compute_subnetwork.multicast-management-subnet.name
-        network_ip  = each.value.management_ip
+        network_ip  = var.addrs[count + 1]
         nic_type    = "GVNIC"
         stack_type  = "IPV4_ONLY"
     }
@@ -161,7 +163,7 @@ resource "google_compute_instance" "worker_instance" {
     network_interface {
         network     = data.google_compute_network.multicast-service.name
         subnetwork  = data.google_compute_subnetwork.multicast-service-subnet.name
-        network_ip  = each.value.service_ip
+        network_ip  = var.saddrs[count + 1]
         nic_type    = "GVNIC"
         stack_type  = "IPV4_ONLY"
     }

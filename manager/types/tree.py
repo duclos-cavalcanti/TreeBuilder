@@ -1,10 +1,10 @@
+from .logger import Logger
+
 import hashlib 
 
 from collections import deque
 from typing import List, Callable, Optional
 from enum import Enum, auto
-
-from .logger import Logger
 
 class Format(Enum):
     TREE = auto()
@@ -85,11 +85,11 @@ class Tree():
             n = n.parent
         return d
 
-    def n_add(self, arr:List, verbose:bool=False):
+    def n_add(self, arr:List):
         for id in arr:
-            self.add(id, verbose=verbose)
+            self.add(id)
 
-    def add(self, id, verbose:bool=False):
+    def add(self, id):
         if self.full():
             return False
 
@@ -98,9 +98,6 @@ class Tree():
         node.children.append(new)
         self.n += 1
         self.d = self.depth(new)
-
-        if verbose:
-            print(f"ADDED {id} TO TREE")
 
         if len(node.children) >= self.fanout:
             self.queue.popleft()

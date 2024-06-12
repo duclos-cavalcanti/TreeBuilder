@@ -1,16 +1,16 @@
-from .node      import Node
 from .message   import *
 from .types     import Pool, Tree, Logger
-from .parent    import Parent
-from .mcast     import Mcast
+from .node      import Node
+from .task      import Parent, Mcast
 from .utils     import *
 
-from queue      import Queue, SimpleQueue
-from typing     import List
-from datetime import datetime
+from queue              import Queue, SimpleQueue
+from typing             import List
+from datetime           import datetime
 
 import zmq
 import csv
+import os
 
 class Run():
     def __init__(self, run:dict, params:dict, root:str, nodes:List):
@@ -63,7 +63,7 @@ class Runner():
         self.data.append(row)
         self.L.record(f"TREE[{self.run.tree.name}] PERFORMANCE[{data['selected'][0]['addr']}]: {data['selected'][0]['perc']}")
 
-    def flush(self):
+    def write(self):
         file = f"/work/logs/results.csv"
         headers = ['NAME', 
                    'LATENCY', 
@@ -80,15 +80,31 @@ class Runner():
             for d in self.data: writer.writerow(d)
 
     def upload(self):
+        if not self.infra in ["gcp", "docker"]:
+            return
+
         bucket = "exp-results-nyu-systems-multicast"
         timestamp = datetime.now().strftime("%m-%d-%H:%M:%S")
-        compress  = "tar -zcvf results.tar.gz ./logs"
-        execute(f"{compress}", wdir="/work")
+        folder = f"treefinder-{self.infra}-{timestamp}/results.tar.gz"
+
+        if os.system(f"cd /work && tar -zcvf results.tar.gz ./logs") != 0: 
+            raise RuntimeError()
 
         if self.infra == "gcp":
-            print(f"RESULTS[{bucket}] => treefinder-{timestamp}/results.tar.gz")
-            execute(f"gcloud storage cp results.tar.gz gs://{bucket}/treefinder-{timestamp}/results.tar.gz", wdir="/work")
-            execute(f"gcloud storage cp plans/default.yaml gs://{bucket}/treefinder-{timestamp}/default.yaml", wdir="/work/project")
+            if os.system(f"cd /work && gcloud storage cp results.tar.gz gs://{bucket}/{folder}/results.tar.gz") != 0: 
+                raise RuntimeError()
+
+            if os.system(f"cd /work && gcloud storage cp project/plans/default.yaml gs://{bucket}/{folder}/default.yaml") != 0: 
+                raise RuntimeError()
+
+        else:
+            if os.system(f"cd /work && mv results.tar.gz /work/logs") != 0: 
+                raise RuntimeError()
+
+            if os.system(f"cd /work && mv project/plans/docker.yaml /work/logs") != 0: 
+                raise RuntimeError()
+
+        self.L.record(f"RESULTS[{bucket}] => {folder}!")
 
 class Manager(Node):
     def __init__(self, plan:dict, name:str, ip:str, port:str):
@@ -101,7 +117,7 @@ class Manager(Node):
         self.workers    = self.plan["addrs"][1:]
         self.tasks      = Queue()
         self.runner     = Runner(self.workers[0], self.workers[1:], plan["params"], plan["runs"], plan["infra"])
-        self.L          = Logger(name=f"manager:{self.addr}")
+        self.L          = Logger(name=f"manager:{self.ip}")
 
     def go(self):
         self.L.state(f"{self.name} UP")
@@ -122,7 +138,7 @@ class Manager(Node):
                 data = self.mcast()
                 self.runner.log(self.run, data)
 
-            self.runner.flush()
+            self.runner.write()
             self.runner.upload()
             self.L.record("FINISHED!")
 

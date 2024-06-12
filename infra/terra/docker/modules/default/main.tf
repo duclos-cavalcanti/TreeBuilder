@@ -7,16 +7,24 @@ terraform {
     }
 }
 
-variable "yaml" {
-    description = "Path to present working directory"
-    type        = string
-    default     = "./plans/default.yaml"
+resource "docker_network" "custom_network" {
+    name = "custom_network"
+    ipam_config {
+      subnet  = "10.1.1.0/24"
+      gateway = "10.1.1.254"
+    }
 }
 
-variable "ports" {
-    description = "List of ports"
+variable "addrs" {
+    description = "List of ip addresses"
     type        = list(string)
-    default     = ["9092", "9093", "9094", "9095", "9096", "9097", "9098", "9099"]
+    default     = ["localhost"]
+}
+
+variable "port" {
+    description = "List of ports"
+    type        = number
+    default     = 9091
 }
 
 resource "docker_container" "manager" {
@@ -24,14 +32,14 @@ resource "docker_container" "manager" {
     image = "ubuntu-base:jammy"
 
     volumes {
-        host_path = "${path.cwd}/modules/manager/volume/"
+        host_path = "${path.cwd}/modules/default/volume/"
         container_path = "/work/logs"
         # volume_name    = docker_volume.shared_volume.name
     }
 
     upload {
         file = "/manager.sh"
-        source = "${path.cwd}/modules/manager/scripts/manager.sh"
+        source = "${path.cwd}/modules/default/scripts/manager.sh"
         executable = true
     }
 
@@ -41,9 +49,12 @@ resource "docker_container" "manager" {
         executable = false
     }
 
-    network_mode = "host"
+    networks_advanced {
+        name         = docker_network.custom_network.name
+        ipv4_address = var.addrs[0]
+    }
 
-    entrypoint = ["/bin/bash", "/manager.sh", "manager", "localhost", "9091", "${var.yaml}" ]
+    entrypoint = ["/bin/bash", "/manager.sh", "manager", var.addrs[0], var.port ]
 
     rm         = true
     tty        = true
@@ -51,19 +62,19 @@ resource "docker_container" "manager" {
 }
 
 resource "docker_container" "workers" {
-    count = length(var.ports)
+    count = length(var.addrs) - 1
     name  = "worker${count.index}"
     image = "ubuntu-base:jammy"
 
     volumes {
-        host_path = "${path.cwd}/modules/manager/volume/"
+        host_path = "${path.cwd}/modules/default/volume/"
         container_path = "/work/logs"
         # volume_name    = docker_volume.shared_volume.name
     }
 
     upload {
         file = "/worker.sh"
-        source = "${path.cwd}/modules/manager/scripts/worker.sh"
+        source = "${path.cwd}/modules/default/scripts/worker.sh"
         executable = true
     }
 
@@ -73,9 +84,12 @@ resource "docker_container" "workers" {
         executable = false
     }
 
-    network_mode = "host"
+    networks_advanced {
+        name         = docker_network.custom_network.name
+        ipv4_address = var.addrs[1 + count.index]
+    }
 
-    entrypoint = ["/bin/bash", "/worker.sh", "worker${count.index}", "localhost", var.ports[count.index], count.index]
+    entrypoint = ["/bin/bash", "/worker.sh", "worker${count.index}", var.addrs[count.index + 1], var.port]
 
     rm         = true
     tty        = true

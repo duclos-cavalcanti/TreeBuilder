@@ -1,7 +1,8 @@
+from .logger import Logger
+
 import random
 
 from typing import List, Optional
-from .logger import Logger
 
 class Pool():
     def __init__(self, elements:List, K:int, N:int):

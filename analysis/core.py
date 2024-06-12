@@ -1,9 +1,6 @@
-import argparse
 import subprocess
 import os
-import shutil
 import tarfile
-import csv
 
 def run(command:str, verbose:bool=False) -> list[str]:
     ret = subprocess.run(command.split(" "), stdout=subprocess.PIPE, text=True)
@@ -13,8 +10,6 @@ def run(command:str, verbose:bool=False) -> list[str]:
             print(a)
 
     return arr
-
-# treefinder-06-10-14:21:46
 
 def pull(args):
     print(f"PULLING: {args.prefix}")
@@ -45,43 +40,3 @@ def pull(args):
 
 def process(args):
     raise NotImplementedError()
-
-def parse(rem=None):
-    arg_def = argparse.ArgumentParser(
-        description='Script to automate data analysis.',
-        epilog='Example: main.py --action/-a pull -p <prefix>'
-    )
-
-    arg_def.add_argument(
-        "-a", "--action",
-        type=str,
-        choices=["pull", "process"],
-        required=True,
-        dest="action",
-    )
-
-    arg_def.add_argument(
-        "-p", "--prefix",
-        type=str,
-        required=True,
-        dest="prefix",
-    )
-
-    if not rem: args = arg_def.parse_args()
-    else: args = arg_def.parse_args(rem)
-
-    return args
-
-def main(rem):
-    args = parse(rem)
-
-    match args.action:
-        case "pull":    pull(args)
-        case "process": process(args)
-        case _:         raise NotImplementedError()
-
-    return
-
-
-if __name__ == "__main__":
-    main(rem=None)

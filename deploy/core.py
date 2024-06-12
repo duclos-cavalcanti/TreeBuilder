@@ -1,8 +1,8 @@
-import os
-import argparse
-import yaml
-
 from .utils import *
+
+import os
+import yaml
+import json
 
 def compress(dst:str):
     command = "tar --exclude=jasper \
@@ -24,10 +24,10 @@ def compress(dst:str):
     command = f"{command} {dst}/project.tar.gz ."
     execute(command)
 
-def config(args):
-    config = "plans/default.yaml"
-    port   = 9091
-    addrs  = [ f"10.1.1.{i}:{port}" for i in range(args.pool + 1) ]
+def config(args, wdir):
+    config = "plans/default.yaml" if args.infra == "gcp" else "plans/docker.yaml"
+    addrs   = [ f"10.1.1.{i + 1}:{args.port}" for i in range(args.size + 1) ]
+    saddrs  = [ f"10.1.0.{i + 1}:{args.port}" for i in range(args.size + 1) ]
     data = {
             "infra": args.infra,
             "addrs": addrs,
@@ -63,15 +63,24 @@ def config(args):
     with open(config, "w") as file: 
         yaml.dump(data, file, sort_keys=False)
 
+    with open(f"{wdir}/data.json", "w") as file: 
+        json.dump({
+                "port":     args.port,
+                "addrs":    [ a.split(":")[0] for a in data["addrs"] ],
+                "saddrs":   [ a.split(":")[0] for a in saddrs ]
+                }, file)
+
+    return data
+
 def plan(args):
     wdir = os.path.join(os.getcwd(), "infra", "terra", args.infra)
     if not os.path.isdir(wdir): raise RuntimeError(f"Not a directory: {wdir}")
 
     compress(f"{wdir}/extract")
-    out = try_execute(f"terraform init", wdir=wdir)
-    out = try_execute(f"terraform plan -out=tf.plan -var mode=default -var pool={args.pool}", wdir=wdir)
-    with open(f"{wdir}/plan.log", "w") as file: file.write(out.decode("utf-8"))
-    config(args)
+    config(args, wdir)
+    execute(f"terraform init", wdir=wdir)
+    out = lexecute(f"terraform plan -out=tf.plan -var mode={args.mode}", wdir=wdir)
+    with open(f"{wdir}/plan.log", "w") as file: file.write(out.decode('utf-8'))
 
 def deploy(args):
     wdir = os.path.join(os.getcwd(), "infra", "terra", args.infra)
@@ -85,84 +94,3 @@ def destroy(args):
 
     lexecute(f"terraform destroy -auto-approve", wdir=wdir)
 
-def parse(rem=None):
-    arg_def = argparse.ArgumentParser(
-        description='Module to automate terraform stack management.',
-        epilog='Example: core.py -a plan -i gcp'
-    )
-
-    arg_def.add_argument(
-        "-a", "--action",
-        type=str,
-        required=True,
-        choices=["plan", "deploy", "destroy"],
-        dest="action",
-    )
-
-    arg_def.add_argument(
-        "-i", "--infra",
-        type=str,
-        required=False,
-        default="gcp",
-        choices=["docker", "gcp"],
-        dest="infra",
-    )
-
-    arg_def.add_argument(
-        "-f", "--fanout",
-        type=int,
-        default=2,
-        required=False,
-        dest="fanout",
-    )
-
-    arg_def.add_argument(
-        "-d", "--depth",
-        type=int,
-        default=2,
-        required=False,
-        dest="depth",
-    )
-
-    arg_def.add_argument(
-        "-r", "--rate",
-        type=int,
-        default=10,
-        required=False,
-        dest="rate",
-    )
-
-    arg_def.add_argument(
-        "-t", "--time",
-        type=int,
-        default=10,
-        required=False,
-        dest="duration",
-    )
-
-    arg_def.add_argument(
-        "-p", "--pool",
-        type=int,
-        default=9,
-        required=False,
-        dest="pool",
-    )
-
-    if not rem: args = arg_def.parse_args()
-    else: args = arg_def.parse_args(rem)
-
-    return args
-
-def main(rem):
-    args = parse(rem)
-
-    match args.action:
-        case "plan":    plan(args)
-        case "deploy":  deploy(args)
-        case "destroy": destroy(args)
-        case _:         raise NotImplementedError()
-
-    return
-
-if __name__ == "__main__":
-    main(rem=None)
