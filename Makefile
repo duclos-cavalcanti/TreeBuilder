@@ -18,7 +18,7 @@ ifeq (, $(shell which terraform))
 $(error terraform not found)
 endif
 
-.PHONY: build docs test proto udp docker vagrant gcp image clean rm
+.PHONY: proto build udp mcast docker gcp clean docs test 
 all: build
 
 proto:
@@ -29,17 +29,20 @@ build:
 	@cd build && make
 
 udp: build
-	@./run.sh --deploy docker --mode udp
+	@python3 -m deploy -a plan   -i docker -m udp
+	@python3 -m deploy -a deploy -i docker
 
 mcast: build
-	@./run.sh --deploy docker --mode mcast
+	@python3 -m deploy -a plan   -i docker -m mcast
+	@python3 -m deploy -a deploy -i docker
 
 docker:
-	@./run.sh --build docker
-	@./run.sh --deploy docker --mode manager --yaml "./plans/docker.yaml"
+	@python3 -m deploy -a plan   -i docker -s 8 -p 9092
+	@python3 -m deploy -a deploy -i docker
 
 clean:
 	@find . -path ./jasper -prune -type f -name "*.tar.gz" -print0 | xargs -0 -I {} rm -v {}
+	@python3 -m deploy -a destroy -i docker
 
 docs:
 	$(MAKE) -C docs/slidev
