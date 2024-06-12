@@ -4,7 +4,7 @@ from ..types     import Logger
 from abc        import ABC, abstractmethod
 from typing     import TypedDict, List, Optional
 
-class Result(TypedDict):
+class TaskResult(TypedDict):
     selected: List[int]
 
 class Task(ABC):

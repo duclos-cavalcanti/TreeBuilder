@@ -83,26 +83,26 @@ class Runner():
         if not self.infra in ["gcp", "docker"]:
             return
 
-        bucket = "exp-results-nyu-systems-multicast"
-        timestamp = datetime.now().strftime("%m-%d-%H:%M:%S")
-        folder = f"treefinder-{self.infra}-{timestamp}/results.tar.gz"
-
-        if os.system(f"cd /work && tar -zcvf results.tar.gz ./logs") != 0: 
-            raise RuntimeError()
+        bucket      = "exp-results-nyu-systems-multicast"
+        timestamp   = datetime.now().strftime("%m-%d-%H:%M:%S")
+        folder      = f"treefinder-{self.infra}-{timestamp}/results.tar.gz"
+        commands    = [ f"cd /work && tar -zcvf results.tar.gz ./logs" ]
 
         if self.infra == "gcp":
-            if os.system(f"cd /work && gcloud storage cp results.tar.gz gs://{bucket}/{folder}/results.tar.gz") != 0: 
-                raise RuntimeError()
-
-            if os.system(f"cd /work && gcloud storage cp project/plans/default.yaml gs://{bucket}/{folder}/default.yaml") != 0: 
-                raise RuntimeError()
+            commands += [ 
+                f"cd /work && gcloud storage cp results.tar.gz gs://{bucket}/{folder}/results.tar.gz",
+                f"cd /work && gcloud storage cp project/plans/default.yaml gs://{bucket}/{folder}/default.yaml"
+            ]
 
         else:
-            if os.system(f"cd /work && mv results.tar.gz /work/logs") != 0: 
-                raise RuntimeError()
+            commands += [ 
+                f"cd /work && mv results.tar.gz /work/logs",
+                f"cd /work && mv project/plans/docker.yaml /work/logs"
+            ]
 
-            if os.system(f"cd /work && mv project/plans/docker.yaml /work/logs") != 0: 
-                raise RuntimeError()
+        for c in commands: 
+            if os.system(f"{c}") != 0: 
+                raise RuntimeError(f"{c} failed")
 
         self.L.record(f"RESULTS[{bucket}] => {folder}!")
 

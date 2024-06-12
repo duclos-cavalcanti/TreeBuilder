@@ -17,7 +17,7 @@ def parse():
     )
 
     arg_def.add_argument(
-        "-M", "--MODE",
+        "-m", "--mode",
         type=str,
         required=False,
         default="default",
