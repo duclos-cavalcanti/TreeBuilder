@@ -20,7 +20,7 @@ class Node():
         ret = ''.join(random.choice(string.ascii_letters) for _ in range(length))
         return ret
 
-    def ipaddr(self, addr:str):
+    def ip(self, addr:str):
         ip = addr.split(":")[0]
         return ip
 
@@ -52,11 +52,11 @@ class Node():
         m.ParseFromString(self.socket.recv())
 
         match m.type:
-            case Type.CONNECT: self.L.log(f"CONNECT[{self.ipaddr(m.src)}]: RECV")
-            case Type.COMMAND: self.L.log(f"COMMAND[{Flag.Name(m.mdata.command.flag)}][{self.ipaddr(m.mdata.command.addr)}]: RECV")
-            case Type.REPORT:  self.L.log(f"REPORT[{Flag.Name(m.mdata.job.flag)}][{self.ipaddr(m.mdata.job.addr)}] RECV")
+            case Type.CONNECT: self.L.log(f"CONNECT[{self.ip(m.src)}]: RECV")
+            case Type.COMMAND: self.L.log(f"COMMAND[{Flag.Name(m.mdata.command.flag)}][{self.ip(m.mdata.command.addr)}]: RECV")
+            case Type.REPORT:  self.L.log(f"REPORT[{Flag.Name(m.mdata.job.flag)}][{self.ip(m.mdata.job.addr)}] RECV")
             case Type.ACK:     pass
-            case _:            self.L.log(f"{Type.Name(m.type)}[{self.ipaddr(m.src)}] RECV")
+            case _:            self.L.log(f"{Type.Name(m.type)}[{self.ip(m.src)}] RECV")
 
 
         self.L.debug(f"{self.name} RECV", data=m)
@@ -67,10 +67,10 @@ class Node():
         self.tick += 1
 
         match m.type:
-            case Type.CONNECT: self.L.log(f"CONNECT[{self.ipaddr(m.dst)}]: SENT")
-            case Type.COMMAND: self.L.log(f"COMMAND[{Flag.Name(m.mdata.command.flag)}][{self.ipaddr(m.mdata.command.addr)}]: SENT")
-            case Type.REPORT:  self.L.log(f"REPORT[{Flag.Name(m.mdata.job.flag)}][{self.ipaddr(m.mdata.job.addr)}] SENT")
-            case _:            self.L.log(f"{Type.Name(m.type)}[{self.ipaddr(m.dst)}] SENT")
+            case Type.CONNECT: self.L.log(f"CONNECT[{self.ip(m.dst)}]: SENT")
+            case Type.COMMAND: self.L.log(f"COMMAND[{Flag.Name(m.mdata.command.flag)}][{self.ip(m.mdata.command.addr)}]: SENT")
+            case Type.REPORT:  self.L.log(f"REPORT[{Flag.Name(m.mdata.job.flag)}][{self.ip(m.mdata.job.addr)}] SENT")
+            case _:            self.L.log(f"{Type.Name(m.type)}[{self.ip(m.dst)}] SENT")
 
         self.L.debug(f"{self.name} SENT", data=m)
         return m

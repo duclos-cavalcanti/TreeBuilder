@@ -109,15 +109,12 @@ class Runner():
 class Manager(Node):
     def __init__(self, plan:dict, name:str, ip:str, port:str):
         super().__init__(name=name, stype=zmq.REQ)
-        self.ip         = ip
-        self.port       = port
         self.addr       = f"{ip}:{port}"
-
         self.plan       = plan
         self.workers    = self.plan["addrs"][1:]
         self.tasks      = Queue()
         self.runner     = Runner(self.workers[0], self.workers[1:], plan["params"], plan["runs"], plan["infra"])
-        self.L          = Logger(name=f"manager:{self.ip}")
+        self.L          = Logger(name=f"{name}:{ip}")
 
     def go(self):
         self.L.state(f"{self.name} UP")
@@ -194,9 +191,5 @@ class Manager(Node):
             r = self.handshake(m)
             rjob = self.verify(m, r, field="job")
 
-            if rjob.end: 
-                data = task.process(rjob, self.run.strategy)
-                self.L.stats(message=f"TASK[{Flag.Name(rjob.flag)}][{rjob.id}:{rjob.addr}]", data=data)
-                return data
-
-            self.timer.sleep_sec(dur)
+            if rjob.end: return task.process(rjob, self.run.strategy)
+            else:        self.timer.sleep_sec(dur)

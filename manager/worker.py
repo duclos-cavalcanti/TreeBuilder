@@ -10,7 +10,7 @@ import subprocess
 class Controller(Node):
     def __init__(self, name:str, ip:str, port:str):
         super().__init__(name=name, stype=zmq.REQ)
-        self.addr       = f"{ip}"
+        self.addr       = f"{ip}:{port}"
         self.task       = None
         self.job        = None
         self.thread     = None
@@ -95,12 +95,9 @@ class Controller(Node):
 class Worker(Node):
     def __init__(self, name:str, ip:str, port:str):
         super().__init__(name=name, stype=zmq.REP)
-        self.ip         = ip
-        self.port       = port
         self.addr       = f"{ip}:{port}"
-
         self.controller = Controller(name="CONTROLLER", ip=ip, port=port)
-        self.L          = Logger(name=f"{name}:{self.ip}")
+        self.L          = Logger(name=f"{name}:{ip}")
 
     def go(self):
         self.bind(protocol="tcp", ip=self.ip, port=self.port)
