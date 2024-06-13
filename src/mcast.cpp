@@ -20,7 +20,6 @@ std::string name = "";
 int port = 0;
 int rate = 0, duration = 0;
 bool ROOT    = false;
-bool LEAF    = false;
 bool verbose = false;
 
 void log(const char* format, ...) {
@@ -59,7 +58,7 @@ std::vector<std::string> split(const std::string& s, char delimiter) {
 int parse(int argc, char **argv) {
     int opt = 0, opti = 0;
     int ret = 0;
-    while ( (opt = getopt (argc, argv, "hn:i:p:a:r:d:vRL") ) != -1 ) {
+    while ( (opt = getopt (argc, argv, "hn:i:p:a:r:d:vR") ) != -1 ) {
         switch (opt) {
         case 'h':
             usage(EXIT_SUCCESS);
@@ -103,10 +102,6 @@ int parse(int argc, char **argv) {
             duration = atoi(optarg);
             break;
 
-        case 'L':
-            LEAF = true;
-            break;
-
         case 'R':
             ROOT = true;
             break;
@@ -125,7 +120,6 @@ int parse(int argc, char **argv) {
     if (!duration)              usage(EXIT_FAILURE);
     if (!ROOT && ip == "")      usage(EXIT_FAILURE);
     if (!ROOT && port == 0)     usage(EXIT_FAILURE);
-    if (addrs.empty() && !LEAF) usage(EXIT_FAILURE);
     if (optind > argc)          usage(EXIT_FAILURE);
     return ret;
 }
@@ -312,7 +306,7 @@ int leaf(void) {
 
 int main(int argc, char **argv) {
     parse(argc, argv);
-    if (ROOT)       return root();
-    else if (LEAF)  return leaf();
-    else            return proxy();
+    if (ROOT)                return root();
+    else if (addrs.empty())  return leaf();
+    else                     return proxy();
 }
