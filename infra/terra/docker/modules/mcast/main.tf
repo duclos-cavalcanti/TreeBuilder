@@ -7,55 +7,28 @@ terraform {
     }
 }
 
-variable "rargs" {
-    description = "List of addrs"
+resource "docker_network" "custom_network" {
+    name = "custom_network"
+    ipam_config {
+      subnet  = "10.1.1.0/24"
+      gateway = "10.1.1.254"
+    }
+}
+
+variable "addrs" {
+    description = "List of ip addresses"
     type        = list(string)
-    default     = ["-r", "10", 
-                   "-d", "10", 
-                   "-a", "localhost:8080", "localhost:8081",
-                   "-R"
-                  ]
+    default     = ["localhost"]
 }
 
-variable "cargs" {
-    description = "List of addrs"
-    type        = list(list(string))
-    default     = [
-        ["-i", "localhost", 
-         "-p", "8080", 
-         "-a", "localhost:8082", "localhost:8083",
-         "-r", "10", 
-         "-d", "10"],
-        ["-i", "localhost", 
-         "-p", "8081", 
-         "-a", "localhost:8084", "localhost:8085",
-         "-r", "10", 
-         "-d", "10"],
-        ["-i", "localhost", 
-         "-p", "8082", 
-         "-r", "10", 
-         "-d", "10",
-         "-L"],
-        ["-i", "localhost", 
-         "-p", "8083", 
-         "-r", "10", 
-         "-d", "10",
-         "-L"],
-        ["-i", "localhost", 
-         "-p", "8084", 
-         "-r", "10", 
-         "-d", "10",
-         "-L"],
-        ["-i", "localhost", 
-         "-p", "8085", 
-         "-r", "10", 
-         "-d", "10",
-         "-L"],
-    ]
+variable "commands" {
+    description = "List of commands to run"
+    type        = list(string)
+    default     = ["echo hi"]
 }
 
-resource "docker_container" "root0" {
-    name  = "root0"
+resource "docker_container" "root" {
+    name  = "root"
     image = "ubuntu-base:jammy"
 
     upload {
@@ -70,8 +43,12 @@ resource "docker_container" "root0" {
         executable = false
     }
 
-    network_mode = "host"
-    entrypoint = concat(["/bin/bash", "/root.sh", "ROOT0"], var.rargs)
+    networks_advanced {
+        name         = docker_network.custom_network.name
+        ipv4_address = var.addrs[0]
+    }
+
+    entrypoint = ["/bin/bash", "/root.sh", "ROOT0", var.commands[0]]
 
     rm         = true
     tty        = true
@@ -79,7 +56,7 @@ resource "docker_container" "root0" {
 }
 
 resource "docker_container" "children" {
-    count = length(var.cargs)
+    count = length(var.commands) - 1
     name  = "child${count.index}"
     image = "ubuntu-base:jammy"
 
@@ -95,8 +72,12 @@ resource "docker_container" "children" {
         executable = false
     }
 
-    network_mode = "host"
-    entrypoint = concat(["/bin/bash", "/child.sh", "CHILD${count.index}"], var.cargs[count.index])
+    networks_advanced {
+        name         = docker_network.custom_network.name
+        ipv4_address = var.addrs[count.index + 1]
+    }
+
+    entrypoint = ["/bin/bash", "/child.sh", "CHILD${count.index}", count.index, var.commands[count.index + 1]]
 
     rm         = true
     tty        = true

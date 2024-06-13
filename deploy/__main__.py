@@ -1,5 +1,6 @@
 from .core import plan, deploy, destroy
 
+import os
 import argparse
 
 def parse():
@@ -88,10 +89,14 @@ def parse():
 def main():
     args = parse()
 
+    wdir = os.path.join(os.getcwd(), "infra", "terra", args.infra)
+    if not os.path.isdir(wdir): 
+        raise RuntimeError(f"Not a directory: {wdir}")
+
     match args.action:
-        case "plan":    plan(args)
-        case "deploy":  deploy(args)
-        case "destroy": destroy(args)
+        case "plan":    plan(args, wdir)
+        case "deploy":  deploy(args, wdir)
+        case "destroy": destroy(args, wdir)
         case _:         raise NotImplementedError()
 
     return

@@ -29,15 +29,15 @@ build:
 	@cd build && make
 
 udp: build
-	@python3 -m deploy -a plan   -i docker -m udp
+	@python3 -m deploy -a plan -i docker -m udp -s 6
 	@python3 -m deploy -a deploy -i docker
 
 mcast: build
-	@python3 -m deploy -a plan   -i docker -m mcast
+	@python3 -m deploy -a plan -i docker -m mcast -s 6 -f 2 -d 2
 	@python3 -m deploy -a deploy -i docker
 
 docker:
-	@python3 -m deploy -a plan   -i docker -s 8 -p 9092
+	@python3 -m deploy -a plan -i docker -s 8 -p 9092
 	@python3 -m deploy -a deploy -i docker
 
 clean:

@@ -1,12 +1,8 @@
 #!/bin/bash -xe
 
-echo "ARGS: $@"
 role="$1" 
 shift 1
-rate=10
-dur=10
-
-addrs="$@"
+command="$@"
 
 export ROLE="$role"
 
@@ -20,7 +16,7 @@ pushd /work/project/build
     cmake ..
     make
     pushd /work/project/
-        command="./bin/parent -a ${addrs} -r ${rate} -d ${dur} -v"
+        command="${command} -v"
         sleep 2s
         echo ${command}
         ${command}

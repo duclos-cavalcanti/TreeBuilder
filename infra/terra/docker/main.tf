@@ -18,13 +18,15 @@ variable "mode" {
 }
 
 locals {
-    addrs = local.data.addrs
-    port  = local.data.port
+    addrs    = local.data.addrs
+    port     = local.data.port
+    commands = local.data.commands
 }
 
 module "default" {
     source  = "./modules/default/"
     count   = (var.mode == "default") ? 1 : 0
+
     addrs   = local.addrs
     port    = local.port
 }
@@ -32,9 +34,15 @@ module "default" {
 module "udp" {
     source = "./modules/udp/"
     count = (var.mode == "udp") ? 1 : 0
+
+    addrs    = local.addrs
+    commands = local.commands
 }
 
 module "mcast" {
     source = "./modules/mcast/"
     count = (var.mode == "mcast") ? 1 : 0
+
+    addrs    = local.addrs
+    commands = local.commands
 }

@@ -7,14 +7,24 @@ terraform {
     }
 }
 
-variable "addrs" {
-    description = "List of addrs"
-    type        = list(string)
-    default     = ["localhost:8084", "localhost:8085"]
+resource "docker_network" "custom_network" {
+    name = "custom_network"
+    ipam_config {
+      subnet  = "10.1.1.0/24"
+      gateway = "10.1.1.254"
+    }
 }
 
-locals {
-    ports = [for addr in var.addrs: split(":", addr)[1]]
+variable "addrs" {
+    description = "List of ip addresses"
+    type        = list(string)
+    default     = ["localhost"]
+}
+
+variable "commands" {
+    description = "List of commands to run"
+    type        = list(string)
+    default     = ["echo hi"]
 }
 
 resource "docker_container" "parent" {
@@ -33,9 +43,12 @@ resource "docker_container" "parent" {
         executable = false
     }
 
-    network_mode = "host"
+    networks_advanced {
+        name         = docker_network.custom_network.name
+        ipv4_address = var.addrs[0]
+    }
 
-    entrypoint = concat(["/bin/bash", "/parent.sh", "parent"], var.addrs)
+    entrypoint = ["/bin/bash", "/parent.sh", "parent", var.commands[0]]
 
     rm         = true
     tty        = true
@@ -43,7 +56,7 @@ resource "docker_container" "parent" {
 }
 
 resource "docker_container" "children" {
-    count = length(var.addrs)
+    count = length(var.commands) - 1
     name  = "child${count.index}"
     image = "ubuntu-base:jammy"
 
@@ -59,9 +72,12 @@ resource "docker_container" "children" {
         executable = false
     }
 
-    network_mode = "host"
+    networks_advanced {
+        name         = docker_network.custom_network.name
+        ipv4_address = var.addrs[count.index + 1]
+    }
 
-    entrypoint = [ "/bin/bash", "/child.sh", "child${count.index}", "localhost", local.ports[count.index] ]
+    entrypoint = [ "/bin/bash", "/child.sh", "child${count.index}", count.index, var.commands[count.index + 1]]
 
     rm         = true
     tty        = true

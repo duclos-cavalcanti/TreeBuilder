@@ -1,9 +1,8 @@
 #!/bin/bash -xe
 
-echo "ARGS: $@"
 role="$1" 
 shift 1
-args="$@"
+command="$@"
 
 export ROLE="$role"
 
@@ -17,7 +16,7 @@ pushd /work/project/build
     cmake ..
     make
     pushd /work/project/
-        command="./bin/mcast ${args} -n ${role} -v"
+        command="${command} -v"
         sleep 2s
         echo ${command}
         ${command}
