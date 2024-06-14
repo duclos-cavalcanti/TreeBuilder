@@ -1,7 +1,7 @@
 from .message   import *
 from .types     import Pool, Tree, Logger
 from .node      import Node
-from .task      import Parent, Mcast
+from .task      import Task, Parent, Mcast, Plan
 from .utils     import *
 
 from queue              import Queue, SimpleQueue
@@ -18,7 +18,7 @@ class Run():
         self.strategy   = run["strategy"]
         self.K          = params["hyperparameter"]
         self.rate       = params["rate"]
-        self.dur        = params["duration"]
+        self.duration   = params["duration"]
         self.pool       = Pool([n for n in nodes], self.K, len(nodes))
         self.tree       = Tree(name=self.name, root=root, fanout=params["fanout"], depth=params["depth"])
         self.data       = []
@@ -47,7 +47,7 @@ class Runner():
         addrs = [ d["addr"] for d in data["selected"] ]
         self.run.tree.n_add(addrs)
         self.run.pool.n_remove(addrs)
-        self.L.record(f"TREE[{self.run.tree.name}] SELECTION[{self.run.tree.n}/{self.run.tree.max}]: PARENT[{root}] => CHILDREN {[c for c in addrs]}")
+        self.L.record(f"TREE[{self.run.tree.name}] SELECTION[{self.run.tree.n}/{self.run.tree.nmax}]: PARENT[{root}] => CHILDREN {[c for c in addrs]}")
 
     def log(self, run:Run, data:dict):
         timestamp = datetime.now().strftime("%m-%d %H:%M:%S")
@@ -57,7 +57,7 @@ class Runner():
                 run.tree.d, 
                 run.tree.fanout,
                 run.rate, 
-                run.dur, 
+                run.duration, 
                 timestamp]
 
         self.data.append(row)
@@ -91,13 +91,13 @@ class Runner():
         if self.infra == "gcp":
             commands += [ 
                 f"cd /work && gcloud storage cp results.tar.gz gs://{bucket}/{folder}/results.tar.gz",
-                f"cd /work && gcloud storage cp project/plans/default.yaml gs://{bucket}/{folder}/default.yaml"
+                f"cd /work && gcloud storage cp project/schemas/default.yaml gs://{bucket}/{folder}/default.yaml"
             ]
 
         else:
             commands += [ 
                 f"cd /work && mv results.tar.gz /work/logs",
-                f"cd /work && mv project/plans/docker.yaml /work/logs"
+                f"cd /work && mv project/schemas/docker.yaml /work/logs"
             ]
 
         for c in commands: 
@@ -107,13 +107,13 @@ class Runner():
         self.L.record(f"RESULTS[{bucket}] => {folder}!")
 
 class Manager(Node):
-    def __init__(self, plan:dict, name:str, ip:str, port:str):
+    def __init__(self, schema:dict, name:str, ip:str, port:str):
         super().__init__(name=name, stype=zmq.REQ)
         self.addr       = f"{ip}:{port}"
-        self.plan       = plan
-        self.workers    = self.plan["addrs"][1:]
+        self.schema     = schema
+        self.workers    = self.schema["addrs"][1:]
         self.tasks      = Queue()
-        self.runner     = Runner(self.workers[0], self.workers[1:], plan["params"], plan["runs"], plan["infra"])
+        self.runner     = Runner(self.workers[0], self.workers[1:], schema["params"], schema["runs"], schema["infra"])
         self.L          = Logger(name=f"{name}:{ip}")
 
     def go(self):
@@ -155,23 +155,28 @@ class Manager(Node):
 
     def parent(self):
         addr = self.run.tree.next()
-        c = Command(flag=Flag.PARENT, id=self.gen(), addr=addr, layer=1, select=self.run.tree.fanout, rate=self.run.rate, dur=self.run.dur, data=self.run.pool.slice())
-        m = self.message(src=self.addr, dst=addr, t=Type.COMMAND, mdata=Metadata(command=c))
-        r = self.handshake(m)
+        arr  = [addr] + self.run.pool.slice()
+        plan = Plan(rate=self.run.rate, duration=self.run.duration, depth=1, fanout=len(arr[1:]), select=self.run.tree.fanout, arr=arr)
+        task = Parent()
+        c    = task.build(plan)
+        m    = self.message(src=self.addr, dst=addr, t=Type.COMMAND, mdata=Metadata(command=c))
+        r    = self.handshake(m)
         job  = self.verify(m, r, field="job")
-        self.tasks.put(Parent(c, job))
-        data = self.report()
+        task.job.CopyFrom(job)
+        data = self.report(task)
         return data
 
     def mcast(self):
-        data = self.run.tree.ids()
-        addr = data[0]
-        c = Command(flag=Flag.MCAST, id=self.gen(), addr=addr, layer=self.run.tree.d, select=1, rate=self.run.rate, dur=self.run.dur, depth=self.run.tree.d, fanout=self.run.tree.fanout, data=data)
-        m = self.message(src=self.addr, dst=addr, t=Type.COMMAND, mdata=Metadata(command=c))
-        r = self.handshake(m)
-        job = self.verify(m, r, field="job")
-        self.tasks.put(Mcast(c, job))
-        data = self.report()
+        addr = self.run.tree.root.id
+        arr  = self.run.tree.arr()
+        plan = Plan(rate=self.run.rate, duration=self.run.duration, depth=self.run.tree.d, fanout=self.run.tree.fanout, select=1, arr=arr)
+        task = Mcast()
+        c    = task.build(plan)
+        m    = self.message(src=self.addr, dst=addr, t=Type.COMMAND, mdata=Metadata(command=c))
+        r    = self.handshake(m)
+        job  = self.verify(m, r, field="job")
+        task.job.CopyFrom(job)
+        data = self.report(task)
         return data
 
     def rand(self) -> dict:
@@ -183,13 +188,12 @@ class Manager(Node):
         }
         return data
 
-    def report(self, dur:int=2) -> dict:
-        task = self.tasks.get_nowait()
+    def report(self, task:Task, interval:int=1) -> dict:
         while True:
-            job = task.copy()
+            job = task.job
             m = self.message(src=self.addr, dst=job.addr, t=Type.REPORT, mdata=Metadata(job=job))
             r = self.handshake(m)
             rjob = self.verify(m, r, field="job")
 
             if rjob.end: return task.process(rjob, self.run.strategy)
-            else:        self.timer.sleep_sec(dur)
+            else:        self.timer.sleep_sec(interval)

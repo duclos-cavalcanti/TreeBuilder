@@ -1,29 +1,41 @@
 from ..message   import *
 from ..types     import Logger
 
+import random 
+import string
+
 from abc        import ABC, abstractmethod
 from typing     import TypedDict, List, Optional
 
-class TaskResult(TypedDict):
+class Result(TypedDict):
     selected: List[int]
 
+class Plan():
+    def __init__(self, rate:int, duration:int, fanout:int, depth:int, select:int, arr:List):
+        self.rate       = rate
+        self.duration   = duration
+        self.fanout     = fanout
+        self.depth      = depth
+        self.select     = select
+        self.arr        = [ a for a in arr ]
+
 class Task(ABC):
-    def __init__(self, command:Command, job:Optional[Job]=None):
-        self.command      = command
-        self.dependencies = []
+    def __init__(self):
+        self.command        = Command()
+        self.job            = Job()
+        self.dependencies   = []
+        self.L              = Logger()
 
-        if job is None: self.job = Job(id=command.id, flag=command.flag, addr=command.addr)
-        else:           self.job = job
-
-        self.L = Logger()
-
-    def copy(self) -> Job:
-        ret = Job()
-        ret.CopyFrom(self.job)
+    def generate(self, length:int=10):
+        ret = ''.join(random.choice(string.ascii_letters) for _ in range(length))
         return ret
 
     @abstractmethod
-    def make(self) -> Job:
+    def build(self, p:Plan) -> Command:
+        pass
+
+    @abstractmethod
+    def handle(self, command:Command) -> Job:
         pass
 
     @abstractmethod
@@ -31,7 +43,7 @@ class Task(ABC):
         pass
 
     @abstractmethod
-    def process(self, job:Optional[Job]=None, strategy:dict={}) -> dict:
+    def process(self, job:Job, strategy:dict={}) -> dict:
         pass
 
     def complete(self) -> bool:
@@ -44,21 +56,17 @@ class Task(ABC):
 
         return True
 
-    def failed(self) -> bool:
-        arr = []
+    def err(self) -> bool:
+        ret = False
         if self.job.ret != 0:
-            string = "\n".join(self.job.data)
-            arr.append(string)
+            ret = True
+            self.job.ClearField['data']
+            self.job.data.append(self.job.addr)
 
         for d in self.dependencies:
             if d.ret != 0: 
-                self.job = d.ret
-                string = "\n".join(d.data)
-                arr.append(string)
+                if not ret: self.job.ClearField['data']
+                self.job.data.append(d.addr)
+                ret = True
 
-        failed = (len(arr) > 0)
-        if failed:
-            self.job.ClearField('data')
-            self.job.data.extend(arr)
-
-        return failed
+        return ret

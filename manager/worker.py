@@ -1,3 +1,4 @@
+from google.protobuf.reflection import ParseMessage
 from .message   import *
 from .types     import Logger
 from .node      import Node
@@ -15,19 +16,37 @@ class Controller(Node):
         self.job        = None
         self.thread     = None
 
+    def launch(self, target, args):
+        self.thread = threading.Thread(target=target, args=args)
+        self.thread.start()
+
     def start(self, command:Command):
         if   command.flag == Flag.PARENT: Constructor = Parent
         elif command.flag == Flag.MCAST:  Constructor = Mcast
         else:                             raise RuntimeError()
 
-        self.task   = Constructor(command)
-        self.job    = self.task.make()
+        self.task   = Constructor()
+        self.job    = self.task.handle(command)
 
-        self.L.log(message=f"STARTED JOB[{self.job.id}:{self.job.addr}]")
-        self.thread = threading.Thread(target=self.execute, args=(self.task,))
-        self.thread.start()
+        self.L.log(message=f"NOTIFYING JOB[{self.job.id}:{self.job.addr}]")
+        self.notify()
+
+        self.L.log(message=f"STARTING JOB[{self.job.id}:{self.job.addr}]")
+        self.launch(target=self.execute, args=(self.task,))
 
         return self.job
+
+    def notify(self):
+        for i,item in enumerate(self.task.dependencies):
+            c = Command()
+            c.CopyFrom(item)
+            m = self.message(src=self.addr, dst=c.addr, t=Type.COMMAND, mdata=Metadata(command=c))
+            r = self.handshake(m=m)
+            d = self.verify(m, r, field="job")
+            self.task.dependencies[i] = d
+            self.L.log(message=f"NOTIFICATION RECEIVED JOB[{d.id}:{d.addr}]")
+
+        return
 
     def report(self, job:Job):
         if self.job is None or self.task is None: 
@@ -100,7 +119,7 @@ class Worker(Node):
         self.L          = Logger(name=f"{name}:{ip}")
 
     def go(self):
-        self.bind(protocol="tcp", ip=self.ip, port=self.port)
+        self.bind(protocol="tcp", ip=self.addr.split(':')[0], port=self.addr.split(':')[1])
         self.L.state(f"{self.name} UP")
         try:
             while(True):

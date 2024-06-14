@@ -5,14 +5,14 @@ import os
 import yaml
 
 def manager(args):
-    plan = os.path.join(os.getcwd(), "plans", "default.yaml")
+    schema = os.path.join(os.getcwd(), "schemas", "default.yaml")
     if args.yaml: 
-        plan = args.yaml
+        schema = args.yaml
 
-    with open(plan, 'r') as file: 
-        plan = yaml.safe_load(file)
+    with open(schema, 'r') as file: 
+        schema = yaml.safe_load(file)
 
-    M = Manager(plan, name=args.name, ip=args.addr, port=args.port) 
+    M = Manager(schema, name=args.name, ip=args.addr, port=args.port) 
     M.go()
 
 def worker(args):

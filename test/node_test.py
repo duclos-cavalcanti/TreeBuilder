@@ -32,7 +32,7 @@ class TestNodeClass:
         assert mtx == mrx
 
     def sender(self):
-        N = Node(stype=zmq.REQ)
+        N = Node(name="sender", stype=zmq.REQ)
         N.socket.setsockopt(zmq.RCVTIMEO, 5000)
         L.log(message=f"SENDER NODE UP")
         
@@ -61,7 +61,7 @@ class TestNodeClass:
             return
 
     def receiver(self):
-        N = Node(stype=zmq.REP)
+        N = Node("receiver", stype=zmq.REP)
         N.socket.setsockopt(zmq.RCVTIMEO, 5000)
         L.log(message=f"RECEIVER NODE UP")
 

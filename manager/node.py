@@ -2,8 +2,6 @@ from .message   import *
 from .types     import Timer, Logger
 
 import zmq
-import random 
-import string
 
 from typing import Optional
 
@@ -15,10 +13,6 @@ class Node():
         self.timer      = Timer()
         self.tick       = 1
         self.L          = Logger()
-
-    def gen(self, length:int=10):
-        ret = ''.join(random.choice(string.ascii_letters) for _ in range(length))
-        return ret
 
     def ip(self, addr:str):
         ip = addr.split(":")[0]

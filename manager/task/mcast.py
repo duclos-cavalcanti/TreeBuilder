@@ -1,81 +1,67 @@
 from ..message   import *
-from ..types     import Tree
-from ..node      import Node
-from .task       import Task
-from ..utils     import *
+from ..types     import TreeBuilder
+from .task       import Task, Plan
 
 from typing import List, Optional
 
-import zmq
 import heapq
 
 class Mcast(Task):
-    def make(self):
-        N = Node(name=f"TASK[{Flag.Name(self.command.flag)}]", stype=zmq.REQ)
-        if self.command.layer:
-            if self.command.layer == self.command.depth: 
-                self.job.instr = self.rinstr(self.command.addr, 
-                                             self.command.data[1:1 + self.command.fanout], 
-                                             self.command.rate, 
-                                             self.command.dur)
-            else:              
-                self.job.instr = self.pinstr(self.command.addr, 
-                                             self.command.data[1:1 + self.command.fanout], 
-                                             self.command.rate, 
-                                             self.command.dur)
+    def build(self, p:Plan) -> Command:
+        tb  = TreeBuilder(arr=p.arr, depth=p.depth, fanout=p.fanout) 
+        ret = tb.mcast(rate=p.rate, duration=p.duration)
 
-            tree = Tree(name=f"SUBTREE:{self.command.data[0]}", 
-                     root=self.command.data[0], 
-                     fanout=self.command.fanout, 
-                     depth=self.command.layer, 
-                     arr=self.command.data[1:])
+        c = Command()
+        c.flag      = Flag.MCAST
+        c.id        = self.generate()
+        c.addr      = p.arr[0]
+        c.layer     = p.depth
+        c.depth     = p.depth
+        c.fanout    = p.fanout
+        c.select    = p.select
+        c.rate      = p.rate
+        c.duration  = p.duration
+        c.instr.extend([ i for i in ret.buf ])
+        c.data.extend([ a for a in p.arr   ])
 
-            data  = tree.slice()
+        self.command = c
+        return c
 
-            for i, a in enumerate(self.command.data[1:1 + self.command.fanout]):
+    def handle(self, command:Command):
+        self.command   = command
+        self.job.id    = command.id
+        self.job.flag  = command.flag
+        self.job.instr = command.instr[0]
+        self.job.addr  = command.addr
+
+        if command.layer:
+            addrT   = TreeBuilder(arr=command.data,  depth=command.layer, fanout=command.fanout) 
+            instrT  = TreeBuilder(arr=command.instr, depth=command.layer, fanout=command.fanout) 
+
+            addrs   = command.data[1:(1+command.fanout)]
+            data    = addrT.slice()
+            instr   = instrT.slice()
+
+            for addr, d, i in  zip(addrs, data, instr):
                 c = Command()
-                c.CopyFrom(self.command)
-                c.addr  = a
-                c.layer = self.command.layer - 1
-                c.ClearField('data')
-                c.data.extend(data[i])
-                m = N.message(src=self.command.addr, dst=a, t=Type.COMMAND, mdata=Metadata(command=c))
-                r = N.handshake(m=m)
-                d = N.verify(m, r, field="job")
-                self.dependencies.append(d)
+                c.id     = command.id
+                c.flag   = command.flag
+                c.layer  = command.layer - 1
+                c.fanout = command.fanout
+                c.addr   = addr
+                c.instr.extend(i)
+                c.data.extend(d)
+                self.dependencies.append(c)
 
-        else:
-            self.job.instr =  self.linstr(self.command.addr, self.command.rate, self.command.dur)
-
-        return self.copy()
-
-    def linstr(self, addr:str, rate:int, dur:int):
-        addr = format_addr(addr, diff=2000)
-        ret  =  f"./bin/mcast -r {rate} -d {dur}"
-        ret  += f" -i {addr.split(':')[0]} -p {addr.split(':')[1]}"
-        ret  += f" -L"
-        return ret
-
-    def pinstr(self, addr:str, addrs:List, rate:int, dur:int):
-        addr  = format_addr(addr, diff=2000)
-        addrs = [ format_addr(a, diff=2000) for a in addrs ]
-        ret   =   f"./bin/mcast -a "
-        ret   +=  f" ".join(f"{a}" for a in addrs)
-        ret   +=  f" -r {rate} -d {dur}"
-        ret   +=  f" -i {addr.split(':')[0]} -p {addr.split(':')[1]}"
-        return ret
-
-    def rinstr(self, addr:str, addrs:List, rate:int, dur:int):
-        ret =  self.pinstr(addr, addrs, rate, dur)
-        ret += " -R"
-        return ret
+        return self.job
 
     def resolve(self) -> Job:
         self.L.stats(message=f"TASK PRE-RESOLVE[{Flag.Name(self.job.flag)}][{self.job.id}:{self.job.addr}]", data=self.job)
-        if self.failed():
+
+        if self.err():
             return self.job
 
-        total = self.command.rate * self.command.dur
+        total = self.command.rate * self.command.duration
         if self.command.layer == 0:
             recv  = int(self.job.data[0])
             perc  = float(self.job.data[1])
@@ -99,15 +85,14 @@ class Mcast(Task):
                 for dperc in d.floats:   self.job.floats.append(dperc)
 
         self.L.stats(message=f"TASK RESOLVE[{Flag.Name(self.job.flag)}][{self.job.id}:{self.job.addr}]", data=self.job)
-        return self.copy()
+        return self.job
 
-    def process(self, job:Optional[Job]=None, strategy:dict={}) -> dict:
-        if job is None:  job = self.job
+    def process(self, job:Job, strategy:dict={}) -> dict:
         if job.ret != 0: raise RuntimeError()
 
+        addrs  = [a for a in job.data]
         percs  = [f for f in job.floats]
         recvs  = [i for i in job.integers]
-        addrs  = [a for a in job.data]
 
         sorted = heapq.nlargest(len(percs), enumerate(percs), key=lambda x: x[1])
 

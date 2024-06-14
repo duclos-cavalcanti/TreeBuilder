@@ -1,53 +1,61 @@
 from ..message import *
-from ..task    import Task
-from ..node    import Node
-from ..utils   import *
+from ..task    import Task, Plan, Result
+from ..types   import Tree, TreeBuilder
 
 from typing import List, Optional
 
-import zmq
 import heapq
 
 class Parent(Task):
-    def make(self):
-        N = Node(name=f"TASK[{Flag.Name(self.command.flag)}]", stype=zmq.REQ)
-        if self.command.layer:
-            self.job.instr = self.pinstr(self.command.data, self.command.rate, self.command.dur)
-            for a in self.command.data:
-                c = Command() 
-                c.CopyFrom(self.command)
-                c.addr = a
-                c.layer = self.command.layer - 1
-                c.ClearField('data')
-                m = N.message(src=self.command.addr, dst=a, t=Type.COMMAND, mdata=Metadata(command=c))
-                r = N.handshake(m=m)
-                d = N.verify(m, r, field="job")
-                self.dependencies.append(d)
-        else:
-            self.job.instr = self.cinstr(self.command.addr, self.command.rate, self.command.dur)
+    def build(self, p:Plan) -> Command:
+        tb  = TreeBuilder(arr=p.arr, depth=p.depth, fanout=p.fanout) 
+        ret = tb.parent(rate=p.rate, duration=p.duration)
 
-        return self.copy()
+        c = Command()
+        c.flag      = Flag.PARENT
+        c.id        = self.generate()
+        c.addr      = p.arr[0]
+        c.layer     = p.depth
+        c.depth     = p.depth
+        c.fanout    = p.fanout
+        c.select    = p.select
+        c.rate      = p.rate
+        c.duration  = p.duration
+        c.instr.extend([ i for i in ret.buf ])
+        c.data.extend([ a for a in p.arr   ])
 
-    def cinstr(self, addr:str, rate:int, dur:int):
-        addr = format_addr(addr)
-        ret =  f"./bin/child -i {addr.split(':')[0]} -p {addr.split(':')[1]}"
-        ret += f" -r {rate} -d {dur}"
-        return ret
+        self.command = c
+        return c
 
-    def pinstr(self, addrs:List, rate:int, dur:int):
-        addrs = [ format_addr(a) for a in addrs ]
-        ret   =  f"./bin/parent -a "
-        ret   += f" ".join(f"{a}" for a in addrs)
-        ret   += f" -r {rate} -d {dur}"
-        return ret
+    def handle(self, command:Command):
+        self.command   = command
+        self.job.id    = command.id
+        self.job.flag  = command.flag
+        self.job.instr = command.instr[0]
+        self.job.addr  = command.addr
+
+        addrs = command.data[1:]
+        instr = command.instr[1:]
+
+        if command.layer:
+            for addr,i in zip(addrs, instr):
+                c = Command()
+                c.id    = command.id
+                c.flag  = command.flag
+                c.layer = command.layer - 1
+                c.addr  = addr
+                c.instr.append(i)
+                self.dependencies.append(c)
+
+        return self.job
 
     def resolve(self) -> Job:
         self.L.stats(message=f"TASK PRE-RESOLVE[{Flag.Name(self.job.flag)}][{self.job.id}:{self.job.addr}]", data=self.job)
 
-        if self.failed():
+        if self.err():
             return self.job
 
-        total = self.command.rate * self.command.dur
+        total = self.command.rate * self.command.duration
         if self.command.layer == 0:
             recv  = int(self.job.data[0])
             perc  = float(self.job.data[1])
@@ -70,10 +78,9 @@ class Parent(Task):
                 self.job.floats.append(d.floats[0])
 
         self.L.stats(message=f"TASK RESOLVE[{Flag.Name(self.job.flag)}][{self.job.id}:{self.job.addr}]", data=self.job)
-        return self.copy()
+        return self.job
 
-    def process(self, job:Optional[Job]=None, strategy:dict={}) -> dict:
-        if job is None:  job = self.job
+    def process(self, job:Job, strategy:dict={}) -> dict:
         if job.ret != 0: raise RuntimeError()
 
         addrs  = [a for a in job.data]
