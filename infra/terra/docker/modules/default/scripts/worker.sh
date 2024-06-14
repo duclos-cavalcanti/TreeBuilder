@@ -20,11 +20,6 @@ popd
 
 pushd /work/project
     echo "-- ROLE: $role [ ${addr}:${port} ] --"
-    if [ $count -gt 0 ] && (( $count % 2 == 0)); then 
-        delay=300
-        echo "DELAY: ${delay}ms"
-        sudo tc qdisc add dev "eth0" root netem delay ${delay}ms
-    fi
     python3 -m manager -a worker -n ${role}  -i ${addr} -p ${port}
     bash
 popd

@@ -19,6 +19,6 @@ popd
 
 pushd /work/project
     echo "-- ROLE: $role --"
-    python3 -m manager -a manager -n ${role}  -i ${addr} -p ${port} -y plans/docker.yaml
+    python3 -m manager -a manager -n ${role}  -i ${addr} -p ${port} -y schemas/docker.yaml
     bash
 popd

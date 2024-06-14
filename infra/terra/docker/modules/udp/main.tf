@@ -77,6 +77,8 @@ resource "docker_container" "children" {
         ipv4_address = var.addrs[count.index + 1]
     }
 
+    privileged = true
+
     entrypoint = [ "/bin/bash", "/child.sh", "child${count.index}", count.index, var.commands[count.index + 1]]
 
     rm         = true
