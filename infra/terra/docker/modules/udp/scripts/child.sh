@@ -33,6 +33,10 @@ pushd /work/project/build
     cmake ..
     make
     pushd /work/project/
+        if [ $count -gt 0 ] && (( $count % 2 == 0)); then 
+            idelay 10
+        fi
+
         command="${command} -v"
         echo ${command}
         ${command}

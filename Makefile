@@ -37,7 +37,7 @@ mcast: build
 	@python3 -m deploy -a deploy -i docker
 
 docker:
-	@python3 -m deploy -a plan -i docker -s 8 -p 9092
+	@python3 -m deploy -a plan -i docker -s 12 -p 9092
 	@python3 -m deploy -a deploy -i docker
 
 clean:
