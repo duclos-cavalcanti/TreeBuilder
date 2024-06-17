@@ -36,6 +36,7 @@ __pycache__/*
 .cache/*
 
 volume/*
+infra/terra/docker/modules/default/volume/*
 
 *.tfstate*
 *.terraform/
