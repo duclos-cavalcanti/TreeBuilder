@@ -27,8 +27,8 @@ variable "commands" {
     default     = ["echo hi"]
 }
 
-resource "docker_container" "parent" {
-    name  = "parent"
+resource "docker_container" "root" {
+    name  = "root"
     image = "ubuntu-base:jammy"
 
     upload {

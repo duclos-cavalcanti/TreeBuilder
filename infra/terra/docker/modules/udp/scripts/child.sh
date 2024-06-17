@@ -1,11 +1,12 @@
 #!/bin/bash -xe
 
 role="$1" 
-count="$2"
+count="$2" 
 shift 2
 command="$@"
 
 export ROLE="$role"
+TAR="/work/project.tar.gz"
 
 edelay() {
     dur="$1"
@@ -23,24 +24,29 @@ idelay() {
     echo "SUCCESSFULL INGRESS DELAY: ${dur}ms"
 }
 
-TAR="/work/project.tar.gz"
-mkdir /work/project
-tar -xzf ${TAR} -C /work/project
+setup() {
+    mkdir -p /work/logs
+    mkdir -p /work/project
+    tar -xzf ${TAR} -C /work/project
 
-mkdir /work/project/build
-pushd /work/project/build
-    echo "-- ROLE: $role --"
-    cmake ..
-    make
-    pushd /work/project/
-        if [ $count -gt 0 ] && (( $count % 2 == 0)); then 
-            idelay 10
-        fi
-
-        command="${command} -v"
-        echo ${command}
-        ${command}
-        echo "RET: ${?}"
+    mkdir /work/project/build
+    pushd /work/project/build
+        cmake ..
+        make
     popd
-    bash
-popd
+}
+
+main() {
+    setup
+    pushd /work/project
+        echo "-- ROLE: $role --"
+    
+        echo ${command}
+        ${command} -v
+
+        echo "RET: ${?}"
+        bash
+    popd
+}
+
+main

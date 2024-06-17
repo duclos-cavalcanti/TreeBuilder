@@ -6,6 +6,7 @@ shift 2
 command="$@"
 
 export ROLE="$role"
+TAR="/work/project.tar.gz"
 
 edelay() {
     dur="$1"
@@ -23,20 +24,34 @@ idelay() {
     echo "SUCCESSFULL INGRESS DELAY: ${dur}ms"
 }
 
-TAR="/work/project.tar.gz"
-mkdir /work/project
-tar -xzf ${TAR} -C /work/project
+setup() {
+    mkdir -p /work/logs
+    mkdir -p /work/project
+    tar -xzf ${TAR} -C /work/project
 
-mkdir /work/project/build
-pushd /work/project/build
-    echo "-- ROLE: $role --"
-    cmake ..
-    make
-    pushd /work/project/
-        command="${command} -v"
-        echo ${command}
-        ${command}
-        echo "RET: ${?}"
+    mkdir /work/project/build
+    pushd /work/project/build
+        cmake ..
+        make
     popd
-    bash
-popd
+}
+
+main() {
+    setup
+    pushd /work/project
+        echo "-- ROLE: $role --"
+
+        # even numbered workers with index greater than 2
+        if [ $count -gt 2 ] && (( $count % 2 == 0)); then 
+            idelay 0.2
+        fi
+    
+        echo ${command}
+        ${command} -v
+
+        echo "RET: ${?}"
+        bash
+    popd
+}
+
+main

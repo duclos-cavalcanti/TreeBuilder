@@ -33,11 +33,11 @@ def parse():
     )
 
     arg_def.add_argument(
-        "-y", "--yaml",
+        "-s", "--schema",
         type=str,
         default="",
         required=False,
-        dest="yaml",
+        dest="schema",
     )
 
     arg_def.add_argument(

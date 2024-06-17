@@ -5,20 +5,39 @@ addr="$2"
 port="$3"
 
 export ROLE="$role"
-
 TAR="/work/project.tar.gz"
-mkdir -p /work/logs
-mkdir -p /work/project
-tar -xzf ${TAR} -C /work/project
+BUCKET=
 
-mkdir /work/project/build
-pushd /work/project/build
-    cmake ..
-    make
-popd
+setup() {
+    mkdir -p /work/logs
+    mkdir -p /work/project
+    tar -xzf ${TAR} -C /work/project
 
-pushd /work/project
-    echo "-- ROLE: $role --"
-    python3 -m manager -a manager -n ${role}  -i ${addr} -p ${port} -y schemas/docker.yaml
-    bash
-popd
+    mkdir /work/project/build
+    pushd /work/project/build
+        cmake ..
+        make
+    popd
+}
+
+upload() {
+    pushd /work 
+        tar -zcvf results.tar.gz ./logs
+        mv results.tar.gz /work/logs
+        mv project/schemas/docker.json /work/logs
+    popd
+}
+
+main() {
+    setup
+    pushd /work/project
+        echo "-- ROLE: $role --"
+
+        python3 -m manager -a manager -n ${role}  -i ${addr} -p ${port} -s schemas/docker.json
+        upload
+
+        bash
+    popd
+}
+
+main

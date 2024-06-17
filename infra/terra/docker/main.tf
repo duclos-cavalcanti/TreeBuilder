@@ -8,7 +8,7 @@ terraform {
 }
 
 locals {
-    data = jsondecode(file("${path.cwd}/data.json"))
+    data = jsondecode(file("${path.cwd}/extract/data.json"))
 }
 
 variable "mode" {

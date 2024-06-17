@@ -49,7 +49,7 @@ class Runner():
         self.run.pool.n_remove(addrs)
         self.L.record(f"TREE[{self.run.tree.name}] SELECTION[{self.run.tree.n}/{self.run.tree.nmax}]: PARENT[{root}] => CHILDREN {[c for c in addrs]}")
 
-    def log(self, run:Run, data:dict):
+    def save(self, run:Run, data:dict):
         timestamp = datetime.now().strftime("%m-%d %H:%M:%S")
         row = [ run.tree.name, 
                 data['selected'][0]['perc'], 
@@ -79,39 +79,12 @@ class Runner():
             writer.writerow(headers)
             for d in self.data: writer.writerow(d)
 
-    def upload(self):
-        if not self.infra in ["gcp", "docker"]:
-            return
-
-        bucket      = "exp-results-nyu-systems-multicast"
-        timestamp   = datetime.now().strftime("%m-%d-%H:%M:%S")
-        folder      = f"treefinder-{self.infra}-{timestamp}/results.tar.gz"
-        commands    = [ f"cd /work && tar -zcvf results.tar.gz ./logs" ]
-
-        if self.infra == "gcp":
-            commands += [ 
-                f"cd /work && gcloud storage cp results.tar.gz gs://{bucket}/{folder}/results.tar.gz",
-                f"cd /work && gcloud storage cp project/schemas/default.yaml gs://{bucket}/{folder}/default.yaml"
-            ]
-
-        else:
-            commands += [ 
-                f"cd /work && mv results.tar.gz /work/logs",
-                f"cd /work && mv project/schemas/docker.yaml /work/logs"
-            ]
-
-        for c in commands: 
-            if os.system(f"{c}") != 0: 
-                raise RuntimeError(f"{c} failed")
-
-        self.L.record(f"RESULTS[{bucket}] => {folder}!")
-
 class Manager(Node):
     def __init__(self, schema:dict, name:str, ip:str, port:str):
         super().__init__(name=name, stype=zmq.REQ)
         self.addr       = f"{ip}:{port}"
         self.schema     = schema
-        self.workers    = self.schema["addrs"][1:]
+        self.workers    = [ f"{a}:{self.schema['port']}" for a in self.schema["addrs"][1:] ]
         self.tasks      = Queue()
         self.runner     = Runner(self.workers[0], self.workers[1:], schema["params"], schema["runs"], schema["infra"])
         self.L          = Logger(name=f"{name}:{ip}")
@@ -133,10 +106,9 @@ class Manager(Node):
                 self.L.trees(f"{self.run.tree}")
 
                 data = self.mcast()
-                self.runner.log(self.run, data)
+                self.runner.save(self.run, data)
 
             self.runner.write()
-            self.runner.upload()
             self.L.record("FINISHED!")
 
         except Exception as e:
