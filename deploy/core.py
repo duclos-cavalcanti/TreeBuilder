@@ -77,6 +77,8 @@ def config(args, path):
     with open(path, "w") as file: 
         json.dump(data, file, indent=4)
 
+    del data["commands"]
+
     with open("schemas/default.json" if data["infra"] == "gcp" else "schemas/docker.json", "w") as file: 
         json.dump(data, file, indent=4)
 
