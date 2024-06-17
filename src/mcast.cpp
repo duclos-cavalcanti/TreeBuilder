@@ -281,10 +281,11 @@ int leaf(void) {
         latencies.push_back(timestamp() - msg->ts);
 
         if (config.verbose) {
-            log("LEAF::%s: RECV[%4lu] => ", config.name.c_str(), cnt++);
+            log("LEAF::%s: RECV[%4lu] => ", config.name.c_str(), cnt);
             log(msg->str());
             log("\n");
         }
+        cnt++;
     }
 
     if (config.verbose) {
