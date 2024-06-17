@@ -50,6 +50,7 @@ resource "docker_container" "root" {
 
     entrypoint = ["/bin/bash", "/root.sh", "ROOT0", var.commands[0]]
 
+    privileged = true
     rm         = true
     tty        = true
     stdin_open = true
@@ -79,6 +80,7 @@ resource "docker_container" "children" {
 
     entrypoint = ["/bin/bash", "/child.sh", "CHILD${count.index}", count.index, var.commands[count.index + 1]]
 
+    privileged = true
     rm         = true
     tty        = true
     stdin_open = true
