@@ -19,8 +19,17 @@ def parse():
     arg_def.add_argument(
         "-p", "--prefix",
         type=str,
-        required=True,
+        required=False,
         dest="prefix",
+    )
+
+    arg_def.add_argument(
+        "-i", "--infra",
+        type=str,
+        choices=["docker", "gcp"],
+        required=False,
+        default="docker",
+        dest="infra",
     )
 
     args = arg_def.parse_args()

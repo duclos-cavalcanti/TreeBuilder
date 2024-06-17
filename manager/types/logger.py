@@ -5,8 +5,10 @@ import sys
 from typing import List
 from google.protobuf.json_format import MessageToDict
 
-STATS  = 18
-TREES  = 19
+# DEBUG = 10
+EVENTS = 17
+# STATS  = 18
+# TREES  = 19
 # INFO = 20
 STATE  = 25
 RECORD = 26
@@ -17,8 +19,9 @@ _logger = logging.getLogger('LOGGER')
 
 logging.addLevelName(STATE,  "STATE")
 logging.addLevelName(RECORD, "RECORD")
-logging.addLevelName(STATS,  "STATS")
-logging.addLevelName(TREES,  "TREES")
+logging.addLevelName(EVENTS, "EVENT")
+# logging.addLevelName(STATS,  "STATS")
+# logging.addLevelName(TREES,  "TREES")
 
 class Formatter(logging.Formatter):
     GREEN   = '\033[92m'
@@ -61,7 +64,13 @@ class Logger():
             if name: self.setup(name, path)
 
     def setup(self, name:str, path:str):
+        """
+        i)   (f)  File Handler logs from DEBUG on.
+        ii)  (ch) Stream Handler logs from INFO on.
+        iii) (rf) File Handler logs only EVENTS.
+        """
         format = '%(asctime)s | %(name)s:[%(levelname)s] %(message)s'
+
         f = logging.FileHandler(f"{path}/{name}.log", mode='w')
         f.setLevel(logging.DEBUG)
         f.setFormatter(logging.Formatter(format))
@@ -70,30 +79,21 @@ class Logger():
         ch.setLevel(logging.INFO)
         ch.setFormatter(Formatter(format))
 
-        rf = logging.FileHandler(f"{path}/stats-{name.split(':')[0]}.log", mode='w')
-        rf.setLevel(STATS)
-        rf.setFormatter(logging.Formatter(format))
-        rf.addFilter(LevelFilter([ STATS ]))
+        if "manager" in name:
+            rf = logging.FileHandler(f"{path}/events.log", mode='w')
+            rf.setLevel(EVENTS)
+            rf.setFormatter(Formatter('%(message)s'))
+            rf.addFilter(LevelFilter([ EVENTS ]))
+            logging.basicConfig(level=logging.DEBUG, handlers=[ f, ch, rf ])
 
-        tf = logging.FileHandler(f"{path}/trees-{name.split(':')[0]}.log", mode='w')
-        tf.setLevel(TREES)
-        tf.setFormatter(logging.Formatter(format))
-        tf.addFilter(LevelFilter([ TREES ]))
-
-        logging.basicConfig(level=logging.DEBUG,
-                            handlers=[ 
-                                f, 
-                                ch, 
-                                rf,
-                                tf
-                            ]
-        )
+        else:
+            logging.basicConfig(level=logging.DEBUG, handlers=[ f, ch ])
     
     def info(self, message: str):
         _logger.log(logging.INFO, message)
     
     def debug(self, message: str, data=None):
-        if not (data is None):
+        if data is not None:
             if isinstance(data, dict):
                 data = json.dumps(data, indent=4)
                 message = f"{message}: {data}"
@@ -113,20 +113,8 @@ class Logger():
     def record(self, message: str):
         _logger.log(RECORD, message)
 
-    def trees(self, message: str):
-        _logger.log(TREES, message)
-
-    def stats(self, message: str, data=None):
-        if not (data is None):
-            if isinstance(data, dict):
-                data = json.dumps(data, indent=4)
-                message = f"{message}: {data}"
-            else:
-                data = MessageToDict(data)
-                data = json.dumps(data, indent=4)
-                message = f"{message}: {data}"
-
-        _logger.log(STATS, message)
+    def event(self, data=None):
+        _logger.log(EVENTS, json.dumps(data))
 
     def log(self, message: str, data=None, level=logging.INFO):
         if not (data is None):

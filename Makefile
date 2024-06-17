@@ -18,7 +18,7 @@ ifeq (, $(shell which terraform))
 $(error terraform not found)
 endif
 
-.PHONY: proto build udp mcast docker gcp clean docs test 
+.PHONY: proto build udp mcast docker pull process clean docs test 
 all: build
 
 proto:
@@ -39,6 +39,13 @@ mcast: build
 docker:
 	@python3 -m deploy -a plan -i docker -s 12 -p 9092
 	@python3 -m deploy -a deploy -i docker
+
+pull:
+	@python3 -m analysis -a pull -i docker
+
+process:
+	@python3 -m analysis -a process -i docker
+	@# impressive -t None -f *.pdf
 
 clean:
 	@find . -path ./jasper -prune -type f -name "*.tar.gz" -print0 | xargs -0 -I {} rm -v {}

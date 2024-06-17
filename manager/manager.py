@@ -22,6 +22,24 @@ class Run():
         self.tree       = Tree(name=self.name, root=root, fanout=params["fanout"], depth=params["depth"])
         self.data       = []
 
+    def to_dict(self):
+        ret = {
+            "name": self.name, 
+            "strategy": self.strategy, 
+            "params": {
+                "K": self.K, 
+                "rate": self.rate, 
+                "duration": self.duration
+            },
+            "tree": {
+                "name": self.name, 
+                "root": self.tree.root.id,
+                "fanout": self.tree.fanout,
+                "depth": self.tree.dmax,
+            }
+        }
+        return ret
+
 class Runner():
     def __init__(self, root:str, nodes:List, params:dict, runs:List, infra:str):
         self.seed   = Seed()
@@ -99,17 +117,23 @@ class Manager(Node):
                 self.run = self.runner.next()
                 self.L.state(f"STATE[RUN={self.run.name}]")
 
+                self.L.event({"RUN":  self.run.to_dict()})
+                self.L.event({"POOL": self.run.pool.pool})
                 while(not self.run.tree.full()):
-                    if self.run.name == "RAND": data = self.rand()
-                    else:                       data = self.parent()
+                    data = self.parent() if self.run.name != "RAND" else self.rand()
                     self.runner.build(data)
-                    self.L.record(f"TREE[{self.run.tree.name}] SELECTION[{self.run.tree.n}/{self.run.tree.nmax}]: PARENT[{data['root']}] => CHILDREN {[ d['addr'] for d in data['selected'] ]}")
 
-                self.L.trees(f"{self.run.tree}")
+                    self.L.record(f"TREE[{self.run.tree.name}] SELECTION[{self.run.tree.n}/{self.run.tree.nmax}]: PARENT[{data['root']}] => CHILDREN {[ d['addr'] for d in data['selected'] ]}")
+                    self.L.event({"BUILD": data})
+                    if self.run.tree.full():
+                        self.L.event({"TREE": self.run.tree.to_dict()})
 
                 data = self.mcast()
                 self.runner.save(self.run, data)
+
                 self.L.record(f"TREE[{self.run.tree.name}] PERFORMANCE[{data['selected'][0]['addr']}]: {data['selected'][0]['perc']}")
+                self.L.event({"PERF": data})
+                self.L.event({"POOL": self.run.pool.pool})
 
             self.runner.write()
             self.L.record("FINISHED!")

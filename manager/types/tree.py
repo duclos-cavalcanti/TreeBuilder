@@ -206,6 +206,18 @@ class Tree():
 
         return ret
 
+    def to_dict(self):
+        ret = {
+                "name": self.name, 
+                "fanout": self.fanout, 
+                "depth": self.d, 
+                "n": self.n, 
+                "max": self.nmax, 
+                "nodes": self.arr()
+        }
+
+        return ret
+
     def __str__(self):
         ret = ""
         arr = []
@@ -224,5 +236,4 @@ class Tree():
 
         self.traverse(callback, data)
         ret += "\n\t" + "\n\t".join(data)
-
         return ret

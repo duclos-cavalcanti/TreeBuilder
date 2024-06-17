@@ -43,7 +43,7 @@ upload() {
     local RESULTS="exp-results-nyu-systems-multicast"
     local FOLDER="treefinder-$CLOUD-$TS/results.tar.gz"
     pushd /work 
-        echo "STARTING UPLOAD"
+        echo "COMPRESSING LOGS"
         tar -zcvf results.tar.gz ./logs
         gcloud storage cp results.tar.gz "gs://$RESULTS/$FOLDER/results.tar.gz"
         gcloud storage cp project/schemas/default.json "gs://$RESULTS/$FOLDER/default.json"

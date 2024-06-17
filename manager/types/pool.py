@@ -22,6 +22,9 @@ class Pool():
         self.N = len(elements)
         self.L = Logger()
 
+    def get(self):
+        return [ p for p in self.pool ]
+
     def reset(self):
         self.pool.clear()
         self.pool.extend([b for b in self.base])

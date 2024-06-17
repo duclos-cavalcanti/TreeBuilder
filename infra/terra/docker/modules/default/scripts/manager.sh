@@ -21,11 +21,17 @@ setup() {
 }
 
 upload() {
+    local TS=$(date +"%m-%d-%H:%M:%S")
+    local FOLDER="treefinder-docker-$TS"
     pushd /work 
-        echo "STARTING UPLOAD"
+        echo "COMPRESSING LOGS"
+        mv project/schemas/docker.json /work/logs/
         tar -zcvf results.tar.gz ./logs
-        mv results.tar.gz /work/logs
-        mv project/schemas/docker.json /work/logs
+
+        echo "MAKING DIR=$FOLDER"
+        mkdir /work/logs/$FOLDER
+
+        mv results.tar.gz /work/logs/$FOLDER
         echo "FINISHED UPLOAD"
     popd
 }

@@ -56,7 +56,7 @@ class Mcast(Task):
         return self.job
 
     def resolve(self) -> Job:
-        self.L.stats(message=f"TASK PRE-RESOLVE[{Flag.Name(self.job.flag)}][{self.job.id}:{self.job.addr}]", data=self.job)
+        self.L.debug(message=f"TASK PRE-RESOLVE[{Flag.Name(self.job.flag)}][{self.job.id}:{self.job.addr}]", data=self.job)
 
         if self.err():
             return self.job
@@ -84,7 +84,7 @@ class Mcast(Task):
                 for drecv in d.integers: self.job.integers.append(drecv)
                 for dperc in d.floats:   self.job.floats.append(dperc)
 
-        self.L.stats(message=f"TASK RESOLVE[{Flag.Name(self.job.flag)}][{self.job.id}:{self.job.addr}]", data=self.job)
+        self.L.debug(message=f"TASK RESOLVE[{Flag.Name(self.job.flag)}][{self.job.id}:{self.job.addr}]", data=self.job)
         return self.job
 
     def process(self, job:Job, strategy:dict={}) -> dict:
@@ -108,5 +108,5 @@ class Mcast(Task):
         recv  = recvs[idx]
         data["selected"].append({"addr": addr, "perc": perc, "recv": recv})
 
-        self.L.stats(message=f"TASK[{Flag.Name(job.flag)}][{job.id}:{job.addr}]", data=data)
+        self.L.debug(message=f"TASK[{Flag.Name(job.flag)}][{job.id}:{job.addr}]", data=data)
         return data

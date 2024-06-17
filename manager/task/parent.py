@@ -50,7 +50,7 @@ class Parent(Task):
         return self.job
 
     def resolve(self) -> Job:
-        self.L.stats(message=f"TASK PRE-RESOLVE[{Flag.Name(self.job.flag)}][{self.job.id}:{self.job.addr}]", data=self.job)
+        self.L.debug(message=f"TASK PRE-RESOLVE[{Flag.Name(self.job.flag)}][{self.job.id}:{self.job.addr}]", data=self.job)
 
         if self.err():
             return self.job
@@ -77,7 +77,7 @@ class Parent(Task):
                 self.job.integers.append(d.integers[0])
                 self.job.floats.append(d.floats[0])
 
-        self.L.stats(message=f"TASK RESOLVE[{Flag.Name(self.job.flag)}][{self.job.id}:{self.job.addr}]", data=self.job)
+        self.L.debug(message=f"TASK RESOLVE[{Flag.Name(self.job.flag)}][{self.job.id}:{self.job.addr}]", data=self.job)
         return self.job
 
     def process(self, job:Job, strategy:dict={}) -> dict:
@@ -105,5 +105,5 @@ class Parent(Task):
             data["selected"].append({"addr": addr, "perc": perc, "recv": recv})
 
 
-        self.L.stats(message=f"TASK PROCESS[{Flag.Name(job.flag)}][{job.id}:{job.addr}]", data=data)
+        self.L.debug(message=f"TASK PROCESS[{Flag.Name(job.flag)}][{job.id}:{job.addr}]", data=data)
         return data
