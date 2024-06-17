@@ -1,15 +1,25 @@
 from .logger import Logger
 
 import random
+import time
 
 from typing import List, Optional
 
+class Seed():
+    def __init__(self):
+        self.seed = int(time.time())
+
+    def get(self) -> int:
+        return self.seed
+
 class Pool():
-    def __init__(self, elements:List, K:int, N:int):
+    def __init__(self, elements:List, K:int, seed:int):
         self.base = [ e for e in elements ]
         self.pool = [ e for e in elements ]
+        self.seed = seed
+        self.rng = random.Random(self.seed)
         self.K = K 
-        self.N = N
+        self.N = len(elements)
         self.L = Logger()
 
     def reset(self):
@@ -17,9 +27,8 @@ class Pool():
         self.pool.extend([b for b in self.base])
 
     def select(self, pool:Optional[List]):
-        if pool is None: 
-            pool = self.pool
-        idx = random.randint(0, len(pool) - 1)
+        if pool is None: pool = self.pool
+        idx = self.rng.randint(0, len(pool) - 1)
         el = pool[idx]
         pool.pop(idx)
         return el
@@ -45,6 +54,5 @@ class Pool():
         raise RuntimeError(f"{el} NOT IN POOL")
 
     def __str__(self):
-        ret =  ""
-        ret += f"POOL: {[e for e in self.pool]}"
+        ret = f"POOL: {[e for e in self.pool]}"
         return ret
