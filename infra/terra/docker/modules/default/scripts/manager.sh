@@ -22,9 +22,11 @@ setup() {
 
 upload() {
     pushd /work 
+        echo "STARTING UPLOAD"
         tar -zcvf results.tar.gz ./logs
         mv results.tar.gz /work/logs
         mv project/schemas/docker.json /work/logs
+        echo "FINISHED UPLOAD"
     popd
 }
 
