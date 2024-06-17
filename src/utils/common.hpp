@@ -17,7 +17,6 @@
 typedef struct MsgUDP {
     uint32_t id;
     uint64_t ts;
-    uint64_t deadline;
 
     void print(void) {
         fprintf(stdout, "MSGUDP: { ");
@@ -37,9 +36,9 @@ typedef struct MsgUDP {
     MsgUDP() : id(0), ts(0) {};
 } MsgUDP_t;
 
-struct timeval timeout(int dur_sec);
 int64_t timestamp(void);
 int64_t deadline(float dur_sec);
 double  get_percentile(const std::vector<int64_t>& data, double percentile);
+double  get_variance(const std::vector<int64_t>& data);
 
 #endif /* __COMMON__HPP */

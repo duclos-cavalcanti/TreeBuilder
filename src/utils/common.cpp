@@ -42,10 +42,14 @@ double get_percentile(const std::vector<int64_t>& data, double percentile) {
         return floorValue + (index - floor(index)) * (ceilValue - floorValue);
     }
 }
+double get_variance(const std::vector<int64_t>& data) {
+    double mean = std::accumulate(data.begin(), data.end(), 0.0) / data.size();
+    double sum = 0.0, variance = 0.0;
 
-struct timeval timeout(int dur_sec) {
-    struct timeval timeout;
-    timeout.tv_sec  = dur_sec;
-    timeout.tv_usec = 0;
-    return timeout;
+    for(const auto& latency : data) {
+        sum += std::pow(latency - mean, 2);
+    }
+
+    variance = sum / data.size();
+    return variance;
 }

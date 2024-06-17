@@ -14,26 +14,45 @@
 #include <arpa/inet.h>
 
 #include "common.hpp"
+#include "utils.hpp"
+#include "log.hpp"
 
-FILE* LOG=stdout;
-std::vector<int64_t> latencies;
-std::string ip = "";
-int rate=0, duration=0, port = 0;
-bool verbose = false;
+typedef struct Config {
+    std::string name, ip;
+    int port, rate, duration;
+    bool verbose;
 
-void log(const char* format, ...) {
-    if (!verbose) {
-        return;
+    bool valid(void) {
+        if (this->duration == 0)
+            return false;
+
+        if (this->port == 0)
+            return false;
+
+        if (this->ip == "")
+            return false;
+
+        return true;
     }
 
-    va_list args;
-    va_start(args, format);
-        vfprintf(LOG, format, args);
-    va_end(args);
-}
+    Config(): name(""), 
+              ip(""),
+              port(0),
+              rate(0), 
+              duration(0), 
+              verbose(false)
+              {};
+} Config_t;
+
+Config_t config;
 
 void usage(int e) {
-    std::cout << "Usage: ./child [-i IP_ADDR] [-d DUR] [-p PORT] [-h] [-v]" << std::endl;
+    std::string str = "Usage: ./child "
+                      "[-r rate] [-d duration] "
+                      "[-i ip] [-p port] "
+                      "[-h] [-v]";
+
+    fprintf(stdout, "%s\n", str.c_str());
     exit(e);
 }
 
@@ -47,23 +66,23 @@ int parse(int argc, char **argv) {
             break;
 
         case 'v':
-            verbose = true;
+            config.verbose = true;
             break;
 
         case 'i':
-            ip =  std::string{optarg};
+            config.ip =  std::string{optarg};
             break;
 
         case 'p':
-            port = atoi(optarg);
+            config.port = atoi(optarg);
             break;
 
         case 'r':
-            rate = atoi(optarg);
+            config.rate = atoi(optarg);
             break;
 
         case 'd':
-            duration = atoi(optarg);
+            config.duration = atoi(optarg);
             break;
 
         default:
@@ -72,36 +91,25 @@ int parse(int argc, char **argv) {
         }
     }
 
-    if (!duration)             usage(EXIT_FAILURE);
-    if ((ip == "") || (!port)) usage(EXIT_FAILURE);
-    if (optind > argc)         usage(EXIT_FAILURE);
-
+    if (optind > argc || !config.valid()) usage(EXIT_FAILURE);
     return ret;
-}
-
-void print_latencies(void) {
-    for(const auto& d: latencies) {
-        fprintf(LOG, "LATENCY: \t%6luMS\n", d);
-    }
 }
 
 int child(void) {
     unsigned long cnt = 0;
-    int sockfd, n;
-    double perc;
-    int sz = sizeof(MsgUDP_t);
+    int sockfd, n, ret;
+    double perc, var;
     static char buf[1000] = { 0 };
-    struct sockaddr_in sockaddr = { 0 }, senderaddr = { 0 };
+    struct sockaddr_in sockaddr = socketaddr(config.ip, config.port);
+    struct sockaddr_in senderaddr = { 0 };
     socklen_t len = sizeof(senderaddr);
     MsgUDP_t* msg;
+    int sz = sizeof(MsgUDP_t);
     uint64_t now;
+    std::vector<int64_t> latencies;
 
-    auto deadline_ts = deadline(1.5  * duration);
+    auto deadline_ts = deadline(1.5  * config.duration);
     auto t = timeout(1);
-
-    sockaddr.sin_family       = AF_INET;
-    sockaddr.sin_port         = htons(port);
-    sockaddr.sin_addr.s_addr  = inet_addr(ip == "localhost" ? "127.0.0.1" : ip.c_str());
 
     if ( (sockfd = socket(AF_INET, SOCK_DGRAM, 0)) < 0 ) {
         fprintf(stderr, "Failed to create socket\n");
@@ -115,13 +123,15 @@ int child(void) {
     }
 
     if( bind(sockfd, (struct sockaddr*)&sockaddr, sizeof(sockaddr)) < 0) {
-        fprintf(stderr, "Failed to bind socket to port: %d\n", port);
+        fprintf(stderr, "Failed to bind socket to port: %d\n", config.port);
         exit(EXIT_FAILURE);
     }
 
-    log("CHILD: SOCKET BOUND => IP=%s | PORT=%d\n", ip.c_str(), port);
-    log("CHILD: WAITING ON START...\n");
-    log("CHILD: START => \n");
+    if (config.verbose) {
+        log("CHILD: SOCKET BOUND => IP=%s | PORT=%d\n", config.ip.c_str(), config.port);
+        log("CHILD: WAITING ON START...\n");
+        log("CHILD: START => \n");
+    }
 
     while(1) {
         n = recvfrom(sockfd, buf, sizeof(buf), 0, (struct sockaddr*) &senderaddr, (socklen_t *) &len);
@@ -138,23 +148,32 @@ int child(void) {
         msg = reinterpret_cast<MsgUDP_t*>(buf);
         latencies.push_back((now = timestamp()) - msg->ts);
 
-        log("CHILD: RECV[%4lu] AT TS=%lu => ", cnt, now);
-        log(msg->str());
-        log("\n");
+        if (config.verbose) {
+            log("CHILD: RECV[%4lu] AT TS=%lu => ", cnt, now);
+            log(msg->str());
+            log("\n");
+        }
         cnt++;
     }
 
-    log("CHILD: END\n");
-    log("SUMMARY | RECV=%lu | LATENCY_VECTOR=%lu\n", cnt, latencies.size());
-
-    close(sockfd);
-    if ((perc = get_percentile(latencies, 90)) != 0.0) {
-        fprintf(stdout, "%lu\n%lf\n", cnt, perc);
-        return EXIT_SUCCESS;
-    } else {
-        fprintf(stdout, "-1\n-1\n");
-        return EXIT_FAILURE;
+    if (config.verbose) {
+        log("CHILD: END\n");
+        log("SUMMARY | RECV=%lu | LATENCY_VECTOR=%lu\n", cnt, latencies.size());
     }
+    
+    close(sockfd);
+
+    perc = get_percentile(latencies, 90);
+    var  = get_variance(latencies);
+
+    if (perc != 0.0 && var != 0.0) {
+        fprintf(stdout, "%lu\n%lf\n%lf\n", cnt, perc, var);
+        ret = EXIT_SUCCESS;
+    } else {
+        fprintf(stdout, "-1\n-1\n-1");
+        ret = EXIT_FAILURE;
+    }
+    return ret;
 }
 
 
