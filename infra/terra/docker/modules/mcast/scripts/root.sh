@@ -36,9 +36,8 @@ setup() {
 }
 
 main() {
-    sleep 2s 
-
     setup
+    sleep 2s 
     pushd /work/project
         echo "-- ROLE: $role --"
     

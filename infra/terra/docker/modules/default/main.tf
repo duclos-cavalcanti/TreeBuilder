@@ -89,10 +89,9 @@ resource "docker_container" "workers" {
         ipv4_address = var.addrs[1 + count.index]
     }
 
-    privileged = true
-
     entrypoint = ["/bin/bash", "/worker.sh", "worker${count.index}", var.addrs[count.index + 1], var.port, count.index]
 
+    privileged = true
     rm         = true
     tty        = true
     stdin_open = true

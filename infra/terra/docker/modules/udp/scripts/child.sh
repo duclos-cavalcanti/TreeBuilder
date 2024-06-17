@@ -40,6 +40,11 @@ main() {
     setup
     pushd /work/project
         echo "-- ROLE: $role --"
+
+        # even numbered workers with index greater than 2
+        if [ $count -gt 2 ] && (( $count % 2 == 0)); then 
+            idelay 0.3
+        fi
     
         echo ${command}
         ${command} -v
