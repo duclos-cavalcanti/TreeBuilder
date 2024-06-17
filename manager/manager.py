@@ -1,5 +1,5 @@
 from .message   import *
-from .types     import Pool, Tree, Logger
+from .types     import Seed, Pool, Tree, Logger
 from .node      import Node
 from .task      import Task, Parent, Mcast, Plan
 from .utils     import *
@@ -10,26 +10,26 @@ from datetime           import datetime
 
 import zmq
 import csv
-import os
 
 class Run():
-    def __init__(self, run:dict, params:dict, root:str, nodes:List):
+    def __init__(self, run:dict, params:dict, root:str, nodes:List, seed:int):
         self.name       = run["name"]
         self.strategy   = run["strategy"]
         self.K          = params["hyperparameter"]
         self.rate       = params["rate"]
         self.duration   = params["duration"]
-        self.pool       = Pool([n for n in nodes], self.K, len(nodes))
+        self.pool       = Pool([n for n in nodes], self.K, seed)
         self.tree       = Tree(name=self.name, root=root, fanout=params["fanout"], depth=params["depth"])
         self.data       = []
 
 class Runner():
     def __init__(self, root:str, nodes:List, params:dict, runs:List, infra:str):
+        self.seed   = Seed()
         self.runQ   = SimpleQueue()
-        self.runs   = [ Run(run, params, root, nodes) for run in runs ]
+        self.runs   = [ Run(run, params, root, nodes, self.seed.get()) for run in runs ]
         self.run    = self.runs[0]
-        self.data   = []
         self.infra  = infra
+        self.data   = []
         self.L      = Logger()
 
         for run in self.runs: self.runQ.put(run)
@@ -39,15 +39,12 @@ class Runner():
 
     def next(self):
         self.run = self.runQ.get_nowait()
-        self.L.state(f"STATE[RUN={self.run.name}]")
         return self.run
 
     def build(self, data:dict):
-        root  = data["root"]
         addrs = [ d["addr"] for d in data["selected"] ]
         self.run.tree.n_add(addrs)
         self.run.pool.n_remove(addrs)
-        self.L.record(f"TREE[{self.run.tree.name}] SELECTION[{self.run.tree.n}/{self.run.tree.nmax}]: PARENT[{root}] => CHILDREN {[c for c in addrs]}")
 
     def save(self, run:Run, data:dict):
         timestamp = datetime.now().strftime("%m-%d %H:%M:%S")
@@ -61,7 +58,6 @@ class Runner():
                 timestamp]
 
         self.data.append(row)
-        self.L.record(f"TREE[{self.run.tree.name}] PERFORMANCE[{data['selected'][0]['addr']}]: {data['selected'][0]['perc']}")
 
     def write(self):
         file = f"/work/logs/results.csv"
@@ -86,7 +82,11 @@ class Manager(Node):
         self.schema     = schema
         self.workers    = [ f"{a}:{self.schema['port']}" for a in self.schema["addrs"][1:] ]
         self.tasks      = Queue()
-        self.runner     = Runner(self.workers[0], self.workers[1:], schema["params"], schema["runs"], schema["infra"])
+        self.runner     = Runner(self.workers[0], 
+                                 self.workers[1:], 
+                                 schema["params"], 
+                                 schema["runs"], 
+                                 schema["infra"])
         self.L          = Logger(name=f"{name}:{ip}")
 
     def go(self):
@@ -97,16 +97,19 @@ class Manager(Node):
 
             while(not self.runner.completed()):
                 self.run = self.runner.next()
+                self.L.state(f"STATE[RUN={self.run.name}]")
 
                 while(not self.run.tree.full()):
                     if self.run.name == "RAND": data = self.rand()
                     else:                       data = self.parent()
                     self.runner.build(data)
+                    self.L.record(f"TREE[{self.run.tree.name}] SELECTION[{self.run.tree.n}/{self.run.tree.nmax}]: PARENT[{data['root']}] => CHILDREN {[ d['addr'] for d in data['selected'] ]}")
 
                 self.L.trees(f"{self.run.tree}")
 
                 data = self.mcast()
                 self.runner.save(self.run, data)
+                self.L.record(f"TREE[{self.run.tree.name}] PERFORMANCE[{data['selected'][0]['addr']}]: {data['selected'][0]['perc']}")
 
             self.runner.write()
             self.L.record("FINISHED!")
