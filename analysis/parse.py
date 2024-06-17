@@ -4,24 +4,19 @@ import shutil
 import ipdb
 
 from typing import List
+from manager import Pool
 
-import matplotlib.pyplot as plt
-import networkx as nx
-
-from networkx.drawing.nx_agraph import graphviz_layout
-from manager import Pool, Tree
+from .plot import Plotter
 
 class Parser():
     def __init__(self, dir:str):
-        self.map    = {}
-        self.events = self.read(dir)
-        self.schema = self.load(dir)
-        self.runs   = self.sort()
+        self.map        = {}
+        self.events     = self.read(dir)
+        self.schema     = self.load(dir)
+        self.runs       = self.sort()
+        self.plotter    = Plotter(map=self.map)
 
         assert(len(self.runs) == len(self.schema["runs"]))
-
-    def name(self, addr:str):
-        return self.map[addr]
 
     def read(self, dir:str):
         file = os.path.join(dir, "events.log")
@@ -42,7 +37,9 @@ class Parser():
         with open(file, 'r') as f: schema = json.load(f)
 
         for i,addr in enumerate(schema["addrs"][1:]):
-            self.map[addr] = f"W_{i}"
+            name = f"W_{i}"
+            if len(name) < 4: name.ljust(1)
+            self.map[addr] = name
 
         return schema
 
@@ -77,6 +74,7 @@ class Parser():
                     stage = {}
                     stage["before"]   = p.get() 
                     stage["parent"]   = v["root"].split(":")[0]
+                    stage["data"]     = v["data"] if "data" in v else []
                     stage["selected"] = v["selected"]
 
                     for a in  v["selected"]:
@@ -104,43 +102,12 @@ class Parser():
 
     def plot(self, dir:str):
         dir = os.path.join(dir, "plot")
-        if os.path.isdir(dir): os.rmdir(dir)
+        if os.path.isdir(dir): shutil.rmtree(dir)
         os.mkdir(dir)
 
         for run in self.runs:
-            name    = run["run"]["name"]
-            root    = run["root"]
-            depth   = run["tree"]["depth"]
-            fanout  = run["tree"]["fanout"]
-
-            G = nx.DiGraph()
-            G.add_node(root)
-
-            for i,stage in enumerate(run["stages"]):
-                parent = stage["parent"]
-
-                G1 = G.copy()
-                pos1 = graphviz_layout(G, prog="dot")
-                ax1 = plt.subplot(1, 2, 1)
-
-                for a in stage["selected"]:
-                    G.add_edge(parent, a["addr"].split(":")[0]) 
-
-                G2 = G.copy()
-                pos2 = graphviz_layout(G, prog="dot")
-                ax2 = plt.subplot(1, 2, 2)
-
-                nx.draw(G1, pos1, with_labels=True, ax=ax1)
-                nx.draw(G2, pos2, with_labels=True, ax=ax2)
-
-                ax1.set_title("Before")
-                ax2.set_title("After")
-
-                plt.title(f"Tree[{name}] - Stage {i}")
-                plt.tight_layout()
-                # plt.show()
-                plt.savefig(f"{dir}/T{name}-{i}.pdf", format="pdf")
-                plt.close()
+            if run["run"]["name"] == "RAND": continue
+            self.plotter.stages(run, dir)
 
 def parse(dir:str):
     P = Parser(dir=os.path.join(dir, "logs"))
