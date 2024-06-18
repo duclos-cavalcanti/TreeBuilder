@@ -14,7 +14,7 @@ class Parser():
         self.events     = self.read(dir)
         self.schema     = self.load(dir)
         self.runs       = self.sort()
-        self.plotter    = Plotter(map=self.map)
+        self.plotter    = Plotter(self.map)
 
         assert(len(self.runs) == len(self.schema["runs"]))
 
@@ -106,9 +106,10 @@ class Parser():
         os.mkdir(dir)
 
         for run in self.runs:
-            if run["run"]["name"] == "RAND": continue
-            self.plotter.stages(run, dir)
+            if run["run"]["name"] == "RAND": 
+                continue
 
-def parse(dir:str):
-    P = Parser(dir=os.path.join(dir, "logs"))
-    P.plot(dir)
+            print(f"PLOTTING TREE[{run['run']['name']}]")
+            for i,(plt,fig) in enumerate(self.plotter.stages(run)):
+                plt.savefig(f"{dir}/TREE-{run['run']['name']}-{i}.pdf", format="pdf")
+                plt.close(fig)

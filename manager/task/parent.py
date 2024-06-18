@@ -55,10 +55,13 @@ class Parent(Task):
         if self.err():
             return self.job
 
-        total = self.command.rate * self.command.duration
         if self.command.layer == 0:
             recv  = int(self.job.data[0])
-            perc  = float(self.job.data[1])
+            p90   = float(self.job.data[1])
+            p75   = float(self.job.data[2])
+            p50   = float(self.job.data[3])
+            p25   = float(self.job.data[4])
+            dev   = float(self.job.data[5])
             
             self.job.ClearField('data')
             self.job.ClearField('integers')
@@ -66,7 +69,7 @@ class Parent(Task):
 
             self.job.data.append(self.command.addr)
             self.job.integers.append(recv)
-            self.job.floats.append(perc)
+            self.job.floats.extend([p90, p75, p50, p25, dev])
         else: 
             self.job.ClearField('data')
             self.job.ClearField('integers')
@@ -75,35 +78,30 @@ class Parent(Task):
             for d in self.dependencies:
                 self.job.data.append(d.addr)
                 self.job.integers.append(d.integers[0])
-                self.job.floats.append(d.floats[0])
+                for f in d.floats: self.job.floats.append(f)
 
         self.L.debug(message=f"TASK RESOLVE[{Flag.Name(self.job.flag)}][{self.job.id}:{self.job.addr}]", data=self.job)
         return self.job
 
-    def process(self, job:Job, strategy:dict={}) -> dict:
-        if job.ret != 0: raise RuntimeError()
+    def process(self, job:Job, strategy:dict) -> Result:
+        if job.ret != 0:  
+            raise RuntimeError("Failed Job")
+    
+        key    = strategy["key"]
+        best   = strategy["best"]
+        ret    = Result(key)
+        items  = ret.parse(job)
 
-        addrs  = [a for a in job.data]
-        percs  = [f for f in job.floats]
-        recvs  = [i for i in job.integers]
+        if key not in items[0]: 
+            raise RuntimeError(f"Incorrect key:{key}")
 
-        sorted = heapq.nsmallest(len(percs), enumerate(percs), key=lambda x: x[1])
+        sorted = heapq.nsmallest(len(items), items, key=lambda x: x[key])
+        if best: selected = [ s["addr"] for s in sorted[:self.command.select] ]
+        else:    selected = [ s["addr"] for s in [ w for w in reversed(sorted[(-1 * self.command.select):]) ] ]
 
-        if strategy["best"]: items = sorted[:self.command.select]
-        else:                items = [ w for w in reversed(sorted[(-1 * self.command.select):]) ]
+        ret.selected(selected)
+        ret.parameters(self.command)
+        ret.arrange(sorted)
 
-        data = {
-                "root": self.command.addr,
-                "data": [{"addr": a, "perc": p, "recv": r} for a,p,r in zip(addrs, percs, recvs)], 
-                "selected": []
-        }
-        for item in items:
-            idx   = item[0]
-            perc  = item[1]
-            addr  = addrs[idx]
-            recv  = recvs[idx]
-            data["selected"].append({"addr": addr, "perc": perc, "recv": recv})
-
-
-        self.L.debug(message=f"TASK PROCESS[{Flag.Name(job.flag)}][{job.id}:{job.addr}]", data=data)
-        return data
+        self.L.debug(message=f"TASK PROCESS[{Flag.Name(job.flag)}][{job.id}:{job.addr}]", data=ret.data)
+        return ret

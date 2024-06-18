@@ -1,7 +1,7 @@
 from .message   import *
 from .types     import Seed, Pool, Tree, Logger
 from .node      import Node
-from .task      import Task, Parent, Mcast, Plan
+from .task      import Task, Parent, Mcast, Plan, Result
 from .utils     import *
 
 from queue              import Queue, SimpleQueue
@@ -59,15 +59,15 @@ class Runner():
         self.run = self.runQ.get_nowait()
         return self.run
 
-    def build(self, data:dict):
-        addrs = [ d["addr"] for d in data["selected"] ]
+    def build(self, result:Result):
+        addrs = [ d for d in result.data["selected"] ]
         self.run.tree.n_add(addrs)
         self.run.pool.n_remove(addrs)
 
-    def save(self, run:Run, data:dict):
+    def save(self, run:Run, result:Result):
         timestamp = datetime.now().strftime("%m-%d %H:%M:%S")
         row = [ run.tree.name, 
-                data['selected'][0]['perc'], 
+                result.data['data'][0]['p90'], 
                 run.tree.hash(),
                 run.tree.d, 
                 run.tree.fanout,
@@ -120,19 +120,19 @@ class Manager(Node):
                 self.L.event({"RUN":  self.run.to_dict()})
                 self.L.event({"POOL": self.run.pool.pool})
                 while(not self.run.tree.full()):
-                    data = self.parent() if self.run.name != "RAND" else self.rand()
-                    self.runner.build(data)
+                    result = self.parent() if self.run.name != "RAND" else self.rand()
+                    self.runner.build(result)
 
-                    self.L.record(f"TREE[{self.run.tree.name}] SELECTION[{self.run.tree.n}/{self.run.tree.nmax}]: PARENT[{data['root']}] => CHILDREN {[ d['addr'] for d in data['selected'] ]}")
-                    self.L.event({"BUILD": data})
+                    self.L.record(f"TREE[{self.run.tree.name}] SELECTION[{self.run.tree.n}/{self.run.tree.nmax}]: PARENT[{result.data['root']}] => CHILDREN {[ a for a in result.data['selected'] ]}")
+                    self.L.event({"BUILD": result.data})
                     if self.run.tree.full():
                         self.L.event({"TREE": self.run.tree.to_dict()})
 
-                data = self.mcast()
-                self.runner.save(self.run, data)
+                result = self.mcast()
+                self.runner.save(self.run, result)
 
-                self.L.record(f"TREE[{self.run.tree.name}] PERFORMANCE[{data['selected'][0]['addr']}]: {data['selected'][0]['perc']}")
-                self.L.event({"PERF": data})
+                self.L.record(f"TREE[{self.run.tree.name}] PERFORMANCE[{result.data['selected'][0]}]: {result.data['data'][0]['p90']}")
+                self.L.event({"PERF": result.data})
                 self.L.event({"POOL": self.run.pool.pool})
 
             self.runner.write()
@@ -152,7 +152,7 @@ class Manager(Node):
             r = self.handshake(m)
             self.verify(m, r)
 
-    def parent(self):
+    def parent(self) -> Result:
         addr = self.run.tree.next()
         arr  = [addr] + self.run.pool.slice()
         plan = Plan(rate=self.run.rate, duration=self.run.duration, depth=1, fanout=len(arr[1:]), select=self.run.tree.fanout, arr=arr)
@@ -162,10 +162,10 @@ class Manager(Node):
         r    = self.handshake(m)
         job  = self.verify(m, r, field="job")
         task.job.CopyFrom(job)
-        data = self.report(task)
-        return data
+        ret  = self.report(task)
+        return ret
 
-    def mcast(self):
+    def mcast(self) -> Result:
         addr = self.run.tree.root.id
         arr  = self.run.tree.arr()
         plan = Plan(rate=self.run.rate, duration=self.run.duration, depth=self.run.tree.d, fanout=self.run.tree.fanout, select=1, arr=arr)
@@ -175,19 +175,20 @@ class Manager(Node):
         r    = self.handshake(m)
         job  = self.verify(m, r, field="job")
         task.job.CopyFrom(job)
-        data = self.report(task)
-        return data
+        ret  = self.report(task)
+        return ret
 
-    def rand(self) -> dict:
-        data = { 
-            "root": self.run.tree.next(), 
-            "selected": [ 
-                         {"addr": a } for a in self.run.pool.slice(param=self.run.tree.fanout)
-            ]
-        }
-        return data
+    def rand(self) -> Result:
+        r = Result()
+        arr = self.run.pool.slice()
 
-    def report(self, task:Task, interval:int=1) -> dict:
+        r.data["root"] = self.run.tree.next()
+        for a in arr:                         r.data["data"].append(r.element(addr=a))
+        for _ in range(self.run.tree.fanout): r.data["selected"].append(self.run.pool.select(arr))
+
+        return r
+
+    def report(self, task:Task, interval:int=1) -> Result:
         while True:
             job = task.job
             m = self.message(src=self.addr, dst=job.addr, t=Type.REPORT, mdata=Metadata(job=job))

@@ -42,19 +42,22 @@ def config(args, path):
                 {
                     "name": "BEST",
                     "strategy": {
-                        "best": True
+                        "best": True,
+                        "key": "p90"
                     }
                 },
                 {
                     "name": "WORST",
                     "strategy": {
-                        "best": False
+                        "best": False,
+                        "key": "p90"
                     }
                 },
                 {
                     "name": "RAND",
                     "strategy": {
-                        "best": True
+                        "best": False,
+                        "key": "p90"
                     },
                 }
             ],
@@ -85,8 +88,8 @@ def config(args, path):
     return data
 
 def plan(args, wdir):
-    compress(f"{wdir}/extract")
     config(args, f"{wdir}/extract/data.json")
+    compress(f"{wdir}/extract")
     lexecute(f"terraform init", wdir=wdir)
     lexecute(f"terraform plan -out=tf.plan -var mode={args.mode}", wdir=wdir)
 

@@ -38,6 +38,9 @@ def parse():
 def main():
     args = parse()
 
+    if not args.prefix and args.infra != "docker": 
+        raise RuntimeError("Need prefix to pull data from GCP/Cloud")
+
     match args.action:
         case "pull":    pull(args)
         case "process": process(args)

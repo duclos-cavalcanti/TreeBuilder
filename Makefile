@@ -37,10 +37,11 @@ mcast: build
 	@python3 -m deploy -a deploy -i docker
 
 docker:
-	@python3 -m deploy -a plan -i docker -s 12 -p 9092
+	@python3 -m deploy -a plan -i docker -s 19 -p 9092 -r 1000 -t 15
 	@python3 -m deploy -a deploy -i docker
 
 pull:
+	@sudo chown duclos:duclos -R infra/terra/docker/modules/default/volume
 	@python3 -m analysis -a pull -i docker
 
 process:

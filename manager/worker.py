@@ -8,7 +8,7 @@ import zmq
 import threading
 import subprocess
 
-class Controller(Node):
+class Executioner(Node):
     def __init__(self, name:str, ip:str, port:str):
         super().__init__(name=name, stype=zmq.REQ)
         self.addr       = f"{ip}:{port}"
@@ -68,25 +68,7 @@ class Controller(Node):
             return ret
 
     def execute(self, t:Task):
-        try:
-            p = subprocess.Popen(
-                t.job.instr, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True
-            )
-            stdout, stderr = p.communicate()
-
-            data = [ s for s in (stdout if stdout else stderr).split("\n") if s ]
-            t.job.pid = p.pid
-            t.job.ret = int(p.returncode)
-
-        except Exception as e:
-            data = [ f"ERROR: {e}" ]
-            t.job.ret = -1
-
-        finally:
-            t.job.ClearField('data')
-            t.job.data.extend(data)
-            t.job.end = True
-
+        t.run()
         self.collect(t)
 
     def collect(self, t:Task):
@@ -114,9 +96,9 @@ class Controller(Node):
 class Worker(Node):
     def __init__(self, name:str, ip:str, port:str):
         super().__init__(name=name, stype=zmq.REP)
-        self.addr       = f"{ip}:{port}"
-        self.controller = Controller(name="CONTROLLER", ip=ip, port=port)
-        self.L          = Logger(name=f"{name}:{ip}")
+        self.addr           = f"{ip}:{port}"
+        self.executioner    = Executioner(name="EXECUTIONER", ip=ip, port=port)
+        self.L              = Logger(name=f"{name}:{ip}")
 
     def go(self):
         self.bind(protocol="tcp", ip=self.addr.split(':')[0], port=self.addr.split(':')[1])
@@ -148,11 +130,11 @@ class Worker(Node):
         if not m.mdata.HasField("command"): 
             return self.err_message(m, desc=f"COMMAND[{self.ipaddr(self.addr)}] FORMAT ERR")
 
-        if not self.controller.task is None:
+        if not self.executioner.task is None:
             return self.err_message(m, desc=f"COMMAND[{self.ipaddr(self.addr)}] WORKER BUSY ERR")
 
         c = m.mdata.command
-        job = self.controller.start(c)
+        job = self.executioner.start(c)
         return self.ack_message(m, mdata=Metadata(job=job))
 
     def reportACK(self, m:Message):
@@ -160,7 +142,7 @@ class Worker(Node):
             return self.err_message(m, desc=f"REPORT[{self.addr}] FORMAT ERR")
         
         job = m.mdata.job
-        job = self.controller.report(job)
+        job = self.executioner.report(job)
         return self.ack_message(m, mdata=Metadata(job=job))
 
     def errorACK(self, m:Message):

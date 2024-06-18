@@ -25,7 +25,9 @@ int64_t deadline(float dur_sec) {
 }
 
 double get_percentile(const std::vector<int64_t>& data, double percentile) {
-    if (data.empty()) return 0.0;
+    if (data.empty()) {
+        throw std::runtime_error("Data vector is empty");
+    }
 
     std::vector<int64_t> sorted_data = data;
     std::sort(sorted_data.begin(), sorted_data.end());
@@ -42,7 +44,12 @@ double get_percentile(const std::vector<int64_t>& data, double percentile) {
         return floorValue + (index - floor(index)) * (ceilValue - floorValue);
     }
 }
+
 double get_variance(const std::vector<int64_t>& data) {
+    if (data.empty()) {
+        throw std::runtime_error("Data vector is empty");
+    }
+
     double mean = std::accumulate(data.begin(), data.end(), 0.0) / data.size();
     double sum = 0.0, variance = 0.0;
 
@@ -52,4 +59,21 @@ double get_variance(const std::vector<int64_t>& data) {
 
     variance = sum / data.size();
     return variance;
+}
+
+double get_stdev(const std::vector<int64_t>& data) {
+    if (data.empty()) {
+        throw std::runtime_error("Data vector is empty");
+    }
+
+    double mean = std::accumulate(data.begin(), data.end(), 0.0) / data.size();
+    double sum = 0.0, variance = 0.0, stddev = 0.0;
+
+    for (const auto& latency : data) {
+        sum += std::pow(latency - mean, 2);
+    }
+
+    variance = sum / data.size();
+    stddev = std::sqrt(variance);
+    return stddev;
 }

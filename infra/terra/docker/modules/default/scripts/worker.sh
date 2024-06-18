@@ -41,9 +41,9 @@ main() {
     pushd /work/project
         echo "-- ROLE: $role [ ${addr}:${port} ] --"
     
-        # even numbered workers with index greater than 2
-        if [ $count -gt 2 ] && (( $count % 2 == 0)); then 
-            idelay 0.2
+        # even numbered workers with index greater than 0
+        if [ $count -gt 0 ] && (( $count % 2 == 0)); then 
+            idelay 0.5
         fi
     
         python3 -m manager -a worker -n ${role}  -i ${addr} -p ${port}

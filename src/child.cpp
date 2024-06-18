@@ -17,6 +17,8 @@
 #include "utils.hpp"
 #include "log.hpp"
 
+int output(std::vector<int64_t>& data, unsigned long cnt);
+
 typedef struct Config {
     std::string name, ip;
     int port, rate, duration;
@@ -97,8 +99,7 @@ int parse(int argc, char **argv) {
 
 int child(void) {
     unsigned long cnt = 0;
-    int sockfd, n, ret;
-    double perc, var;
+    int sockfd, n;
     static char buf[1000] = { 0 };
     struct sockaddr_in sockaddr = socketaddr(config.ip, config.port);
     struct sockaddr_in senderaddr = { 0 };
@@ -162,20 +163,36 @@ int child(void) {
     }
     
     close(sockfd);
-
-    perc = get_percentile(latencies, 90);
-    var  = get_variance(latencies);
-
-    if (perc != 0.0 && var != 0.0) {
-        fprintf(stdout, "%lu\n%lf\n%lf\n", cnt, perc, var);
-        ret = EXIT_SUCCESS;
-    } else {
-        fprintf(stdout, "-1\n-1\n-1");
-        ret = EXIT_FAILURE;
-    }
-    return ret;
+    return output(latencies, cnt);
 }
 
+
+int output(std::vector<int64_t>& data, unsigned long cnt) {
+    int ret = 0;
+    std::string errout = "-1\n-1\n-1\n-1\n-1";
+
+    try {
+        double p90 = get_percentile(data, 90);
+        double p75 = get_percentile(data, 75);
+        double p50 = get_percentile(data, 50);
+        double p25 = get_percentile(data, 25);
+        double var = get_stdev(data);
+
+        fprintf(stdout, "%lu\n", cnt);
+        fprintf(stdout, "%lf\n", p90);
+        fprintf(stdout, "%lf\n", p75);
+        fprintf(stdout, "%lf\n", p50);
+        fprintf(stdout, "%lf\n", p25);
+        fprintf(stdout, "%lf\n", var);
+        ret = EXIT_SUCCESS;
+
+    } catch (const std::runtime_error& e) {
+        fprintf(stdout, "%s\n", errout.c_str());
+        ret = EXIT_FAILURE;
+    }
+
+    return ret;
+}
 
 int main(int argc, char **argv) {
     parse(argc, argv);
