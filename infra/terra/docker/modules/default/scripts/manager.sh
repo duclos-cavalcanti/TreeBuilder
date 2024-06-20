@@ -41,6 +41,7 @@ main() {
     pushd /work/project
         echo "-- ROLE: $role --"
 
+        echo python3 -m manager -a manager -n ${role}  -i ${addr} -p ${port} -s schemas/docker.json
         python3 -m manager -a manager -n ${role}  -i ${addr} -p ${port} -s schemas/docker.json
         upload
 

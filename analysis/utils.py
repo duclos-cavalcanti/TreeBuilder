@@ -1,6 +1,8 @@
 import os 
 import tarfile
 
+from typing import List
+
 def isdir(dir:str):
     path = os.path.join(os.getcwd(), f"{dir}")
     if os.path.isdir(path): return path
@@ -23,3 +25,5 @@ def extract(dir:str):
                 tar.extractall(path=dir)
                 print(f"DECOMPRESSED: {f}")
 
+def iswithin(arr:List[str]):
+    pass

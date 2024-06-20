@@ -3,6 +3,7 @@ import os
 import shutil
 
 from .parse import Parser
+from .plot  import Plotter
 from .utils import *
 
 def pull(args):
@@ -34,6 +35,6 @@ def process(args):
     if args.infra == "docker":
         dir = isdir("analysis/data")
         dir = find(dir=dir, pattern=f"treefinder-{args.infra}")
-        P = Parser(dir=os.path.join(dir, "logs"))
+        P = Plotter(Parser(dir=os.path.join(dir, "logs")))
         P.plot(dir)
 

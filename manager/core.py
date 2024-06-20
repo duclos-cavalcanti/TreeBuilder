@@ -15,5 +15,11 @@ def manager(args):
     M.go()
 
 def worker(args):
-    W = Worker(name=args.name, ip=args.addr, port=args.port) 
+    schema = os.path.join(os.getcwd(), "schemas", "default.json")
+    if args.schema: schema = args.schema
+
+    with open(schema, 'r') as file: 
+        schema = json.load(file)
+
+    W = Worker(schema, name=args.name, ip=args.addr, port=args.port) 
     W.go()

@@ -9,12 +9,13 @@ import threading
 import subprocess
 
 class Executioner(Node):
-    def __init__(self, name:str, ip:str, port:str):
+    def __init__(self, name:str, ip:str, port:str, map:dict):
         super().__init__(name=name, stype=zmq.REQ)
         self.addr       = f"{ip}:{port}"
         self.task       = None
         self.job        = None
         self.thread     = None
+        self.map        = map
 
     def launch(self, target, args):
         self.thread = threading.Thread(target=target, args=args)
@@ -40,7 +41,7 @@ class Executioner(Node):
         for i,item in enumerate(self.task.dependencies):
             c = Command()
             c.CopyFrom(item)
-            m = self.message(src=self.addr, dst=c.addr, t=Type.COMMAND, mdata=Metadata(command=c))
+            m = self.message(src=self.addr, dst=c.addr, ref=f"{self.map[self.addr]}/{self.map[c.addr]}", t=Type.COMMAND, mdata=Metadata(command=c))
             r = self.handshake(m=m)
             d = self.verify(m, r, field="job")
             self.task.dependencies[i] = d
@@ -84,7 +85,7 @@ class Executioner(Node):
             for i, job in enumerate(t.dependencies):
                 if job.end: continue 
         
-                m   = self.message(src=self.addr, dst=job.addr, t=Type.REPORT, mdata=Metadata(job=job))
+                m   = self.message(src=self.addr, dst=job.addr, ref=f"{self.map[self.addr]}/{self.map[job.addr]}", t=Type.REPORT, mdata=Metadata(job=job))
                 r   = self.handshake(m)
                 ret = self.verify(m, r, field="job")
 
@@ -94,10 +95,18 @@ class Executioner(Node):
 
 
 class Worker(Node):
-    def __init__(self, name:str, ip:str, port:str):
+    def __init__(self, schema:dict, name:str, ip:str, port:str):
         super().__init__(name=name, stype=zmq.REP)
+        self.schema         = schema
         self.addr           = f"{ip}:{port}"
-        self.executioner    = Executioner(name="EXECUTIONER", ip=ip, port=port)
+        self.manageraddr    = f"{self.schema['addrs'][0]}:{self.schema['port']}"
+        self.map            = { self.manageraddr: "M_0" }
+        for i,addr in enumerate(schema["addrs"][1:]):
+            key     = f"{addr}:{self.schema['port']}"
+            value   = f"W_{i}"
+            self.map[key] = value
+
+        self.executioner    = Executioner(name="EXECUTIONER", ip=ip, port=port, map=self.map)
         self.L              = Logger(name=f"{name}:{ip}")
 
     def go(self):

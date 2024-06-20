@@ -46,7 +46,8 @@ main() {
             idelay 0.5
         fi
     
-        python3 -m manager -a worker -n ${role}  -i ${addr} -p ${port}
+        echo python3 -m manager -a worker -n ${role}  -i ${addr} -p ${port} -s schemas/docker.json
+        python3 -m manager -a worker -n ${role}  -i ${addr} -p ${port} -s schemas/docker.json
         bash
     popd
 }

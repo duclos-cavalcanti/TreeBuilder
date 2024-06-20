@@ -3,23 +3,23 @@ import json
 import shutil
 import ipdb
 
-from typing import List
 from manager import Pool
 
-from .plot import Plotter
+from .experiment import Experiment
 
 class Parser():
     def __init__(self, dir:str):
-        self.map        = {}
-        self.events     = self.read(dir)
-        self.schema     = self.load(dir)
-        self.runs       = self.sort()
-        self.plotter    = Plotter(self.map)
+        self.map         = {}
+        self.experiments = self.read(dir)
+        self.schema      = self.load(dir)
+        self.sort()
 
-        assert(len(self.runs) == len(self.schema["runs"]))
+        assert(len(self.experiments) == len(self.schema["runs"]))
 
     def read(self, dir:str):
         file = os.path.join(dir, "events.log")
+        exp    = []
+        exps   = []
         events = []
         with open(file, 'r') as f:
             for line in f:
@@ -30,86 +30,77 @@ class Parser():
                 except json.JSONDecodeError as e:
                     print(f"Error parsing line: {line.strip()} - {e}")
 
-        return events
+        for e in events:
+            if   "RUN" in e:
+                exp.append(e)
+
+            elif "PERF" in e:
+                exp.append(e)
+                exps.append(exp)
+                exp = []
+
+            else:
+                exp.append(e)
+
+        self.experiments = exps
+        return exps
 
     def load(self, dir:str):
         file   = os.path.join(dir, "docker.json")
-        with open(file, 'r') as f: schema = json.load(f)
 
+        with open(file, 'r') as f: 
+            schema = json.load(f)
+
+        self.map[schema["addrs"][0]] = "M_0"
         for i,addr in enumerate(schema["addrs"][1:]):
             name = f"W_{i}"
-            if len(name) < 4: name.ljust(1)
             self.map[addr] = name
 
         return schema
 
     def sort(self):
-        i   = 0
-        d   = {}
-        p   = None
-        ret = []
-        while i < len(self.events):
-            ev = self.events[i]
-            for k,v in ev.items():
-                if k == "RUN":
-                    d["run"] = v
-                    d["root"] = v["tree"]["root"].split(":")[0]
-                    break
+        for i, ex in enumerate(self.experiments):
+            exp = Experiment()
+            p = None
+            for _, ev in enumerate(ex):
+                if "RUN" in ev:
+                    v = ev["RUN"]
+                    exp.data["name"]       = v["name"]
+                    exp.data["strategy"]   = v["strategy"]
+                    exp.data["params"]     = v["params"]
+                    exp.data["tree"]       = v["tree"]
 
-                if k == "POOL":
-                    if "perf" in d: 
-                        d["final"]   = [ p.split(":")[0] for p in v ]
-                        c = d.copy()
-                        d = {}
-                        ret.append(c) 
+                if "POOL" in ev:
+                    v = ev["POOL"]
+                    if len(exp.data["stages"]) == 0:
+                        exp.data["pool"].extend([ p.split(":")[0] for p in v ])
+                        p = Pool(exp.data["pool"], 1, 1)
                     else:
-                        d["pool"]   = [ p.split(":")[0] for p in v ]
-                        d["stages"] = []
-                        p = Pool(d["pool"], 1, 1)
+                        assert(p.get() == [n.split(":")[0] for n in v])
 
-                    break
+                if "BUILD" in ev:
+                    v = ev["BUILD"]
+                    root = v["root"].split(":")[0]
+                    key = v["key"]
+                    data   = v["data"] if "data" in v else []
+                    params = v["parameters"]
+                    select = v["selected"]
+                    pool = p.get() 
+                    p.n_remove([ a.split(":")[0] for a in v["selected"] ])
 
-                if k == "BUILD":
-                    if p is None or d == {}: raise RuntimeError("Parsing gone wrong")
-                    stage = {}
-                    stage["before"]   = p.get() 
-                    stage["parent"]   = v["root"].split(":")[0]
-                    stage["data"]     = v["data"] if "data" in v else []
-                    stage["selected"] = v["selected"]
+                    exp.stage(root, key, data, params, select, pool)
 
-                    for a in  v["selected"]:
-                        addr = a["addr"].split(":")[0]
-                        p.remove(addr)
+                if "TREE" in ev:
+                    v = ev["TREE"]
+                    exp.data["tree"]["nodes"] = [ n.split(":")[0] for n in v["nodes"] ]
 
-                    stage["after"]   = p.get() 
-                    d["stages"].append(stage)
-                    break
+                if "PERF" in ev:
+                    v = ev["PERF"]
+                    root = v["root"].split(":")[0]
+                    key = v["key"]
+                    data   = v["data"]
+                    params = v["parameters"]
+                    select = v["selected"]
+                    exp.performance(root, key, data, params, select)
 
-                if k == "TREE":
-                    d["tree"] = v
-                    d["tree"]["nodes"] = [ n.split(":")[0] for n in v["nodes"] ]
-                    break
-
-                if k == "PERF":
-                    d["perf"] = v
-                    break
-
-                raise RuntimeError(f"KEY[{k}] IS UNKNOWN")
-
-            i += 1
-
-        return ret
-
-    def plot(self, dir:str):
-        dir = os.path.join(dir, "plot")
-        if os.path.isdir(dir): shutil.rmtree(dir)
-        os.mkdir(dir)
-
-        for run in self.runs:
-            if run["run"]["name"] == "RAND": 
-                continue
-
-            print(f"PLOTTING TREE[{run['run']['name']}]")
-            for i,(plt,fig) in enumerate(self.plotter.stages(run)):
-                plt.savefig(f"{dir}/TREE-{run['run']['name']}-{i}.pdf", format="pdf")
-                plt.close(fig)
+            self.experiments[i]  = exp

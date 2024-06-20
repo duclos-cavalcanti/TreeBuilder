@@ -18,7 +18,7 @@ ifeq (, $(shell which terraform))
 $(error terraform not found)
 endif
 
-.PHONY: proto build udp mcast docker pull process clean docs test 
+.PHONY: proto build udp mcast docker pull process clean rm docs test 
 all: build
 
 proto:
@@ -37,7 +37,7 @@ mcast: build
 	@python3 -m deploy -a deploy -i docker
 
 docker:
-	@python3 -m deploy -a plan -i docker -s 19 -p 9092 -r 1000 -t 15
+	@python3 -m deploy -a plan -i docker -s 20 -p 9092 -r 1000 -t 5 -d 3
 	@python3 -m deploy -a deploy -i docker
 
 pull:
@@ -46,11 +46,17 @@ pull:
 
 process:
 	@python3 -m analysis -a process -i docker
-	@# impressive -t None -f *.pdf
+	@cd analysis/data && feh -r
 
 clean:
 	@find . -path ./jasper -prune -type f -name "*.tar.gz" -print0 | xargs -0 -I {} rm -v {}
 	@python3 -m deploy -a destroy -i docker
+
+rm:
+	@sudo rm -f infra/terra/docker/modules/default/volume/*.log
+	@sudo rm -f infra/terra/docker/modules/default/volume/*.json
+	@sudo rm -f infra/terra/docker/modules/default/volume/*.csv
+	@sudo rm -rf infra/terra/docker/modules/default/volume/treefinder*
 
 docs:
 	$(MAKE) -C docs/slidev

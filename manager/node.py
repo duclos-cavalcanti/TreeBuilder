@@ -36,8 +36,9 @@ class Node():
         format = self.format(addr)
         self.socket.disconnect(format)
 
-    def message(self, src:str, dst:str, t=Type.ACK, mdata:Optional[Metadata]=None) -> Message:
-        m = Message(id=self.tick, ts=self.timer.ts(), ref=f"{self.name}:{src}", src=src, dst=dst, type=t)
+    def message(self, src:str, dst:str, ref:str="", t=Type.ACK, mdata:Optional[Metadata]=None) -> Message:
+        if not ref: ref = f"{self.name}:{src}"
+        m = Message(id=self.tick, ts=self.timer.ts(), ref=ref, src=src, dst=dst, type=t)
         if not mdata is None: m.mdata.CopyFrom(mdata)
         return m
 
@@ -70,7 +71,7 @@ class Node():
         return m
 
     def ack_message(self, m:Message, mdata:Optional[Metadata]=None):
-        r = self.message(src=m.dst, dst=m.src, t=Type.ACK, mdata=mdata)
+        r = self.message(src=m.dst, dst=m.src, ref=m.ref, t=Type.ACK, mdata=mdata)
         r.id = m.id
         return self.send_message(r)
 

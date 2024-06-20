@@ -99,6 +99,14 @@ class Manager(Node):
         self.addr       = f"{ip}:{port}"
         self.schema     = schema
         self.workers    = [ f"{a}:{self.schema['port']}" for a in self.schema["addrs"][1:] ]
+        self.map        = { self.addr: "M_0" }
+        for i,addr in enumerate(schema["addrs"][1:]):
+            key     = f"{addr}:{self.schema['port']}"
+            value   = f"W_{i}"
+            self.map[key] = value
+
+        print(self.map)
+
         self.tasks      = Queue()
         self.runner     = Runner(self.workers[0], 
                                  self.workers[1:], 
@@ -132,8 +140,8 @@ class Manager(Node):
                 self.runner.save(self.run, result)
 
                 self.L.record(f"TREE[{self.run.tree.name}] PERFORMANCE[{result.data['selected'][0]}]: {result.data['data'][0]['p90']}")
-                self.L.event({"PERF": result.data})
                 self.L.event({"POOL": self.run.pool.pool})
+                self.L.event({"PERF": result.data})
 
             self.runner.write()
             self.L.record("FINISHED!")
@@ -158,7 +166,7 @@ class Manager(Node):
         plan = Plan(rate=self.run.rate, duration=self.run.duration, depth=1, fanout=len(arr[1:]), select=self.run.tree.fanout, arr=arr)
         task = Parent()
         c    = task.build(plan)
-        m    = self.message(src=self.addr, dst=addr, t=Type.COMMAND, mdata=Metadata(command=c))
+        m    = self.message(src=self.addr, dst=addr, ref=f"{self.map[self.addr]}/{self.map[addr]}", t=Type.COMMAND, mdata=Metadata(command=c))
         r    = self.handshake(m)
         job  = self.verify(m, r, field="job")
         task.job.CopyFrom(job)
@@ -171,7 +179,7 @@ class Manager(Node):
         plan = Plan(rate=self.run.rate, duration=self.run.duration, depth=self.run.tree.d, fanout=self.run.tree.fanout, select=1, arr=arr)
         task = Mcast()
         c    = task.build(plan)
-        m    = self.message(src=self.addr, dst=addr, t=Type.COMMAND, mdata=Metadata(command=c))
+        m    = self.message(src=self.addr, dst=addr, ref=f"{self.map[self.addr]}/{self.map[addr]}", t=Type.COMMAND, mdata=Metadata(command=c))
         r    = self.handshake(m)
         job  = self.verify(m, r, field="job")
         task.job.CopyFrom(job)
@@ -191,7 +199,7 @@ class Manager(Node):
     def report(self, task:Task, interval:int=1) -> Result:
         while True:
             job = task.job
-            m = self.message(src=self.addr, dst=job.addr, t=Type.REPORT, mdata=Metadata(job=job))
+            m = self.message(src=self.addr, dst=job.addr, ref=f"{self.map[self.addr]}/{self.map[job.addr]}", t=Type.REPORT, mdata=Metadata(job=job))
             r = self.handshake(m)
             rjob = self.verify(m, r, field="job")
 

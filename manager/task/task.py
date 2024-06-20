@@ -48,6 +48,7 @@ class Result():
 
     def parse(self, job:Job) -> List[Element]:
         items = []
+        self.data["root"] = job.addr
         for j,i in enumerate(range(0, len(job.floats), 5)):
             addr    = job.data[j]
             p90     = job.floats[i]
