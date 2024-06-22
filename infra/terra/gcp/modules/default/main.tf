@@ -43,6 +43,12 @@ variable "saddrs" {
     default     = ["localhost"]
 }
 
+variable "names" {
+    description = "List of node names"
+    type        = list(string)
+    default     = ["name"]
+}
+
 resource "google_storage_bucket" "bucket" {
     name     = var.bucket
     location = "us-east4"
@@ -93,12 +99,25 @@ resource "google_compute_instance" "manager_instance" {
     metadata = {
         "enable-oslogin" = "TRUE"
         "startup-script" = templatefile("${path.cwd}/modules/default/scripts/manager.sh", {
-            ROLE         = "manager",
+            ROLE         = var.names[0],
             CLOUD        = "GCP",
             IP_ADDR      = var.addrs[0],
             PORT         = var.port,
             BUCKET       = var.bucket
         })
+    }
+
+    provisioner "file" {
+        content     = templatefile("${path.cwd}/modules/default/scripts/upload.sh", {
+            CLOUD        = "GCP",
+        })
+        destination = "/work/upload.sh"
+    }
+
+    provisioner "remote-exec" {
+        inline = [
+            "chmod +x /work/upload.sh",
+        ]
     }
 
     network_interface {
@@ -144,9 +163,9 @@ resource "google_compute_instance" "worker_instance" {
     metadata = {
         "enable-oslogin" = "TRUE"
         "startup-script" = templatefile("${path.cwd}/modules/default/scripts/worker.sh", {
-            ROLE         = "worker${count.index}",
+            ROLE         = var.names[count.index + 1],
             CLOUD        = "GCP",
-            IP_ADDR      = var.addrs[count + 1],
+            IP_ADDR      = var.addrs[count.index + 1],
             PORT         = var.port,
             BUCKET       = var.bucket
         })
@@ -155,7 +174,7 @@ resource "google_compute_instance" "worker_instance" {
     network_interface {
         network     = data.google_compute_network.multicast-management.name
         subnetwork  = data.google_compute_subnetwork.multicast-management-subnet.name
-        network_ip  = var.addrs[count + 1]
+        network_ip  = var.addrs[count.index + 1]
         nic_type    = "GVNIC"
         stack_type  = "IPV4_ONLY"
     }
@@ -163,7 +182,7 @@ resource "google_compute_instance" "worker_instance" {
     network_interface {
         network     = data.google_compute_network.multicast-service.name
         subnetwork  = data.google_compute_subnetwork.multicast-service-subnet.name
-        network_ip  = var.saddrs[count + 1]
+        network_ip  = var.saddrs[count.index + 1]
         nic_type    = "GVNIC"
         stack_type  = "IPV4_ONLY"
     }

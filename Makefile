@@ -18,6 +18,8 @@ ifeq (, $(shell which terraform))
 $(error terraform not found)
 endif
 
+PREFIX := 06-22-20:20:16
+
 .PHONY: proto build udp mcast docker pull process clean rm docs test 
 all: build
 
@@ -37,26 +39,41 @@ mcast: build
 	@python3 -m deploy -a deploy -i docker
 
 docker:
-	@python3 -m deploy -a plan -i docker -s 20 -p 9092 -r 1000 -t 5 -d 3
+	@python3 -m deploy -a plan -i docker -s 20 -p 9092 -r 5000 -t 15 -d 3
 	@python3 -m deploy -a deploy -i docker
 
 pull:
 	@sudo chown duclos:duclos -R infra/terra/docker/modules/default/volume
-	@python3 -m analysis -a pull -i docker
+	python3 -m analysis -a pull -i docker -p ${PREFIX}
 
 process:
-	@python3 -m analysis -a process -i docker
-	@cd analysis/data && feh -r
+	python3 -m analysis -a process -i docker -v yes -p ${PREFIX}
+
+gcp:
+	@python3 -m deploy -a plan -i gcp -s 20 -p 9092 -r 5000 -t 20 -d 3
+	@python3 -m deploy -a deploy -i gcp
+
+gpull:
+	python3 -m analysis -a pull -i gcp -p 06-22-22:19:00
+
+gprocess:
+	python3 -m analysis -a process -i gcp -v yes -p 06-22-22:19:00
+
+gclean:
+	@python3 -m deploy -a destroy -i gcp
 
 clean:
 	@find . -path ./jasper -prune -type f -name "*.tar.gz" -print0 | xargs -0 -I {} rm -v {}
 	@python3 -m deploy -a destroy -i docker
 
 rm:
-	@sudo rm -f infra/terra/docker/modules/default/volume/*.log
-	@sudo rm -f infra/terra/docker/modules/default/volume/*.json
-	@sudo rm -f infra/terra/docker/modules/default/volume/*.csv
-	@sudo rm -rf infra/terra/docker/modules/default/volume/treefinder*
+	@sudo rm -vf infra/terra/docker/modules/default/volume/*.log
+	@sudo rm -vf infra/terra/docker/modules/default/volume/*.json
+	@sudo rm -vf infra/terra/docker/modules/default/volume/*.csv
+	@sudo rm -vrf infra/terra/docker/modules/default/volume/treefinder*
+
+rmplot:
+	@sudo rm -vrf analysis/data/treefinder-*
 
 docs:
 	$(MAKE) -C docs/slidev

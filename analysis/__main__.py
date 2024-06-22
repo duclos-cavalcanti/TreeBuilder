@@ -5,7 +5,7 @@ from .core import pull, process
 def parse():
     arg_def = argparse.ArgumentParser(
         description='Script to automate data analysis.',
-        epilog='Example: main.py --action/-a pull -p <prefix>'
+        epilog='Example: main.py --action/-a pull -p <prefix> [-v yes]'
     )
 
     arg_def.add_argument(
@@ -30,6 +30,14 @@ def parse():
         required=False,
         default="docker",
         dest="infra",
+    )
+
+    arg_def.add_argument(
+        "-v", "--view",
+        type=str,
+        required=False,
+        default="",
+        dest="view",
     )
 
     args = arg_def.parse_args()

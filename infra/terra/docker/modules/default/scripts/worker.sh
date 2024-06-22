@@ -36,6 +36,18 @@ idelay() {
     echo "SUCCESSFULL INGRESS DELAY: ${dur}ms"
 }
 
+idelay_probabilistic() {
+    dur="$1"
+    stddev="$2"
+
+    sudo ip link add ifb0 type ifb
+    sudo ip link set ifb0 up
+    sudo tc qdisc add dev eth0 handle ffff: ingress
+    sudo tc filter add dev eth0 parent ffff: protocol ip u32 match u32 0 0 action mirred egress redirect dev ifb0
+    sudo tc qdisc add dev ifb0 root netem delay ${dur}ms ${stddev}ms distribution normal
+    echo "SUCCESSFUL INGRESS DELAY: ${dur}ms ± ${stddev}ms (normal distribution)"
+}
+
 main() {
     setup
     pushd /work/project
@@ -43,7 +55,15 @@ main() {
     
         # even numbered workers with index greater than 0
         if [ $count -gt 0 ] && (( $count % 2 == 0)); then 
-            idelay 0.5
+            idelay 0.4
+
+        # odd numbered workers above 5
+        else
+            if [ $count -gt 7 ]; then
+                # 0.1 ms with 10ms standard deviation
+                # idelay_probabilistic 0.1 10
+                echo
+            fi
         fi
     
         echo python3 -m manager -a worker -n ${role}  -i ${addr} -p ${port} -s schemas/docker.json

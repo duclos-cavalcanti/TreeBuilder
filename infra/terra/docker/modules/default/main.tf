@@ -27,6 +27,12 @@ variable "port" {
     default     = 9091
 }
 
+variable "names" {
+    description = "List of node names"
+    type        = list(string)
+    default     = ["name"]
+}
+
 resource "docker_container" "manager" {
     name  = "manager"
     image = "ubuntu-base:jammy"
@@ -54,7 +60,7 @@ resource "docker_container" "manager" {
         ipv4_address = var.addrs[0]
     }
 
-    entrypoint = ["/bin/bash", "/manager.sh", "manager", var.addrs[0], var.port ]
+    entrypoint = ["/bin/bash", "/manager.sh", var.names[0], var.addrs[0], var.port ]
 
     rm         = true
     tty        = true
@@ -89,7 +95,7 @@ resource "docker_container" "workers" {
         ipv4_address = var.addrs[1 + count.index]
     }
 
-    entrypoint = ["/bin/bash", "/worker.sh", "worker${count.index}", var.addrs[count.index + 1], var.port, count.index]
+    entrypoint = ["/bin/bash", "/worker.sh", var.names[count.index + 1], var.addrs[count.index + 1], var.port, count.index]
 
     privileged = true
     rm         = true

@@ -1,5 +1,5 @@
 from .utils  import *
-from manager import TreeBuilder
+from manager import TreeBuilder, RunDict, StrategyDict, ParametersDict, TreeDict, ResultDict
 
 import os
 import json
@@ -24,44 +24,66 @@ def compress(dst:str):
     command = f"{command} {dst}/project.tar.gz ."
     execute(command)
 
+def runs(args):
+    runs = []
+    names = [ "BEST", "WORST", "RAND"]
+
+    for name in names:
+        for key in [ "p90", "p75", "p50", "heuristic" ]:
+            r:RunDict = {
+                    "name": name,
+                    "strategy": StrategyDict({
+                        "key": key, 
+                        "expr": {},
+                        "reverse": name == "WORST",
+                        "rand":    name == "RAND",
+                    }), 
+                    "parameters": ParametersDict({
+                        "hyperparameter": args.fanout * 2,
+                        "rate": args.rate, 
+                        "duration": args.duration,
+                    }),
+                    "tree": TreeDict({
+                        "name": "", 
+                        "depth": args.depth, 
+                        "fanout": args.fanout,
+                        "n": 0, 
+                        "max": 0,
+                        "root": "",
+                        "nodes": []
+                    }), 
+                    "pool": [],
+                    "stages": [],
+                    "perf": ResultDict({
+                        "root": "",
+                        "key": key,
+                        "select": 0, 
+                        "rate": args.rate,
+                        "duration": args.duration,
+                        "items": [],
+                        "selected": []
+
+                    })
+            }
+            runs.append(r)
+    return runs
+
 def config(args, path):
+    base_addr  = "10.1.1." if args.infra == "docker" else "10.1.25."
+    base_saddr = "10.1.0." if args.infra == "docker" else "10.0.25."
     data = {
             "infra": args.infra,
             "port": args.port,
-            "addrs":  [ f"10.1.1.{i + 1}" for i in range(args.size + 1) ],
-            "saddrs": [ f"10.1.0.{i + 1}" for i in range(args.size + 1) ],
-            "params": {
-                "hyperparameter": args.fanout * 2,
-                "rate": args.rate, 
-                "duration": args.duration,
-                "fanout": args.fanout, 
-                "depth": args.depth,
-            },
+            "addrs":  [ f"{base_addr}{i + 1}" for i in range(args.size + 1) ],
+            "saddrs": [ f"{base_saddr}{i + 1}" for i in range(args.size + 1) ],
+            "names":  [ "manager" ] + [ f"worker{i}" for i in range(args.size) ],
+            "map":    {},
             "commands": [],
-            "runs": [ 
-                {
-                    "name": "BEST",
-                    "strategy": {
-                        "best": True,
-                        "key": "p90"
-                    }
-                },
-                {
-                    "name": "WORST",
-                    "strategy": {
-                        "best": False,
-                        "key": "p90"
-                    }
-                },
-                {
-                    "name": "RAND",
-                    "strategy": {
-                        "best": False,
-                        "key": "p90"
-                    },
-                }
-            ],
+            "runs": runs(args),
     }
+
+    for addr, name in zip(data["addrs"], data["names"]):
+        data["map"][f"{addr}:{data['port']}"] = name
 
     if args.infra == "docker" and args.mode != "default":
         if args.mode == "mcast":

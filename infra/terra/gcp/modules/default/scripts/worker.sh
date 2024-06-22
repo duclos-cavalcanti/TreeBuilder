@@ -34,9 +34,9 @@ setup() {
 
 ttcs() {
     echo "DEPLOYING TTCS"
-    pushd project/tools/ttcs
-        chmod +x ./deploy_ttcs.sh
-        ./deploy_ttcs.sh ./ttcs-agent.cfg $IP_ADDR
+    pushd /work/project/tools/ttcs
+        sudo chmod +x ./deploy_ttcs.sh
+        sudo ./deploy_ttcs.sh ./ttcs-agent.cfg $IP_ADDR
     popd
 }
 
@@ -48,10 +48,7 @@ main() {
 
     pushd /work/project
         echo "-- ROLE: $ROLE --"
-
         python3 -m manager -a worker -n $ROLE  -i $IP_ADDR -p $PORT
-
-        bash
     popd
 }
 

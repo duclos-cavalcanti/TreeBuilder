@@ -32,9 +32,9 @@ setup() {
 
 ttcs() {
     echo "DEPLOYING TTCS"
-    pushd project/tools/ttcs
-        chmod +x ./deploy_ttcs.sh
-        ./deploy_ttcs.sh ./ttcs-agent.cfg $IP_ADDR
+    pushd /work/project/tools/ttcs
+        sudo chmod +x ./deploy_ttcs.sh
+        sudo ./deploy_ttcs.sh ./ttcs-agent.cfg $IP_ADDR
     popd
 }
 
@@ -44,9 +44,9 @@ upload() {
     local FOLDER="treefinder-$CLOUD-$TS/results.tar.gz"
     pushd /work 
         echo "COMPRESSING LOGS"
+        mv project/schemas/default.json /work/logs/
         tar -zcvf results.tar.gz ./logs
         gcloud storage cp results.tar.gz "gs://$RESULTS/$FOLDER/results.tar.gz"
-        gcloud storage cp project/schemas/default.json "gs://$RESULTS/$FOLDER/default.json"
         echo "FINISHED UPLOAD"
     popd
 }
@@ -61,9 +61,7 @@ main() {
         echo "-- ROLE: $ROLE --"
 
         echo python3 -m manager -a manager -n $ROLE  -i $IP_ADDR -p $PORT
-        upload
-
-        bash
+        # upload
     popd
 }
 

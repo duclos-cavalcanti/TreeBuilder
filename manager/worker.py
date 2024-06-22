@@ -1,4 +1,3 @@
-from google.protobuf.reflection import ParseMessage
 from .message   import *
 from .types     import Logger
 from .node      import Node
@@ -6,7 +5,6 @@ from .task      import Task, Parent, Mcast
 
 import zmq
 import threading
-import subprocess
 
 class Executioner(Node):
     def __init__(self, name:str, ip:str, port:str, map:dict):
@@ -95,42 +93,28 @@ class Executioner(Node):
 
 
 class Worker(Node):
-    def __init__(self, schema:dict, name:str, ip:str, port:str):
+    def __init__(self, name:str, ip:str, port:str, manager:str, map:dict):
         super().__init__(name=name, stype=zmq.REP)
-        self.schema         = schema
-        self.addr           = f"{ip}:{port}"
-        self.manageraddr    = f"{self.schema['addrs'][0]}:{self.schema['port']}"
-        self.map            = { self.manageraddr: "M_0" }
-        for i,addr in enumerate(schema["addrs"][1:]):
-            key     = f"{addr}:{self.schema['port']}"
-            value   = f"W_{i}"
-            self.map[key] = value
-
-        self.executioner    = Executioner(name="EXECUTIONER", ip=ip, port=port, map=self.map)
         self.L              = Logger(name=f"{name}:{ip}")
+        self.addr           = f"{ip}:{port}"
+        self.manager        = manager
+        self.map            = map
+        self.executioner    = Executioner(name="EXECUTIONER", ip=ip, port=port, map=self.map)
 
-    def go(self):
         self.bind(protocol="tcp", ip=self.addr.split(':')[0], port=self.addr.split(':')[1])
         self.L.state(f"{self.name} UP")
-        try:
-            while(True):
-                m = self.recv_message()
-                self.L.state(f"STATE[{Type.Name(m.type)}]")
 
-                match m.type:
-                    case Type.CONNECT: self.connectACK(m)
-                    case Type.COMMAND: self.commandACK(m)
-                    case Type.REPORT:  self.reportACK(m)
-                    case Type.ERR:     self.errorACK(m)
-                    case _:                   raise NotImplementedError()
-
-        except Exception as e:
-            self.L.log("INTERRUPTED!")
-            raise e
-
-        finally:
-            self.L.flush()
-            self.socket.close()
+    def run(self):
+        while(True):
+            m = self.recv_message()
+            self.L.state(f"STATE[{Type.Name(m.type)}]")
+        
+            match m.type:
+                case Type.CONNECT: self.connectACK(m)
+                case Type.COMMAND: self.commandACK(m)
+                case Type.REPORT:  self.reportACK(m)
+                case Type.ERR:     self.errorACK(m)
+                case _:                   raise NotImplementedError()
 
     def connectACK(self, m:Message):
         return self.ack_message(m)

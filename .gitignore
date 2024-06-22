@@ -1,5 +1,4 @@
 *.tar*
-
 deploy/*.yaml
 
 data.json
@@ -7,6 +6,9 @@ data.json
 analysis/data
 analysis/data/
 analysis/data/*
+analysis/graphs/*
+
+!analysis/archive/*.tar*
 
 analysis/plot
 analysis/plot/

@@ -1,28 +1,27 @@
-from ..message import *
-from ..task    import Task, Plan, Result
-from ..types   import Tree, TreeBuilder
-
-from typing import List, Optional
-
-import heapq
+from ..message      import *
+from ..types        import TreeBuilder, Run, StrategyDict, ResultDict
+from ..heuristic    import Heuristic
+from .task          import Task
 
 class Parent(Task):
-    def build(self, p:Plan) -> Command:
-        tb  = TreeBuilder(arr=p.arr, depth=p.depth, fanout=p.fanout) 
-        ret = tb.parent(rate=p.rate, duration=p.duration)
+    def build(self, run:Run) -> Command:
+        addr = run.tree.next()
+        arr  = [addr] + run.pool.slice()
+        tb  = TreeBuilder(arr=arr, depth=1, fanout=len(arr[1:])) 
+        ret = tb.parent(rate=run.data["parameters"]["rate"], duration=run.data["parameters"]["duration"])
 
         c = Command()
         c.flag      = Flag.PARENT
         c.id        = self.generate()
-        c.addr      = p.arr[0]
-        c.layer     = p.depth
-        c.depth     = p.depth
-        c.fanout    = p.fanout
-        c.select    = p.select
-        c.rate      = p.rate
-        c.duration  = p.duration
+        c.addr      = arr[0]
+        c.layer     = 1
+        c.depth     = 1
+        c.fanout    = len(arr[1:])
+        c.select    = run.tree.fanout
+        c.rate      = run.data["parameters"]["rate"]
+        c.duration  = run.data["parameters"]["duration"]
         c.instr.extend([ i for i in ret.buf ])
-        c.data.extend([ a for a in p.arr   ])
+        c.data.extend([ a for a in arr   ])
 
         self.command = c
         return c
@@ -83,25 +82,12 @@ class Parent(Task):
         self.L.debug(message=f"TASK RESOLVE[{Flag.Name(self.job.flag)}][{self.job.id}:{self.job.addr}]", data=self.job)
         return self.job
 
-    def process(self, job:Job, strategy:dict) -> Result:
+    def process(self, job:Job, strategy:StrategyDict) -> ResultDict:
         if job.ret != 0:  
             raise RuntimeError("Failed Job")
     
-        key    = strategy["key"]
-        best   = strategy["best"]
-        ret    = Result(key)
-        items  = ret.parse(job)
+        H = Heuristic(strategy, self.command, job)
+        H.process()
 
-        if key not in items[0]: 
-            raise RuntimeError(f"Incorrect key:{key}")
-
-        sorted = heapq.nsmallest(len(items), items, key=lambda x: x[key])
-        if best: selected = [ s["addr"] for s in sorted[:self.command.select] ]
-        else:    selected = [ s["addr"] for s in [ w for w in reversed(sorted[(-1 * self.command.select):]) ] ]
-
-        ret.selected(selected)
-        ret.parameters(self.command)
-        ret.arrange(sorted)
-
-        self.L.debug(message=f"TASK PROCESS[{Flag.Name(job.flag)}][{job.id}:{job.addr}]", data=ret.data)
-        return ret
+        self.L.debug(message=f"TASK PROCESS[{Flag.Name(job.flag)}][{job.id}:{job.addr}]", data=H.data)
+        return H.data

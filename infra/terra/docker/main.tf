@@ -20,6 +20,7 @@ variable "mode" {
 locals {
     addrs    = local.data.addrs
     port     = local.data.port
+    names    = local.data.names
     commands = local.data.commands
 }
 
@@ -28,6 +29,7 @@ module "default" {
     count   = (var.mode == "default") ? 1 : 0
 
     addrs   = local.addrs
+    names   = local.names
     port    = local.port
 }
 

@@ -1,4 +1,5 @@
-from .logger import Logger
+from .logger        import Logger
+from .dicts         import TreeDict
 
 import hashlib 
 
@@ -97,6 +98,18 @@ class Tree():
             for i,a in enumerate(arr):
                 if not self.add(a):
                     raise RuntimeError(f"List[{i}] exceeds tree dimensions: {self}")
+
+    def get(self):
+        ret:TreeDict = {
+                "name": self.name, 
+                "fanout": self.fanout, 
+                "depth": self.d, 
+                "n": self.n, 
+                "max": self.nmax, 
+                "root": self.root.id,
+                "nodes": self.arr()
+        }
+        return ret
 
     def hash(self):
         string = "".join(self.arr())
@@ -203,18 +216,6 @@ class Tree():
 
         for c in node.children:
             ret.append(self.arr(c))
-
-        return ret
-
-    def to_dict(self):
-        ret = {
-                "name": self.name, 
-                "fanout": self.fanout, 
-                "depth": self.d, 
-                "n": self.n, 
-                "max": self.nmax, 
-                "nodes": self.arr()
-        }
 
         return ret
 

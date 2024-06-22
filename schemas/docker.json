@@ -47,33 +47,459 @@
         "10.1.0.20",
         "10.1.0.21"
     ],
-    "params": {
-        "hyperparameter": 4,
-        "rate": 1000,
-        "duration": 5,
-        "fanout": 2,
-        "depth": 3
+    "names": [
+        "manager",
+        "worker0",
+        "worker1",
+        "worker2",
+        "worker3",
+        "worker4",
+        "worker5",
+        "worker6",
+        "worker7",
+        "worker8",
+        "worker9",
+        "worker10",
+        "worker11",
+        "worker12",
+        "worker13",
+        "worker14",
+        "worker15",
+        "worker16",
+        "worker17",
+        "worker18",
+        "worker19"
+    ],
+    "map": {
+        "10.1.1.1:9092": "manager",
+        "10.1.1.2:9092": "worker0",
+        "10.1.1.3:9092": "worker1",
+        "10.1.1.4:9092": "worker2",
+        "10.1.1.5:9092": "worker3",
+        "10.1.1.6:9092": "worker4",
+        "10.1.1.7:9092": "worker5",
+        "10.1.1.8:9092": "worker6",
+        "10.1.1.9:9092": "worker7",
+        "10.1.1.10:9092": "worker8",
+        "10.1.1.11:9092": "worker9",
+        "10.1.1.12:9092": "worker10",
+        "10.1.1.13:9092": "worker11",
+        "10.1.1.14:9092": "worker12",
+        "10.1.1.15:9092": "worker13",
+        "10.1.1.16:9092": "worker14",
+        "10.1.1.17:9092": "worker15",
+        "10.1.1.18:9092": "worker16",
+        "10.1.1.19:9092": "worker17",
+        "10.1.1.20:9092": "worker18",
+        "10.1.1.21:9092": "worker19"
     },
     "runs": [
         {
             "name": "BEST",
             "strategy": {
-                "best": true,
-                "key": "p90"
+                "key": "p90",
+                "expr": {},
+                "reverse": false,
+                "rand": false
+            },
+            "parameters": {
+                "hyperparameter": 4,
+                "rate": 5000,
+                "duration": 15
+            },
+            "tree": {
+                "name": "",
+                "depth": 3,
+                "fanout": 2,
+                "n": 0,
+                "max": 0,
+                "root": "",
+                "nodes": []
+            },
+            "pool": [],
+            "stages": [],
+            "perf": {
+                "root": "",
+                "key": "p90",
+                "select": 0,
+                "rate": 5000,
+                "duration": 15,
+                "items": [],
+                "selected": []
+            }
+        },
+        {
+            "name": "BEST",
+            "strategy": {
+                "key": "p75",
+                "expr": {},
+                "reverse": false,
+                "rand": false
+            },
+            "parameters": {
+                "hyperparameter": 4,
+                "rate": 5000,
+                "duration": 15
+            },
+            "tree": {
+                "name": "",
+                "depth": 3,
+                "fanout": 2,
+                "n": 0,
+                "max": 0,
+                "root": "",
+                "nodes": []
+            },
+            "pool": [],
+            "stages": [],
+            "perf": {
+                "root": "",
+                "key": "p75",
+                "select": 0,
+                "rate": 5000,
+                "duration": 15,
+                "items": [],
+                "selected": []
+            }
+        },
+        {
+            "name": "BEST",
+            "strategy": {
+                "key": "p50",
+                "expr": {},
+                "reverse": false,
+                "rand": false
+            },
+            "parameters": {
+                "hyperparameter": 4,
+                "rate": 5000,
+                "duration": 15
+            },
+            "tree": {
+                "name": "",
+                "depth": 3,
+                "fanout": 2,
+                "n": 0,
+                "max": 0,
+                "root": "",
+                "nodes": []
+            },
+            "pool": [],
+            "stages": [],
+            "perf": {
+                "root": "",
+                "key": "p50",
+                "select": 0,
+                "rate": 5000,
+                "duration": 15,
+                "items": [],
+                "selected": []
+            }
+        },
+        {
+            "name": "BEST",
+            "strategy": {
+                "key": "heuristic",
+                "expr": {},
+                "reverse": false,
+                "rand": false
+            },
+            "parameters": {
+                "hyperparameter": 4,
+                "rate": 5000,
+                "duration": 15
+            },
+            "tree": {
+                "name": "",
+                "depth": 3,
+                "fanout": 2,
+                "n": 0,
+                "max": 0,
+                "root": "",
+                "nodes": []
+            },
+            "pool": [],
+            "stages": [],
+            "perf": {
+                "root": "",
+                "key": "heuristic",
+                "select": 0,
+                "rate": 5000,
+                "duration": 15,
+                "items": [],
+                "selected": []
             }
         },
         {
             "name": "WORST",
             "strategy": {
-                "best": false,
-                "key": "p90"
+                "key": "p90",
+                "expr": {},
+                "reverse": true,
+                "rand": false
+            },
+            "parameters": {
+                "hyperparameter": 4,
+                "rate": 5000,
+                "duration": 15
+            },
+            "tree": {
+                "name": "",
+                "depth": 3,
+                "fanout": 2,
+                "n": 0,
+                "max": 0,
+                "root": "",
+                "nodes": []
+            },
+            "pool": [],
+            "stages": [],
+            "perf": {
+                "root": "",
+                "key": "p90",
+                "select": 0,
+                "rate": 5000,
+                "duration": 15,
+                "items": [],
+                "selected": []
+            }
+        },
+        {
+            "name": "WORST",
+            "strategy": {
+                "key": "p75",
+                "expr": {},
+                "reverse": true,
+                "rand": false
+            },
+            "parameters": {
+                "hyperparameter": 4,
+                "rate": 5000,
+                "duration": 15
+            },
+            "tree": {
+                "name": "",
+                "depth": 3,
+                "fanout": 2,
+                "n": 0,
+                "max": 0,
+                "root": "",
+                "nodes": []
+            },
+            "pool": [],
+            "stages": [],
+            "perf": {
+                "root": "",
+                "key": "p75",
+                "select": 0,
+                "rate": 5000,
+                "duration": 15,
+                "items": [],
+                "selected": []
+            }
+        },
+        {
+            "name": "WORST",
+            "strategy": {
+                "key": "p50",
+                "expr": {},
+                "reverse": true,
+                "rand": false
+            },
+            "parameters": {
+                "hyperparameter": 4,
+                "rate": 5000,
+                "duration": 15
+            },
+            "tree": {
+                "name": "",
+                "depth": 3,
+                "fanout": 2,
+                "n": 0,
+                "max": 0,
+                "root": "",
+                "nodes": []
+            },
+            "pool": [],
+            "stages": [],
+            "perf": {
+                "root": "",
+                "key": "p50",
+                "select": 0,
+                "rate": 5000,
+                "duration": 15,
+                "items": [],
+                "selected": []
+            }
+        },
+        {
+            "name": "WORST",
+            "strategy": {
+                "key": "heuristic",
+                "expr": {},
+                "reverse": true,
+                "rand": false
+            },
+            "parameters": {
+                "hyperparameter": 4,
+                "rate": 5000,
+                "duration": 15
+            },
+            "tree": {
+                "name": "",
+                "depth": 3,
+                "fanout": 2,
+                "n": 0,
+                "max": 0,
+                "root": "",
+                "nodes": []
+            },
+            "pool": [],
+            "stages": [],
+            "perf": {
+                "root": "",
+                "key": "heuristic",
+                "select": 0,
+                "rate": 5000,
+                "duration": 15,
+                "items": [],
+                "selected": []
             }
         },
         {
             "name": "RAND",
             "strategy": {
-                "best": false,
-                "key": "p90"
+                "key": "p90",
+                "expr": {},
+                "reverse": false,
+                "rand": true
+            },
+            "parameters": {
+                "hyperparameter": 4,
+                "rate": 5000,
+                "duration": 15
+            },
+            "tree": {
+                "name": "",
+                "depth": 3,
+                "fanout": 2,
+                "n": 0,
+                "max": 0,
+                "root": "",
+                "nodes": []
+            },
+            "pool": [],
+            "stages": [],
+            "perf": {
+                "root": "",
+                "key": "p90",
+                "select": 0,
+                "rate": 5000,
+                "duration": 15,
+                "items": [],
+                "selected": []
+            }
+        },
+        {
+            "name": "RAND",
+            "strategy": {
+                "key": "p75",
+                "expr": {},
+                "reverse": false,
+                "rand": true
+            },
+            "parameters": {
+                "hyperparameter": 4,
+                "rate": 5000,
+                "duration": 15
+            },
+            "tree": {
+                "name": "",
+                "depth": 3,
+                "fanout": 2,
+                "n": 0,
+                "max": 0,
+                "root": "",
+                "nodes": []
+            },
+            "pool": [],
+            "stages": [],
+            "perf": {
+                "root": "",
+                "key": "p75",
+                "select": 0,
+                "rate": 5000,
+                "duration": 15,
+                "items": [],
+                "selected": []
+            }
+        },
+        {
+            "name": "RAND",
+            "strategy": {
+                "key": "p50",
+                "expr": {},
+                "reverse": false,
+                "rand": true
+            },
+            "parameters": {
+                "hyperparameter": 4,
+                "rate": 5000,
+                "duration": 15
+            },
+            "tree": {
+                "name": "",
+                "depth": 3,
+                "fanout": 2,
+                "n": 0,
+                "max": 0,
+                "root": "",
+                "nodes": []
+            },
+            "pool": [],
+            "stages": [],
+            "perf": {
+                "root": "",
+                "key": "p50",
+                "select": 0,
+                "rate": 5000,
+                "duration": 15,
+                "items": [],
+                "selected": []
+            }
+        },
+        {
+            "name": "RAND",
+            "strategy": {
+                "key": "heuristic",
+                "expr": {},
+                "reverse": false,
+                "rand": true
+            },
+            "parameters": {
+                "hyperparameter": 4,
+                "rate": 5000,
+                "duration": 15
+            },
+            "tree": {
+                "name": "",
+                "depth": 3,
+                "fanout": 2,
+                "n": 0,
+                "max": 0,
+                "root": "",
+                "nodes": []
+            },
+            "pool": [],
+            "stages": [],
+            "perf": {
+                "root": "",
+                "key": "heuristic",
+                "select": 0,
+                "rate": 5000,
+                "duration": 15,
+                "items": [],
+                "selected": []
             }
         }
     ]

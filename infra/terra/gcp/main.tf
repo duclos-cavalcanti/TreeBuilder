@@ -32,13 +32,14 @@ variable "bucket" {
 }
 
 locals {
-    data = jsondecode(file("${path.cwd}/data.json"))
+    data = jsondecode(file("${path.cwd}/extract/data.json"))
 }
 
 locals {
     addrs   = local.data.addrs
     saddrs  = local.data.saddrs
     port    = local.data.port
+    names   = local.data.names
 }
 
 provider "google" {
@@ -57,6 +58,7 @@ module "default" {
     addrs   = local.addrs
     saddrs  = local.saddrs
     port    = local.port
+    names   = local.names
 }
 
 module "test" {
