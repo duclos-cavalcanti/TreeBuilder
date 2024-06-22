@@ -28,6 +28,8 @@ within Jasper's time constraints.
 - [Project Wiki](https://github.com/duclos-cavalcanti/master-arbeit/wiki/)
 - [Project Documentation](https://drive.google.com/file/d/1DzhmxgvQ93I39EnXY3HDdw66yohh432I/view?usp=sharing)
 
+- [SIGCOMM24 POSTER - Jasper, A Scalable and Fair Multicast for Fin. Exch. in the Cloud](https://sigcomm24posterdemo.hotcrp.com/paper/47?cap=hcav47KhCcppMuxCoAApCEhcdjiFGC)
+
 ```bash
 git clone --recursive https://github.com/duclos-cavalcanti/master-arbeit.git
 ```
