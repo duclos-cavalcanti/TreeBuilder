@@ -49,6 +49,9 @@ pull:
 process:
 	python3 -m analysis -a process -i docker -v yes -p ${PREFIX}
 
+destroy:
+	@python3 -m deploy -a destroy -i docker
+
 gcp:
 	@python3 -m deploy -a plan -i gcp -s 20 -p 9092 -r 5000 -t 20 -d 3
 	@python3 -m deploy -a deploy -i gcp
@@ -59,21 +62,17 @@ gpull:
 gprocess:
 	python3 -m analysis -a process -i gcp -v yes -p 06-22-22:19:00
 
-gclean:
+gdestroy:
 	@python3 -m deploy -a destroy -i gcp
 
 clean:
 	@find . -path ./jasper -prune -type f -name "*.tar.gz" -print0 | xargs -0 -I {} rm -v {}
-	@python3 -m deploy -a destroy -i docker
 
 rm:
 	@sudo rm -vf infra/terra/docker/modules/default/volume/*.log
 	@sudo rm -vf infra/terra/docker/modules/default/volume/*.json
 	@sudo rm -vf infra/terra/docker/modules/default/volume/*.csv
 	@sudo rm -vrf infra/terra/docker/modules/default/volume/treefinder*
-
-rmplot:
-	@sudo rm -vrf analysis/data/treefinder-*
 
 docs:
 	$(MAKE) -C docs/slidev

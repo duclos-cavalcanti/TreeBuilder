@@ -21,7 +21,11 @@ run:
     ${DOCKER}
 
 pdf: 
+	docker exec -i ${NAME} npx playwright install
 	docker exec -i ${NAME} npx slidev export --timeout 2m --output slides.pdf
+
+static: 
+	docker exec -i ${NAME} npx slidev build
 
 exit:
 	$(error Exiting Makefile)

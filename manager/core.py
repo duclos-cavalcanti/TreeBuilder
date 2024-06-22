@@ -6,30 +6,6 @@ from datetime       import datetime
 
 import os
 import json
-import csv
-
-data = []
-
-def write():
-    file = f"/work/logs/results.csv"
-    headers = ['NAME', 'LATENCY', 'DEPTH', 'FANOUT', 'RATE', 'DUR' , 'TS']
-
-    with open(file, mode='w', newline='') as f:
-        writer = csv.writer(f)
-        writer.writerow(headers)
-
-        for d in data: 
-            writer.writerow(d)
-
-def record(run, result):
-    timestamp = datetime.now().strftime("%m-%d %H:%M:%S")
-    data.append([ run.tree.name, 
-                  result['items'][0]['p90'], 
-                  run.tree.d, 
-                  run.tree.fanout,
-                  run.data["parameters"]["rate"], 
-                  run.data["parameters"]["duration"],
-                  timestamp])
 
 def read(schema):
     default = os.path.join(os.getcwd(), "schemas", "default.json")
@@ -68,11 +44,7 @@ def manager(args):
             run.data["perf"] = result
 
             # record run
-            record(run, result)
             L.event({"RUN": run.data})
-
-        # write csv
-        write()
 
     except Exception as e:
         L.error("INTERRUPTED!")

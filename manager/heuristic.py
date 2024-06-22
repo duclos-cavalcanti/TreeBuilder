@@ -12,12 +12,13 @@ KEYS = [
     "stddev",
 ]
 
-HMAP = {
-    "heuristic": lambda x: x["p90"]*0.3 + x["stddev"]*0.7
+EXPRESSIONS = {
+    "p90":          lambda x, k="p90": x[k],
+    "p75":          lambda x, k="p75": x[k],
+    "p50":          lambda x, k="p50": x[k],
+    "stddev":       lambda x, k="stddev": x[k],
+    "heuristic":    lambda x: x["p90"]*0.3 + x["stddev"]*0.7
 }
-
-for key in KEYS:
-    HMAP[key] = lambda x, k=key: x[k]
 
 class Heuristic():
     def __init__(self, strategy:StrategyDict, command:Command, job:Job):
@@ -33,7 +34,7 @@ class Heuristic():
                 "selected": []
         }
 
-        if strategy["key"] not in HMAP:
+        if strategy["key"] not in EXPRESSIONS:
             raise RuntimeError(f"Invalid Key: {strategy['key']}")
 
     def items(self, job:Job) -> List[ItemDict]:
@@ -58,7 +59,7 @@ class Heuristic():
         select  = self.data["select"]
         reverse = self.strategy["reverse"]
 
-        l = HMAP[key]
+        l = EXPRESSIONS[key]
 
         # parent job
         if self.flag == Flag.PARENT: 

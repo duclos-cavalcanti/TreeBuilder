@@ -5,6 +5,10 @@ import zmq
 
 from typing import Optional
 
+def _ip(addr):
+    ip = addr.split(":")[0]
+    return ip
+
 class Node():
     def __init__(self, name:str, stype:int):
         self.name       = name.upper()
@@ -13,10 +17,6 @@ class Node():
         self.timer      = Timer()
         self.tick       = 1
         self.L          = Logger()
-
-    def ip(self, addr:str):
-        ip = addr.split(":")[0]
-        return ip
 
     def format(self, addr:str):
         protocol="tcp"
@@ -47,11 +47,11 @@ class Node():
         m.ParseFromString(self.socket.recv())
 
         match m.type:
-            case Type.CONNECT: self.L.log(f"CONNECT[{self.ip(m.src)}]: RECV")
-            case Type.COMMAND: self.L.log(f"COMMAND[{Flag.Name(m.mdata.command.flag)}][{self.ip(m.mdata.command.addr)}]: RECV")
-            case Type.REPORT:  self.L.log(f"REPORT[{Flag.Name(m.mdata.job.flag)}][{self.ip(m.mdata.job.addr)}] RECV")
+            case Type.CONNECT: self.L.log(f"CONNECT[{_ip(m.src)}]: RECV")
+            case Type.COMMAND: self.L.log(f"COMMAND[{Flag.Name(m.mdata.command.flag)}][{_ip(m.mdata.command.addr)}]: RECV")
+            case Type.REPORT:  self.L.log(f"REPORT[{Flag.Name(m.mdata.job.flag)}][{_ip(m.mdata.job.addr)}] RECV")
             case Type.ACK:     pass
-            case _:            self.L.log(f"{Type.Name(m.type)}[{self.ip(m.src)}] RECV")
+            case _:            self.L.log(f"{Type.Name(m.type)}[{_ip(m.src)}] RECV")
 
 
         self.L.debug(f"{self.name} RECV", data=m)
@@ -62,10 +62,10 @@ class Node():
         self.tick += 1
 
         match m.type:
-            case Type.CONNECT: self.L.log(f"CONNECT[{self.ip(m.dst)}]: SENT")
-            case Type.COMMAND: self.L.log(f"COMMAND[{Flag.Name(m.mdata.command.flag)}][{self.ip(m.mdata.command.addr)}]: SENT")
-            case Type.REPORT:  self.L.log(f"REPORT[{Flag.Name(m.mdata.job.flag)}][{self.ip(m.mdata.job.addr)}] SENT")
-            case _:            self.L.log(f"{Type.Name(m.type)}[{self.ip(m.dst)}] SENT")
+            case Type.CONNECT: self.L.log(f"CONNECT[{_ip(m.dst)}]: SENT")
+            case Type.COMMAND: self.L.log(f"COMMAND[{Flag.Name(m.mdata.command.flag)}][{_ip(m.mdata.command.addr)}]: SENT")
+            case Type.REPORT:  self.L.log(f"REPORT[{Flag.Name(m.mdata.job.flag)}][{_ip(m.mdata.job.addr)}] SENT")
+            case _:            self.L.log(f"{Type.Name(m.type)}[{_ip(m.dst)}] SENT")
 
         self.L.debug(f"{self.name} SENT", data=m)
         return m
