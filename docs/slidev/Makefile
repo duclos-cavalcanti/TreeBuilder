@@ -27,6 +27,9 @@ pdf:
 build: 
 	docker exec -i ${NAME} npx slidev build
 
+version: 
+	docker exec -i ${NAME} node --version
+
 exit:
 	$(error Exiting Makefile)
 
