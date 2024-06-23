@@ -5,6 +5,7 @@ fonts:
     sans: Arial
 ---
 # Master Thesis
+## Tree Finder
 
 <TUMLogo variant="white" />
 
