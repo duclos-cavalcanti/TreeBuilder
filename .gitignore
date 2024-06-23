@@ -3,6 +3,9 @@ deploy/*.yaml
 
 data.json
 
+docs/slidev/dist
+docs/slidev/dist/*
+
 analysis/data
 analysis/data/
 analysis/data/*
