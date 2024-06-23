@@ -75,7 +75,7 @@ rm:
 	@sudo rm -vrf infra/terra/docker/modules/default/volume/treefinder*
 
 docs:
-	$(MAKE) -C docs/slidev
+	$(MAKE) -C docs slides
 
 test:
 	@python3 -m pytest -v test/ -s

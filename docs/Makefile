@@ -34,6 +34,9 @@ pull:
 
 build: ${PDFS}
 
+slides:
+	$(MAKE) -C slidev
+
 %.pdf: %.tex
 	$(info TEX: $< => PDF: $@)	
 	@docker run --rm \
