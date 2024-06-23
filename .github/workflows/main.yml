@@ -30,7 +30,7 @@ jobs:
         run: npm i -D playwright-chromium
 
       - name: Build Slidev project
-        run: | 
+        run: |
           cd ./docs/slidev/
           slidev build
 
