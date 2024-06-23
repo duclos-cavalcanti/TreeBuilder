@@ -34,6 +34,10 @@ jobs:
           cd ./docs/slidev/
           slidev build
 
+      - name: List contents of dist folder
+        run: |
+          ls -la ./docs/slidev/dist
+
       - name: Copy CNAME
         run: cp ./docs/slidev/CNAME ./docs/slidev/dist/CNAME
 
