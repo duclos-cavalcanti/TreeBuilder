@@ -1,3 +1,4 @@
+import glob
 import subprocess
 import os
 import shutil
@@ -8,6 +9,16 @@ from manager import RunDict
 from .analysis  import Analyzer
 from .plot      import Plotter
 from .utils     import *
+
+def slide(file:str, i:int):
+    content =  f"---\n"
+    content += f"layout: image\n"
+    content += f"image: /plot/images/{file}\n"
+    content +=  f"---\n"
+    content +=  f"\n"
+    content +=  f"# Slide {i}\n"
+    
+    return content
 
 def load(dir:str, infra:str):
     f = "docker.json" if infra == "docker" else "default.json"
@@ -97,3 +108,46 @@ def process(args):
     A = Analyzer(runs, schema,  map)
     P = Plotter(A)
     P.plot(dir, view=(args.view != ""))
+
+def generate(args):
+    files   = []
+    dir     = isdir("analysis/data")
+    dir     = find(dir=dir, pattern=f"treefinder-{args.infra}-{args.prefix}")
+    dir     = os.path.join(dir, "logs", "plot")
+
+    plotdir = os.path.join(os.getcwd(), "docs", "slidev", "plot")
+    images  = glob.glob(os.path.join(plotdir, "images", '*.png'))
+    mds     = glob.glob(os.path.join(plotdir, '*.md'))
+
+    for f in images + mds:
+        os.remove(f"{f}")
+        print(f"REMOVING {f}")
+
+    for f in os.listdir(dir):
+        files.append(f)
+        src = os.path.join(dir, f)
+        dst = os.path.join(os.getcwd(), "docs", "slidev", "plot", "images")
+        shutil.copy(src, dst)
+        print(f"COPYING {f} -> {dst}")
+
+    paths = []
+    for i, f in enumerate(files):
+        content = slide(f, i + 1)
+        path    = os.path.join(os.getcwd(), "docs", "slidev", "plot", f'slide_{i + 1}.md')
+        paths.append(f"./slide_{i + 1}.md")
+        
+        with open(path, 'w') as file:
+            file.write(content)
+            print(f"WRITING -> {path}")
+
+    with open(os.path.join(os.getcwd(), "docs", "slidev", "plot", "master.md"), 'w') as file:
+        print(f"WRITING -> MASTER FILE")
+        top =  "---\n"
+        top += "theme: default\n"
+        top += "colorSchema: light\n"
+        top += "fonts:\n"
+        top += "\tsans: Arial\n"
+        top += "---\n"
+        file.write(top)
+        for p in paths:
+            file.write(f'---\nsrc: {p}\n---\n\n')

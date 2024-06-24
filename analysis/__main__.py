@@ -1,6 +1,6 @@
 import argparse
 
-from .core import pull, process
+from .core import pull, process, generate
 
 def parse():
     arg_def = argparse.ArgumentParser(
@@ -11,7 +11,7 @@ def parse():
     arg_def.add_argument(
         "-a", "--action",
         type=str,
-        choices=["pull", "process"],
+        choices=["pull", "process", "generate"],
         required=True,
         dest="action",
     )
@@ -50,8 +50,9 @@ def main():
         raise RuntimeError("Need prefix to pull data from GCP/Cloud")
 
     match args.action:
-        case "pull":    pull(args)
-        case "process": process(args)
+        case "pull":     pull(args)
+        case "process":  process(args)
+        case "generate": generate(args)
         case _:         raise NotImplementedError()
 
     return

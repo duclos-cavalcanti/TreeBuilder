@@ -73,6 +73,10 @@ src: ./slides/Workflow-4.0.md
 src: ./slides/Summary.md
 ---
 
+<!-- --- -->
+<!-- src: ./plot/master.md -->
+<!-- --- -->
+
 ---
 src: ./slides/Draw.md
 ---

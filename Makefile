@@ -62,6 +62,9 @@ gpull:
 gprocess:
 	python3 -m analysis -a process -i gcp -v yes -p 06-22-22:19:00
 
+gcopy:
+	python3 -m analysis -a generate -i gcp -p 06-22-22:19:00
+
 gdestroy:
 	@python3 -m deploy -a destroy -i gcp
 

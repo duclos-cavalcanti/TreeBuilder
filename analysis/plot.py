@@ -380,7 +380,7 @@ class Plotter():
                 cmap2[i] = self.pargs.grey
 
         # fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(int(self.pargs.w * 1.5), self.pargs.h))
-        fig = plt.figure(figsize=(int(self.pargs.w * 1.2), self.pargs.h))
+        fig = plt.figure(figsize=(int(self.pargs.w), self.pargs.h))
         title = fig.suptitle(f"Tree(s): {G1.name} x {G2.name} - N={N}, D={depth}, F={fanout}, K={K}, P={P}, {cloud}", 
                      fontsize=self.pargs.tfont, fontweight='bold')
 
