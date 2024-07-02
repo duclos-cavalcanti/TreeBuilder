@@ -51,7 +51,7 @@ Config_t config;
 void usage(int e) {
     std::string str = "Usage: ./child "
                       "[-r rate] [-d duration] "
-                      "[-i ip] [-p port] "
+                      "[-i ip] [-p port] [-n name]"
                       "[-h] [-v]";
 
     fprintf(stdout, "%s\n", str.c_str());
@@ -61,7 +61,7 @@ void usage(int e) {
 int parse(int argc, char **argv) {
     int opt = 0;
     int ret = 0;
-    while ( (opt = getopt (argc, argv, "hi:p:t:d:r:v") ) != -1 ) {
+    while ( (opt = getopt (argc, argv, "hi:p:t:d:r:n:v") ) != -1 ) {
         switch (opt) {
         case 'h':
             usage(EXIT_SUCCESS);
@@ -81,6 +81,10 @@ int parse(int argc, char **argv) {
 
         case 'r':
             config.rate = atoi(optarg);
+            break;
+
+        case 'n':
+            config.name = std::string{optarg};
             break;
 
         case 'd':
@@ -168,7 +172,8 @@ int child(void) {
 
 
 int output(std::vector<int64_t>& data, unsigned long cnt) {
-    int ret = 0;
+    int     ret = 0;
+    std::string name = ( config.name == "" ? "results" : config.name );
     std::string errout = "-1\n-1\n-1\n-1\n-1";
 
     try {
@@ -176,14 +181,14 @@ int output(std::vector<int64_t>& data, unsigned long cnt) {
         double p75 = get_percentile(data, 75);
         double p50 = get_percentile(data, 50);
         double p25 = get_percentile(data, 25);
-        double var = get_stdev(data);
+        double dev = get_stdev(data);
 
         fprintf(stdout, "%lu\n", cnt);
         fprintf(stdout, "%lf\n", p90);
         fprintf(stdout, "%lf\n", p75);
         fprintf(stdout, "%lf\n", p50);
         fprintf(stdout, "%lf\n", p25);
-        fprintf(stdout, "%lf\n", var);
+        fprintf(stdout, "%lf\n", dev);
         ret = EXIT_SUCCESS;
 
     } catch (const std::runtime_error& e) {
@@ -191,7 +196,8 @@ int output(std::vector<int64_t>& data, unsigned long cnt) {
         ret = EXIT_FAILURE;
     }
 
-    return ret;
+    if (ret)    return ret;
+    else        return (ret = write_csv(data, name));
 }
 
 int main(int argc, char **argv) {

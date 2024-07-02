@@ -27,10 +27,11 @@ def compress(dst:str):
 def runs(args):
     runs = []
     names = [ "BEST", "WORST", "RAND"]
+    keys  = [ "p90", "heuristic" ]
 
     for name in names:
-        for key in [ "p90", "p75", "p50", "heuristic" ]:
-            r:RunDict = {
+        for key in keys:
+            r:RunDict = RunDict({
                     "name": name,
                     "strategy": StrategyDict({
                         "key": key, 
@@ -64,7 +65,7 @@ def runs(args):
                         "selected": []
 
                     })
-            }
+            })
             runs.append(r)
     return runs
 
@@ -87,13 +88,13 @@ def config(args, path):
 
     if args.infra == "docker" and args.mode != "default":
         if args.mode == "mcast":
-            tb  = TreeBuilder(arr=data["addrs"], depth=data['params']['depth'], fanout=data['params']['fanout'])
-            ret = tb.mcast(rate=data['params']['rate'], duration=data['params']['duration'])
+            tb  = TreeBuilder(arr=data["addrs"], depth=args.depth, fanout=args.fanout)
+            ret = tb.mcast(rate=args.rate, duration=args.duration)
             data["commands"].extend(ret.buf)
 
         elif args.mode == "udp":
             tb  = TreeBuilder(arr=data["addrs"], depth=1, fanout=len(data["addrs"][1:]))
-            ret = tb.parent(rate=data['params']['rate'], duration=data['params']['duration'])
+            ret = tb.parent(rate=args.rate, duration=args.duration, id="example")
             data["commands"].extend(ret.buf)
 
         else:

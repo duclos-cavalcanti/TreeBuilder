@@ -18,7 +18,8 @@ ifeq (, $(shell which terraform))
 $(error terraform not found)
 endif
 
-PREFIX := 06-22-20:20:16
+PREFIX  := 06-27-22:33:59
+GPREFIX := 06-22-22:19:00
 
 .PHONY: proto build udp mcast docker pull process clean rm docs test 
 all: build
@@ -31,7 +32,7 @@ build:
 	@cd build && make
 
 udp: build
-	@python3 -m deploy -a plan -i docker -m udp -s 6
+	@python3 -m deploy -a plan -i docker -m udp -s 8
 	@python3 -m deploy -a deploy -i docker
 
 mcast: build
@@ -39,7 +40,7 @@ mcast: build
 	@python3 -m deploy -a deploy -i docker
 
 docker:
-	@python3 -m deploy -a plan -i docker -s 20 -p 9092 -r 5000 -t 15 -d 3
+	@python3 -m deploy -a plan -i docker -s 10 -p 9092 -r 5000 -t 3 -d 2
 	@python3 -m deploy -a deploy -i docker
 
 pull:
@@ -48,6 +49,7 @@ pull:
 
 process:
 	python3 -m analysis -a process -i docker -v yes -p ${PREFIX}
+	@#python3 -m analysis -a process -i docker -m udp
 
 destroy:
 	@python3 -m deploy -a destroy -i docker
@@ -57,13 +59,13 @@ gcp:
 	@python3 -m deploy -a deploy -i gcp
 
 gpull:
-	python3 -m analysis -a pull -i gcp -p 06-22-22:19:00
+	python3 -m analysis -a pull -i gcp -p ${GPREFIX}
 
 gprocess:
-	python3 -m analysis -a process -i gcp -v yes -p 06-22-22:19:00
+	python3 -m analysis -a process -i gcp -v yes -p ${GPREFIX}
 
 gcopy:
-	python3 -m analysis -a generate -i gcp -p 06-22-22:19:00
+	python3 -m analysis -a generate -i gcp -p ${GPREFIX}
 
 gdestroy:
 	@python3 -m deploy -a destroy -i gcp

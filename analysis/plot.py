@@ -92,14 +92,18 @@ class Plotter():
             addr1 = self.A.map(d1["addr"])
             addr2 = self.A.map(d2["addr"])
 
+            value = float(d1['stddev'])
+            value = round(value, 2)
             cells1.append([ d1["p90"], 
                             d1["p50"], 
-                            d1["stddev"], 
+                            f"{value:.2f}", 
                             100 * float(d1["recv"]/total)])
 
+            value = float(d2['stddev'])
+            value = round(value, 2)
             cells2.append([ d2["p90"], 
                             d2["p50"], 
-                            d2["stddev"], 
+                            f"{value:.2f}", 
                             100 * float(d2["recv"]/total)])
 
             if addr1 == sel1:
@@ -144,6 +148,9 @@ class Plotter():
         total    = rate * duration
         data     = []
 
+        if run['strategy']['key'] == "heuristic":
+            self.draw_subtitle(f"Heuristic: (0.7 x stddev) + (0.3 * p90)")
+
         sel     = [ self.A.map(s) for s in result["selected"] ]
 
         clabels  = ["SCORE", "90(%)-OWD", "75(%)-OWD", "50(%)-OWD", "STDDEV", "RX(%)"]
@@ -166,11 +173,13 @@ class Plotter():
                     cellcolors[i][KEYS.index("p90")    + 1] = self.pargs.red
                     cellcolors[i][KEYS.index("stddev") + 1] = self.pargs.red
 
-            data.append([ score,
+            value = float(d['stddev'])
+            value = round(value, 2)
+            data.append([ round(float(score), 2),
                           d["p90"], 
                           d["p75"], 
                           d["p50"], 
-                          d["stddev"], 
+                         f"{value:.2f}", 
                           100 * float(d["recv"]/total)])
 
         th = ( 0.075 * (len(rlabels)) )
@@ -220,11 +229,13 @@ class Plotter():
                     cellcolors[i][KEYS.index("p90")    + 1] = self.pargs.red
                     cellcolors[i][KEYS.index("stddev") + 1] = self.pargs.red
 
-            data.append([ score,
+            value = float(d['stddev'])
+            value = round(value, 2)
+            data.append([ round(float(score), 2),
                           d["p90"], 
                           d["p75"], 
                           d["p50"], 
-                          d["stddev"], 
+                         f"{value:.2f}", 
                           100 * float(d["recv"]/total)])
 
         th = ( 0.075 * (len(rlabels)) )
@@ -249,9 +260,12 @@ class Plotter():
         G = nx.DiGraph()
         G.add_node(self.A.map(R.data['tree']['root']))
 
+        if run['strategy']['key'] == "heuristic":
+            self.draw_subtitle(f"Heuristic: (0.7 x stddev) + (0.3 * p90)")
+
         cloud    = self.A.schema['infra'].upper()
 
-        for i,result in enumerate(R.data["stages"]):
+        for i,result in enumerate(run["stages"]):
             G.name = f"{R.data['name']}-STAGE-{i}"
 
             name     = R.data['name']
@@ -271,12 +285,11 @@ class Plotter():
         
             for child in children:
                 G.add_edge(parent, child) 
-                R.pool.remove(child)
 
             # figure and subplots
             # fig, ax1 = plt.subplots(figsize=(self.pargs.w, self.pargs.h))
             fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(self.pargs.w, self.pargs.h))
-            title = fig.suptitle(f"{name} Tree - Iteration {i + 1}/{len(R.data['stages'])} - D={depth}, F={fanout}, K={K}, KEY={key}, P={P}, {cloud}", fontsize=self.pargs.tfont, fontweight='bold')
+            title = fig.suptitle(f"{name} Tree - Iteration {i + 1}/{len(run['stages'])} - D={depth}, F={fanout}, K={K}, KEY={key}, P={P}, {cloud}", fontsize=self.pargs.tfont, fontweight='bold')
             # self.draw_subtitle(f"CLOUD: {cloud}")
             ax1.axis("off")
             ax2.axis("off")
@@ -367,6 +380,9 @@ class Plotter():
         cmap1 = ([self.pargs.blue] * len(G1.nodes()))
         cmap2 = ([self.pargs.red] *  len(G2.nodes()))
 
+        if data1['strategy']['key'] == "heuristic" or data2["strategy"]["key"]:
+            self.draw_subtitle(f"Heuristic: (0.7 x stddev) + (0.3 * p90)")
+
         cloud    = self.A.schema['infra'].upper()
         depth    = data1['tree']['depth']
         fanout   = data1['tree']['fanout']
@@ -417,7 +433,7 @@ class Plotter():
 
         runs  = []
         trees = []
-        self.pargs = PlotArgs(w=32, 
+        self.pargs = PlotArgs(w=28, 
                               h=16, 
                               f=16, 
                               nf=18, 
@@ -425,18 +441,20 @@ class Plotter():
                               s=2100,)
 
         for run in self.A.runs:
-            print(f"PLOTTING TREE[{run['name']}]")
-
             name = run["name"]
             key  = run["strategy"]["key"]
+
+            print(f"PLOTTING TREE[{name}:{key}]")
 
             if name != "RAND":
                 # plot build stages
                 for i,(plt,fig) in enumerate(self.stages(run)):
-                    plt.savefig(f"{dir}/TREE-{name}-{key}-{i + 1}.png", format="png")
+                    plt.savefig(f"{dir}/TREE-{name}-{key}-STAGE{i + 1}.png", format="png")
                     plt.close(fig)
+                    print(f"PLOTTING TREE[{name}:{key}] STAGE[{i + 1}]")
 
             # plot tree performance
+            print(f"PLOTTING TREE[{name}:{key}] PERF")
             G = self.A.graph(run)
             plt,fig = self.performance(G, run)
             plt.savefig(f"{dir}/TREE-{name}-{key}-PERF.png", format="png")
@@ -445,17 +463,20 @@ class Plotter():
             trees.append(G)
             runs.append(run)
 
+
+        k = 0
+        total = len(trees) * len(trees)
         # plot tree comparisons
         for i in range(len(trees)):
             for j in range(i + 1, len(trees)):
-                print(f"PLOTTING COMPARISON[{trees[i].name}x{trees[j].name}]")
+                print(f"PLOTTING COMPARISON[{trees[i].name}x{trees[j].name}] {k + 1}/{total}")
                 name_i = trees[i].name.upper()
                 name_j = trees[j].name.upper()
                 key_i  = runs[i]["strategy"]["key"]
                 key_j  = runs[j]["strategy"]["key"]
+                k += 1
 
                 # if key_i != key_j: continue
-
                 plt,fig = self.comparison(trees[i], trees[j], runs[i], runs[j])
                 plt.savefig(f"{dir}/TREE-{name_i}-{name_j}-CMP.png")
                 plt.close(fig)

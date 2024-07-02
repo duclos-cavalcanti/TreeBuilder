@@ -60,6 +60,12 @@ resource "docker_container" "children" {
     name  = "child${count.index}"
     image = "ubuntu-base:jammy"
 
+    volumes {
+        host_path = "${path.cwd}/modules/default/volume/"
+        container_path = "/work/logs"
+        # volume_name    = docker_volume.shared_volume.name
+    }
+
     upload {
         file = "/child.sh"
         source = "${path.cwd}/modules/udp/scripts/child.sh"

@@ -41,5 +41,6 @@ int64_t deadline(float dur_sec);
 double  get_percentile(const std::vector<int64_t>& data, double percentile);
 double  get_variance(const std::vector<int64_t>& data);
 double  get_stdev(const std::vector<int64_t>& data);
+int     write_csv(const std::vector<int64_t>& data, std::string name);
 
 #endif /* __COMMON__HPP */

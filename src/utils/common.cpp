@@ -2,6 +2,7 @@
 
 #include <cstdlib>
 #include <chrono>
+#include <fstream>
 #include <iostream>
 #include <algorithm>
 #include <random>
@@ -76,4 +77,18 @@ double get_stdev(const std::vector<int64_t>& data) {
     variance = sum / data.size();
     stddev = std::sqrt(variance);
     return stddev;
+}
+
+int write_csv(const std::vector<int64_t>& data, std::string name) {
+    std::string filename    = "/work/logs/" + name + ".csv";
+    std::ofstream f(filename);
+
+    if (!f.is_open())
+        return -1;
+
+    for (size_t i = 0; i < data.size(); ++i)
+        f << i << "," << data[i] << "\n";
+
+    f.close();
+    return 0;
 }

@@ -1,19 +1,6 @@
 import os
 import subprocess
 
-def try_execute(command:str, wdir=None):
-    ret = 0
-    out = ""
-    err = ""
-
-    try: 
-        ret, out, err = execute(command, wdir)
-        return out
-
-    except Exception as e:
-        print("OUTPUT: \n{out}")
-        raise(e)
-
 def lexecute(command:str, wdir=None):
     if not wdir: wdir = os.getcwd()
 

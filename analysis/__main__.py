@@ -17,6 +17,15 @@ def parse():
     )
 
     arg_def.add_argument(
+        "-m", "--mode",
+        type=str,
+        required=False,
+        default="default",
+        choices=["default", "udp", "mcast"],
+        dest="mode",
+    )
+
+    arg_def.add_argument(
         "-p", "--prefix",
         type=str,
         required=False,
