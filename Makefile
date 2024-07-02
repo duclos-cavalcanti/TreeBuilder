@@ -18,7 +18,7 @@ ifeq (, $(shell which terraform))
 $(error terraform not found)
 endif
 
-PREFIX  := 06-27-22:33:59
+PREFIX  := 07-02-16:23:47
 GPREFIX := 06-22-22:19:00
 
 .PHONY: proto build udp mcast docker pull process clean rm docs test 
@@ -37,6 +37,10 @@ udp: build
 
 mcast: build
 	@python3 -m deploy -a plan -i docker -m mcast -s 6 -f 2 -d 2
+	@python3 -m deploy -a deploy -i docker
+
+lemon: build
+	@python3 -m deploy -a plan -i docker -m lemon -s 3 -t 5
 	@python3 -m deploy -a deploy -i docker
 
 docker:
