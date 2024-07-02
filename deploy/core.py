@@ -1,5 +1,5 @@
 from .utils  import *
-from manager import TreeBuilder, RunDict, StrategyDict, ParametersDict, TreeDict, ResultDict
+from manager import Timer, TreeBuilder, RunDict, StrategyDict, ParametersDict, TreeDict, ResultDict
 
 import os
 import json
@@ -98,6 +98,14 @@ def config(args, path):
             ret = tb.parent(rate=args.rate, duration=args.duration, id="example")
             data["commands"].extend(ret.buf)
 
+        elif args.mode == "lemon":
+            t = Timer()
+            future = t.future_ts(args.duration)
+            data["addrs"].pop(data["addrs"].index(data["addrs"][-1]))
+            for addr in data["addrs"]:
+                port = 6066
+                command = f"./bin/lemon -i {addr} -p {port} -s docker -f {future}"
+                data["commands"].append(command)
         else:
             raise NotImplementedError()
 

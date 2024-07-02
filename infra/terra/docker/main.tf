@@ -48,3 +48,11 @@ module "mcast" {
     addrs    = local.addrs
     commands = local.commands
 }
+
+module "lemon" {
+    source = "./modules/lemon/"
+    count = (var.mode == "lemon") ? 1 : 0
+
+    addrs    = local.addrs
+    commands = local.commands
+}

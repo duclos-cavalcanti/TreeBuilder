@@ -25,6 +25,11 @@ int64_t deadline(float dur_sec) {
     return ts;
 }
 
+int64_t future (int64_t timestamp, float dur_sec) {
+    int64_t dur = static_cast<int64_t>(dur_sec * 1'000'000);
+    return timestamp + dur;
+}
+
 double get_percentile(const std::vector<int64_t>& data, double percentile) {
     if (data.empty()) {
         throw std::runtime_error("Data vector is empty");

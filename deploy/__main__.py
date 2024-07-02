@@ -22,7 +22,7 @@ def parse():
         type=str,
         required=False,
         default="default",
-        choices=["default", "test", "udp", "mcast"],
+        choices=["default", "test", "udp", "mcast", "lemon"],
         dest="mode",
     )
 
