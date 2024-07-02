@@ -46,12 +46,12 @@ class Worker():
 
         return job
 
-    def scatter(self, arr:List[Command]) -> List:
+    def scatter(self, arr:List[Command]) -> List[Job]:
         ret = []
         if len(arr) == 0: 
             return ret
 
-        for _, item in enumerate(arr):
+        for item in arr:
             c = Command()
             c.CopyFrom(item)
             m       = self.req.message(dst=c.addr, t=Type.COMMAND, mdata=Metadata(command=c))
