@@ -9,6 +9,7 @@ set(CMAKE_VERBOSE_MAKEFILE OFF)
 find_package(Git REQUIRED)
 find_package(PkgConfig REQUIRED)
 find_package(Protobuf REQUIRED)
+find_package(nlohmann_json 3.2.0 REQUIRED)
 
 pkg_search_module(PROTOBUF REQUIRED protobuf)
 pkg_search_module(CPPZMQ REQUIRED cppzmq)
@@ -40,6 +41,7 @@ set(PROJECT_LIBRARIES       ${CPPZMQ_LIBRARIES} ${PROTOBUF_LIBRARIES})
 set(PARENT "parent")
 set(CHILD  "child")
 set(MCAST  "mcast")
+set(LEMON  "lemon")
 
 include_directories(${PROJECT_INCLUDES})
 add_executable(${PARENT} "${PROJECT_SOURCE_DIR}/src/parent.cpp" ${PROJECT_SOURCES})
@@ -55,6 +57,11 @@ include_directories(${PROJECT_INCLUDES})
 add_executable(${MCAST} "${PROJECT_SOURCE_DIR}/src/mcast.cpp" ${PROJECT_SOURCES})
 target_compile_definitions(${MCAST} PUBLIC ZMQ_BUILD_DRAFT_API=1)
 target_link_libraries(${MCAST} PUBLIC ${PROJECT_LIBRARIES})
+
+include_directories(${PROJECT_INCLUDES})
+add_executable(${LEMON} "${PROJECT_SOURCE_DIR}/src/lemon.cpp" ${PROJECT_SOURCES})
+target_compile_definitions(${LEMON} PUBLIC ZMQ_BUILD_DRAFT_API=1)
+target_link_libraries(${LEMON} PUBLIC ${PROJECT_LIBRARIES} nlohmann_json::nlohmann_json)
 
 set_property(DIRECTORY PROPERTY ADDITIONAL_CLEAN_FILES
     "${PROJECT_SOURCE_DIR}/build/CMakeFiles"
