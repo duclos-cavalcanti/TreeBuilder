@@ -29,15 +29,17 @@ class TreeBuilder():
         else:
             c   =  f"./bin/child -i {node.id.split(':')[0]} -p {data.port}"
             c   += f" -r {data.rate} -d {data.duration}"
+            c   += f" -n {node.id.split(':')[0]}_{data.id}"
 
         data.buf.append(c)
 
-    def parent(self, rate, duration, port:int=8080):
+    def parent(self, rate, duration, id, port:int=8080):
         class Data:
             def __init__(self, rate, duration, port):
                 self.rate       = rate
                 self.duration   = duration
                 self.port       = port
+                self.id         = id
                 self.buf        = []
 
         data = Data(rate, duration, port)

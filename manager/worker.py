@@ -5,138 +5,154 @@ from .task      import Task, Parent, Mcast
 
 import zmq
 import threading
+import subprocess
 
-class Executioner(Node):
-    def __init__(self, name:str, ip:str, port:str, map:dict):
-        super().__init__(name=name, stype=zmq.REQ)
-        self.addr       = f"{ip}:{port}"
-        self.task       = None
-        self.job        = None
-        self.thread     = None
-        self.map        = map
+from typing     import List, Dict, Tuple
+from threading  import Thread
 
-    def launch(self, target, args):
-        self.thread = threading.Thread(target=target, args=args)
-        self.thread.start()
+class Worker():
+    def __init__(self, name:str, ip:str, port:str, manager:str, map:dict):
+        self.node                                       = Node(name=name, addr=f"{ip}:{port}", stype=zmq.REP, map=map)
+        self.req                                        = Node(name=name, addr=f"{ip}:{port}", stype=zmq.REQ, map=map)
+        self.manager                                    = manager
+        self.map                                        = map
+        self.tasks: Dict[str, Tuple[Task, Thread]]      = {}
+        self.L                                          = Logger(name=f"{name}:{ip}")
 
-    def start(self, command:Command):
+        self.node.bind()
+        self.L.state(f"{name.upper()} UP")
+
+    def run(self, job:Job):
+        self.L.log(message=f"RUNNING JOB[{job.id}:{job.addr}]")
+        try:
+            p = subprocess.Popen(
+                job.instr, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True
+            )
+            stdout, stderr = p.communicate()
+            output = (stdout if stdout else stderr)
+    
+            data = [ s for s in output.split("\n") if s ]
+            job.pid = p.pid
+            job.ret = int(p.returncode)
+    
+        except Exception as e:
+            data = [ f"ERROR: {e}" ]
+            job.ret = -1
+    
+        finally:
+            job.ClearField('data')
+            job.data.extend(data)
+            job.end = True
+
+        return job
+
+    def scatter(self, arr:List[Command]) -> List:
+        ret = []
+        if len(arr) == 0: 
+            return ret
+
+        for _, item in enumerate(arr):
+            c = Command()
+            c.CopyFrom(item)
+            m       = self.req.message(dst=c.addr, t=Type.COMMAND, mdata=Metadata(command=c))
+            r       = self.req.handshake(m=m, field="job")
+            rjob    = r.mdata.job
+            ret.append(rjob)
+            self.L.log(message=f"SCATTERED JOB[{rjob.id}:{rjob.addr}]")
+
+        return ret
+
+    def gather(self, arr:List[Job], interval:int=1):
+        if len(arr) == 0: 
+            return
+
+        completed = [ False ] * len(arr)
+
+        while True:
+            self.req.timer.sleep_sec(interval)
+
+            if all(completed): 
+                break
+
+            for i, job in enumerate(arr):
+                if job.end: continue
+
+                m       = self.req.message(dst=job.addr, t=Type.REPORT, mdata=Metadata(job=job))
+                r       = self.req.handshake(m, field="job")
+                rjob    = r.mdata.job
+
+                if rjob.end: 
+                    arr[i].CopyFrom(rjob)
+                    completed[i] = True 
+                    self.L.log(message=f"GATHERED DEPENDENCY[{i}][{rjob.id}:{rjob.addr}]")
+        return
+
+    def launch(self, task:Task):
+        def callback(t:Task):
+            self.run(t.job)
+            self.gather(t.deps)
+
+        t = threading.Thread(target=callback, args=(task,))
+        t.start()
+
+        id              = task.job.id
+        self.tasks[id]  = (task, t)
+
+    def schedule(self, command:Command):
         if   command.flag == Flag.PARENT: Constructor = Parent
         elif command.flag == Flag.MCAST:  Constructor = Mcast
         else:                             raise RuntimeError()
 
-        self.task   = Constructor()
-        self.job    = self.task.handle(command)
+        task              = Constructor()
+        job, commands     = task.handle(command)
+        jobs              = self.scatter(commands)
 
-        self.L.log(message=f"NOTIFYING JOB[{self.job.id}:{self.job.addr}]")
-        self.notify()
+        if jobs: task.deps.extend(jobs)
+        self.launch(task)
 
-        self.L.log(message=f"STARTING JOB[{self.job.id}:{self.job.addr}]")
-        self.launch(target=self.execute, args=(self.task,))
-
-        return self.job
-
-    def notify(self):
-        for i,item in enumerate(self.task.dependencies):
-            c = Command()
-            c.CopyFrom(item)
-            m = self.message(src=self.addr, dst=c.addr, ref=f"{self.map[self.addr]}/{self.map[c.addr]}", t=Type.COMMAND, mdata=Metadata(command=c))
-            r = self.handshake(m=m)
-            d = self.verify(m, r, field="job")
-            self.task.dependencies[i] = d
-            self.L.log(message=f"NOTIFICATION RECEIVED JOB[{d.id}:{d.addr}]")
-
-        return
-
-    def report(self, job:Job):
-        if self.job is None or self.task is None: 
-            raise RuntimeError()
-
-        if job.id != self.job.id:
-            raise RuntimeError()
-
-        # if job and/or it's dependencies haven't finished
-        if not self.task.complete() or self.thread.is_alive():
-            return job
-        else:
-            ret = self.task.resolve()
-            self.task   = None
-            self.job    = None
-            self.thread = None
-
-            self.L.log(message=f"FINISHED JOB[{ret.id}:{ret.addr}]")
-            return ret
-
-    def execute(self, t:Task):
-        t.run()
-        self.collect(t)
-
-    def collect(self, t:Task):
-        if len(t.dependencies) == 0: 
-            return
-
-        while True:
-            self.timer.sleep_sec(1)
-
-            if t.complete(): 
-                break
-        
-            for i, job in enumerate(t.dependencies):
-                if job.end: continue 
-        
-                m   = self.message(src=self.addr, dst=job.addr, ref=f"{self.map[self.addr]}/{self.map[job.addr]}", t=Type.REPORT, mdata=Metadata(job=job))
-                r   = self.handshake(m)
-                ret = self.verify(m, r, field="job")
-
-                if ret.end: 
-                    t.dependencies[i] = ret
-                    self.L.log(message=f"COLLECTED DEPENDENCY[{i}][{job.id}:{job.addr}]")
-
-
-class Worker(Node):
-    def __init__(self, name:str, ip:str, port:str, manager:str, map:dict):
-        super().__init__(name=name, stype=zmq.REP)
-        self.L              = Logger(name=f"{name}:{ip}")
-        self.addr           = f"{ip}:{port}"
-        self.manager        = manager
-        self.map            = map
-        self.executioner    = Executioner(name="EXECUTIONER", ip=ip, port=port, map=self.map)
-
-        self.bind(protocol="tcp", ip=self.addr.split(':')[0], port=self.addr.split(':')[1])
-        self.L.state(f"{self.name} UP")
-
-    def run(self):
-        while(True):
-            m = self.recv_message()
-            self.L.state(f"STATE[{Type.Name(m.type)}]")
-        
-            match m.type:
-                case Type.CONNECT: self.connectACK(m)
-                case Type.COMMAND: self.commandACK(m)
-                case Type.REPORT:  self.reportACK(m)
-                case Type.ERR:     self.errorACK(m)
-                case _:                   raise NotImplementedError()
+        return job
 
     def connectACK(self, m:Message):
-        return self.ack_message(m)
+        return self.node.ack_message(m)
 
     def commandACK(self, m:Message):
         if not m.mdata.HasField("command"): 
-            return self.err_message(m, desc=f"COMMAND[{self.ipaddr(self.addr)}] FORMAT ERR")
-
-        if not self.executioner.task is None:
-            return self.err_message(m, desc=f"COMMAND[{self.ipaddr(self.addr)}] WORKER BUSY ERR")
+            return self.node.err_message(m, desc=f"COMMAND[{self.addr}] FORMAT ERR")
 
         c = m.mdata.command
-        job = self.executioner.start(c)
-        return self.ack_message(m, mdata=Metadata(job=job))
+        job = self.schedule(c)
+        return self.node.ack_message(m, mdata=Metadata(job=job))
 
     def reportACK(self, m:Message):
         if not m.mdata.HasField("job"): 
-            return self.err_message(m, desc=f"REPORT[{self.addr}] FORMAT ERR")
+            return self.node.err_message(m, desc=f"REPORT[{self.addr}] FORMAT ERR")
         
         job = m.mdata.job
-        job = self.executioner.report(job)
-        return self.ack_message(m, mdata=Metadata(job=job))
+        if job.id not in self.tasks:
+            raise RuntimeError()
+
+        task, t = self.tasks[job.id]
+
+        if t.is_alive() or not task.complete():
+            return self.node.ack_message(m, mdata=Metadata(job=job))
+
+        ret = task.process()
+        self.tasks.pop(job.id)
+
+        return self.node.ack_message(m, mdata=Metadata(job=ret))
 
     def errorACK(self, m:Message):
         raise NotImplementedError()
+
+    def start(self):
+        while(True):
+            m = self.node.recv_message()
+            self.L.state(f"STATE[{Type.Name(m.type)}]")
+        
+            match m.type:
+                case Type.CONNECT:  self.connectACK(m)
+                case Type.COMMAND:  self.commandACK(m)
+                case Type.REPORT:   self.reportACK(m)
+                case Type.ERR:      self.errorACK(m)
+                case _:             raise NotImplementedError()
+

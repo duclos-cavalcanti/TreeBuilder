@@ -3,6 +3,8 @@ from ..types        import TreeBuilder, Run, StrategyDict, ResultDict
 from ..heuristic    import Heuristic
 from .task          import Task
 
+from typing     import List, Tuple
+
 class Mcast(Task):
     def build(self, run:Run) -> Command:
         arr = run.tree.arr()
@@ -25,12 +27,14 @@ class Mcast(Task):
         self.command = c
         return c
 
-    def handle(self, command:Command):
+    def handle(self, command:Command) -> Tuple[Job, List[Command]]:
         self.command   = command
         self.job.id    = command.id
         self.job.flag  = command.flag
         self.job.instr = command.instr[0]
         self.job.addr  = command.addr
+
+        commands    = []  
 
         if command.layer:
             addrT   = TreeBuilder(arr=command.data,  depth=command.layer, fanout=command.fanout) 
@@ -49,11 +53,11 @@ class Mcast(Task):
                 c.addr   = addr
                 c.instr.extend(i)
                 c.data.extend(d)
-                self.dependencies.append(c)
+                commands.append(c)
 
-        return self.job
+        return self.job, commands
 
-    def resolve(self) -> Job:
+    def process(self) -> Job:
         self.L.debug(message=f"TASK PRE-RESOLVE[{Flag.Name(self.job.flag)}][{self.job.id}:{self.job.addr}]", data=self.job)
 
         if self.err():
@@ -79,7 +83,7 @@ class Mcast(Task):
             self.job.ClearField('integers')
             self.job.ClearField('floats')
 
-            for d in self.dependencies:
+            for d in self.deps:
                 for daddr in d.data:     self.job.data.append(daddr)
                 for drecv in d.integers: self.job.integers.append(drecv)
                 for dperc in d.floats:   self.job.floats.append(dperc)
@@ -87,11 +91,11 @@ class Mcast(Task):
         self.L.debug(message=f"TASK RESOLVE[{Flag.Name(self.job.flag)}][{self.job.id}:{self.job.addr}]", data=self.job)
         return self.job
 
-    def process(self, job:Job, strategy:StrategyDict) -> ResultDict:
+    def evaluate(self, job:Job, run:Run) -> ResultDict:
         if job.ret != 0:  
             raise RuntimeError("Failed Job")
-    
-        H = Heuristic(strategy, self.command, job)
+
+        H = Heuristic(run.data["strategy"], self.command, job)
         H.process(key="p90")
 
         self.L.debug(message=f"TASK[{Flag.Name(job.flag)}][{job.id}:{job.addr}]", data=H.data)

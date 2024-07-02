@@ -52,7 +52,7 @@ def manager(args):
 
     finally:
         L.flush()
-        M.socket.close()
+        M.node.socket.close()
 
     L.record("FINISHED!")
 
@@ -64,7 +64,7 @@ def worker(args):
     W = Worker(name=args.name, ip=args.addr, port=args.port, manager=exp.manager, map=exp.map) 
 
     try:
-        W.run()
+        W.start()
 
     except Exception as e:
         L.error("INTERRUPTED!")
@@ -72,5 +72,5 @@ def worker(args):
 
     finally:
         L.flush()
-        W.socket.close()
+        W.node.socket.close()
 

@@ -5,26 +5,34 @@ import zmq
 
 from typing import Optional
 
-def _ip(addr):
-    ip = addr.split(":")[0]
-    return ip
-
 class Node():
-    def __init__(self, name:str, stype:int):
+    def __init__(self, name:str, addr:str, stype:int, map:dict):
         self.name       = name.upper()
+        self.addr       = addr
+        self.map        = map
         self.context    = zmq.Context()
         self.socket     = self.context.socket(stype)
         self.timer      = Timer()
         self.tick       = 1
         self.L          = Logger()
+    
+    def ip(self, addr:str):
+        ip = addr.split(":")[0]
+        return ip
+
+    def port(self, addr:str):
+        port = addr.split(":")[1]
+        return port
 
     def format(self, addr:str):
         protocol="tcp"
-        ip = addr.split(":")[0]
-        port = addr.split(":")[1]
+        ip = self.ip(addr)
+        port = self.port(addr)
         return f"{protocol}://{ip}:{port}"
 
-    def bind(self, protocol:str, ip:str, port:str):
+    def bind(self, protocol:str="tcp", ip:str="", port:str=""):
+        if not ip:      ip = self.ip(self.addr)
+        if not port:    port = self.port(self.addr)
         format = f"{protocol}://{ip}:{port}"
         self.socket.bind(format)
 
@@ -36,57 +44,45 @@ class Node():
         format = self.format(addr)
         self.socket.disconnect(format)
 
-    def message(self, src:str, dst:str, ref:str="", t=Type.ACK, mdata:Optional[Metadata]=None) -> Message:
-        if not ref: ref = f"{self.name}:{src}"
-        m = Message(id=self.tick, ts=self.timer.ts(), ref=ref, src=src, dst=dst, type=t)
-        if not mdata is None: m.mdata.CopyFrom(mdata)
+    def message(self, dst:str, id:Optional[int]=0, t=Type.ACK, mdata:Optional[Metadata]=None) -> Message:
+        ref = f"{self.map[self.addr]}/{self.map[dst]}" 
+        mdata = Metadata() if mdata is None else mdata
+        m = Message(id=(self.tick if id else id), ts=self.timer.ts(), ref=ref, src=self.addr, dst=dst, type=t, mdata=mdata)
         return m
 
     def recv_message(self) -> Message:
         m = Message()
         m.ParseFromString(self.socket.recv())
-
-        match m.type:
-            case Type.CONNECT: self.L.log(f"CONNECT[{_ip(m.src)}]: RECV")
-            case Type.COMMAND: self.L.log(f"COMMAND[{Flag.Name(m.mdata.command.flag)}][{_ip(m.mdata.command.addr)}]: RECV")
-            case Type.REPORT:  self.L.log(f"REPORT[{Flag.Name(m.mdata.job.flag)}][{_ip(m.mdata.job.addr)}] RECV")
-            case Type.ACK:     pass
-            case _:            self.L.log(f"{Type.Name(m.type)}[{_ip(m.src)}] RECV")
-
-
+        typ         = Type.Name(m.type)
+        dst         = self.ip(m.dst)
+        self.L.log(f"{typ}[{dst}] RECV")
         self.L.debug(f"{self.name} RECV", data=m)
         return m
 
     def send_message(self, m:Message) -> Message:
         self.socket.send(m.SerializeToString())
-        self.tick += 1
-
-        match m.type:
-            case Type.CONNECT: self.L.log(f"CONNECT[{_ip(m.dst)}]: SENT")
-            case Type.COMMAND: self.L.log(f"COMMAND[{Flag.Name(m.mdata.command.flag)}][{_ip(m.mdata.command.addr)}]: SENT")
-            case Type.REPORT:  self.L.log(f"REPORT[{Flag.Name(m.mdata.job.flag)}][{_ip(m.mdata.job.addr)}] SENT")
-            case _:            self.L.log(f"{Type.Name(m.type)}[{_ip(m.dst)}] SENT")
-
+        typ         = Type.Name(m.type)
+        dst         = self.ip(m.dst)
+        self.L.log(f"{typ}[{dst}] SENT")
         self.L.debug(f"{self.name} SENT", data=m)
+        self.tick   += 1
         return m
 
     def ack_message(self, m:Message, mdata:Optional[Metadata]=None):
-        r = self.message(src=m.dst, dst=m.src, ref=m.ref, t=Type.ACK, mdata=mdata)
-        r.id = m.id
+        r = self.message(dst=m.src, t=Type.ACK, mdata=mdata, id=m.id)
         return self.send_message(r)
 
     def err_message(self, m:Message, desc:str):
-        e = Message(id=m.id, ts=self.timer.ts(), type=Type.ERR, mdata=Metadata(error=Error(desc=desc)))
+        e = self.message(dst=m.src, ref=m.ref, t=Type.ERR, mdata=Metadata(error=Error(desc=desc)), id=m.id)
         return self.send_message(e)
 
-    def handshake(self, m:Message) -> Message:
-        self.connect(m.dst)
-        self.send_message(m)
+    def handshake(self, m:Message, field:str="") -> Message:
+        addr = m.dst
+        self.connect(addr)
+        _ = self.send_message(m)
         r = self.recv_message()
-        self.disconnect(m.dst)
-        return r
+        self.disconnect(addr)
 
-    def verify(self, m:Message, r:Message, field:str=""):
         try:
             if r.id != m.id:
                 raise RuntimeError()
@@ -102,10 +98,12 @@ class Node():
 
             if field:
                 if r.mdata.HasField(f"{field}"):
-                    if   field == "job":        return r.mdata.job
-                    elif field == "command":    return r.mdata.command
-                    elif field == "error":      return r.mdata.error
+                    if   field == "job":        return r
+                    elif field == "command":    return r
+                    elif field == "error":      return r
                     else:                       raise RuntimeError()
+
+            return r
 
         except RuntimeError as e:
             print(f"MESSAGE: {m}")

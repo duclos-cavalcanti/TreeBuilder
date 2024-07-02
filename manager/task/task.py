@@ -1,17 +1,17 @@
 from ..message      import *
-from ..types        import Logger, Run, StrategyDict, ResultDict
+from ..types        import Logger, Run, ResultDict
 
 import random 
 import string
-import subprocess
 
+from typing     import List, Tuple
 from abc        import ABC, abstractmethod
 
 class Task(ABC):
     def __init__(self):
         self.command        = Command()
         self.job            = Job()
-        self.dependencies   = []
+        self.deps           = []
         self.L              = Logger()
 
     def generate(self, length:int=10):
@@ -23,43 +23,22 @@ class Task(ABC):
         pass
 
     @abstractmethod
-    def handle(self, command:Command) -> Job:
-        pass
-
-    def run(self):
-        try:
-            p = subprocess.Popen(
-                self.job.instr, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True
-            )
-            stdout, stderr = p.communicate()
-            output = (stdout if stdout else stderr)
-
-            data = [ s for s in output.split("\n") if s ]
-            self.job.pid = p.pid
-            self.job.ret = int(p.returncode)
-
-        except Exception as e:
-            data = [ f"ERROR: {e}" ]
-            self.job.ret = -1
-
-        finally:
-            self.job.ClearField('data')
-            self.job.data.extend(data)
-            self.job.end = True
-
-    @abstractmethod
-    def resolve(self) -> Job:
+    def handle(self, command:Command) -> Tuple[Job, List[Command]]:
         pass
 
     @abstractmethod
-    def process(self, job:Job, strategy:StrategyDict) -> ResultDict:
+    def process(self) -> Job:
+        pass
+
+    @abstractmethod
+    def evaluate(self, job:Job, run:Run) -> ResultDict:
         pass
 
     def complete(self) -> bool:
         if not self.job.end:
             return False
 
-        for d in self.dependencies:
+        for d in self.deps:
             if not d.end: 
                 return False
 
@@ -72,7 +51,7 @@ class Task(ABC):
             self.job.ClearField['data']
             self.job.data.append(self.job.addr)
 
-        for d in self.dependencies:
+        for d in self.deps:
             if d.ret != 0: 
                 if not ret: self.job.ClearField['data']
                 self.job.data.append(d.addr)
