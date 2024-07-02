@@ -12,13 +12,23 @@ variable "commands" {
     type        = list(string)
 }
 
+variable "name" {
+    type    = string
+    default = "ubuntu-base"
+}
+
+variable "source" {
+    type    = string
+    default = "ubuntu:jammy"
+}
+
 source "docker" "ubuntu" {
-    image  = "ubuntu:jammy"
+    image  = var.source
     commit = true
 }
 
 build {
-    name = "ubuntu-base"
+    name = var.name
     sources = ["source.docker.ubuntu"]
 
     provisioner "shell" {

@@ -111,6 +111,10 @@ def config(args, path):
 
     return data
 
+def build(args, wdir):
+    command=f"packer build -force -var-file=./variables.pkr.hcl {args.infra}.pkr.hcl"
+    lexecute(f"{command}", wdir=wdir)
+
 def plan(args, wdir):
     config(args, f"{wdir}/extract/data.json")
     compress(f"{wdir}/extract")

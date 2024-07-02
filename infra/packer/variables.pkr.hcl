@@ -8,6 +8,7 @@ commands = [
     "sudo apt-get install -yq libprotobuf-c-dev libprotobuf-dev protobuf-compiler",
     "sudo apt-get install -yq libbpf-dev",
     "sudo apt-get install -yq pkg-config",
+    "sudo apt-get install -yq nlohmann-json3-dev",
     "sudo mkdir /work",
     "cd /work && sudo git clone https://github.com/zeromq/libzmq.git",
     "sudo mkdir /work/libzmq/build",
@@ -29,5 +30,5 @@ commands = [
     # "cd /work/dpdk-23.07 && sudo meson setup build && sudo ninja -C build install",
     # "export RTE_SDK=/work/dpdk-23.07",
     "sudo ldconfig",
-    "sudo pip install pyzmq protobuf cvxpy",
+    "sudo pip install pyzmq protobuf cvxpy numpy",
 ]

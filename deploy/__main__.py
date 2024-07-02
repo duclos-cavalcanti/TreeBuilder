@@ -1,4 +1,4 @@
-from .core import plan, deploy, destroy
+from .core import plan, deploy, destroy, build
 
 import os
 import argparse
@@ -13,7 +13,7 @@ def parse():
         "-a", "--action",
         type=str,
         required=True,
-        choices=["plan", "deploy", "destroy"],
+        choices=["plan", "deploy", "destroy", "build"],
         dest="action",
     )
 
@@ -89,7 +89,9 @@ def parse():
 def main():
     args = parse()
 
-    wdir = os.path.join(os.getcwd(), "infra", "terra", args.infra)
+    if args.action != "build":  wdir = os.path.join(os.getcwd(), "infra", "terra", args.infra)
+    else:                       wdir = os.path.join(os.getcwd(), "infra", "packer")
+
     if not os.path.isdir(wdir): 
         raise RuntimeError(f"Not a directory: {wdir}")
 
@@ -97,6 +99,7 @@ def main():
         case "plan":    plan(args, wdir)
         case "deploy":  deploy(args, wdir)
         case "destroy": destroy(args, wdir)
+        case "build":   build(args, wdir)
         case _:         raise NotImplementedError()
 
     return

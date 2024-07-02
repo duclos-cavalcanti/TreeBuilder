@@ -7,19 +7,19 @@ packer {
     }
 }
 
+variable "commands" {
+    description = "Commands to build image"
+    type        = list(string)
+}
+
 variable "name" {
     type    = string
-    default = "ubuntu-base-disk"
+    default = "treefinder-image"
 }
 
 variable "source" {
     type    = string
-    default = ""
-}
-
-variable "commands" {
-    description = "Commands to build image"
-    type        = list(string)
+    default = "multicast-ebpf-zmq-grub-disk"
 }
 
 source "googlecompute" "ubuntu" {
