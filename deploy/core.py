@@ -28,6 +28,7 @@ def runs(args):
     runs = []
     names = [ "BEST", "WORST", "RAND"]
     keys  = [ "p90", "heuristic" ]
+    # keys  = [ "p90", "p75", "p50", "heuristic" ]
 
     for name in names:
         for key in keys:
