@@ -173,8 +173,9 @@ int child(void) {
 
 int output(std::vector<int64_t>& data, unsigned long cnt) {
     int     ret = 0;
-    std::string name = ( config.name == "" ? "results" : config.name );
+    int64_t ts  = timestamp();
     std::string errout = "-1\n-1\n-1\n-1\n-1";
+    std::string name = ( config.name == "" ? "results" : config.name ) + "_" + std::to_string(ts);
 
     try {
         double p90 = get_percentile(data, 90);
