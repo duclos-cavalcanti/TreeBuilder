@@ -55,6 +55,9 @@ def parse():
 def main():
     args = parse()
 
+    if args.view:   args.view = True
+    else:           args.view = False
+
     if not args.prefix and args.infra != "docker": 
         raise RuntimeError("Need prefix to pull data from GCP/Cloud")
 

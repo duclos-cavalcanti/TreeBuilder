@@ -99,7 +99,7 @@ def process(args):
         schema, map = load(dir, args.infra)
         A = Analyzer(runs, schema,  map)
         P = Plotter(A)
-        P.plot(dir)
+        P.plot(dir, view=args.view)
 
     elif args.mode == "udp":
         dir  = isdir("infra/terra/docker/modules/default/volume")

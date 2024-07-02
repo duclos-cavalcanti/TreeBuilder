@@ -12,6 +12,12 @@ from networkx.drawing.nx_agraph import graphviz_layout
 from .analysis  import Analyzer
 from manager    import Run, RunDict, ResultDict, KEYS, EXPRESSIONS
 
+def rnd(val:float, precision:int=2):
+    ret = val
+    ret = round(ret, precision)
+    ret = f"{ret:.2f}"
+    return  ret
+
 class PlotArgs():
     def __init__(self, x:int=0, y:int=0, w:int=0, h:int=0, 
                        f:int=8, nf:int=0, tf:int=0, 
@@ -92,19 +98,17 @@ class Plotter():
             addr1 = self.A.map(d1["addr"])
             addr2 = self.A.map(d2["addr"])
 
-            value = float(d1['stddev'])
-            value = round(value, 2)
+            perc1 = 100 * (float(d1["recv"]/total))
             cells1.append([ d1["p90"], 
                             d1["p50"], 
-                            f"{value:.2f}", 
-                            100 * float(d1["recv"]/total)])
+                            rnd(d1['stddev']),
+                            rnd(perc1)])
 
-            value = float(d2['stddev'])
-            value = round(value, 2)
+            perc2 = 100 * (float(d2["recv"]/total))
             cells2.append([ d2["p90"], 
                             d2["p50"], 
-                            f"{value:.2f}", 
-                            100 * float(d2["recv"]/total)])
+                            rnd(d2['stddev']),
+                            rnd(perc2)])
 
             if addr1 == sel1:
                 cellcolors1[i][KEYS.index("p90")] = self.pargs.blue
@@ -173,14 +177,13 @@ class Plotter():
                     cellcolors[i][KEYS.index("p90")    + 1] = self.pargs.red
                     cellcolors[i][KEYS.index("stddev") + 1] = self.pargs.red
 
-            value = float(d['stddev'])
-            value = round(value, 2)
-            data.append([ round(float(score), 2),
+            perc = 100 * (float(d["recv"]/total))
+            data.append([ rnd(float(score)),
                           d["p90"], 
                           d["p75"], 
                           d["p50"], 
-                         f"{value:.2f}", 
-                          100 * float(d["recv"]/total)])
+                          rnd(d['stddev']),
+                          rnd(perc)])
 
         th = ( 0.075 * (len(rlabels)) )
         ret = table(ax, 
@@ -207,6 +210,9 @@ class Plotter():
         total    = rate * duration
         data     = []
 
+        if run['strategy']['key'] == "heuristic":
+            self.draw_subtitle(f"Heuristic: (0.7 x stddev) + (0.3 * p90)")
+
         sel     = [ self.A.map(s) for s in result["selected"] ]
 
         clabels  = ["SCORE", "90(%)-OWD", "75(%)-OWD", "50(%)-OWD", "STDDEV", "RX(%)"]
@@ -229,14 +235,13 @@ class Plotter():
                     cellcolors[i][KEYS.index("p90")    + 1] = self.pargs.red
                     cellcolors[i][KEYS.index("stddev") + 1] = self.pargs.red
 
-            value = float(d['stddev'])
-            value = round(value, 2)
-            data.append([ round(float(score), 2),
+            perc = 100 * (float(d["recv"]/total))
+            data.append([ rnd(float(score)),
                           d["p90"], 
                           d["p75"], 
                           d["p50"], 
-                         f"{value:.2f}", 
-                          100 * float(d["recv"]/total)])
+                          rnd(d['stddev']),
+                          rnd(perc)])
 
         th = ( 0.075 * (len(rlabels)) )
         ret = table(ax, 
@@ -446,12 +451,11 @@ class Plotter():
 
             print(f"PLOTTING TREE[{name}:{key}]")
 
-            if name != "RAND":
-                # plot build stages
-                for i,(plt,fig) in enumerate(self.stages(run)):
-                    plt.savefig(f"{dir}/TREE-{name}-{key}-STAGE{i + 1}.png", format="png")
-                    plt.close(fig)
-                    print(f"PLOTTING TREE[{name}:{key}] STAGE[{i + 1}]")
+            # plot build stages
+            for i,(plt,fig) in enumerate(self.stages(run)):
+                plt.savefig(f"{dir}/TREE-{name}-{key}-STAGE{i + 1}.png", format="png")
+                plt.close(fig)
+                print(f"PLOTTING TREE[{name}:{key}] STAGE[{i + 1}]")
 
             # plot tree performance
             print(f"PLOTTING TREE[{name}:{key}] PERF")
@@ -465,7 +469,7 @@ class Plotter():
 
 
         k = 0
-        total = len(trees) * len(trees)
+        total = ( (len(trees) * (len(trees) - 1) ) / 2 )
         # plot tree comparisons
         for i in range(len(trees)):
             for j in range(i + 1, len(trees)):
