@@ -9,6 +9,7 @@ commands = [
     "sudo apt-get install -yq libbpf-dev",
     "sudo apt-get install -yq pkg-config",
     "sudo apt-get install -yq nlohmann-json3-dev",
+    "sudo apt-get install -yq tzdata",
     "sudo mkdir /work",
     "cd /work && sudo git clone https://github.com/zeromq/libzmq.git",
     "sudo mkdir /work/libzmq/build",

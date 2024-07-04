@@ -40,8 +40,11 @@ mcast: build
 	@python3 -m deploy -a deploy -i docker
 
 lemon: build
-	@python3 -m deploy -a plan -i docker -m lemon -s 3 -t 5
+	@python3 -m deploy -a plan -i docker -m lemon -s 3 -t 15
 	@python3 -m deploy -a deploy -i docker
+
+image:
+	@python3 -m deploy -a build -i docker
 
 docker:
 	@python3 -m deploy -a plan -i docker -s 10 -p 9092 -r 5000 -t 3 -d 2
