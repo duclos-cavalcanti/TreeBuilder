@@ -100,7 +100,8 @@ def config(args, path):
 
         elif args.mode == "lemon":
             t = Timer()
-            future = t.future_ts(args.duration)
+            buffer = 25
+            future = t.future_ts(args.duration + buffer)
             data["addrs"].pop(data["addrs"].index(data["addrs"][-1]))
             for addr in data["addrs"]:
                 port = 6066
@@ -126,8 +127,8 @@ def build(args, wdir):
 def plan(args, wdir):
     config(args, f"{wdir}/extract/data.json")
     compress(f"{wdir}/extract")
-    lexecute(f"terraform init", wdir=wdir)
-    lexecute(f"terraform plan -out=tf.plan -var mode={args.mode}", wdir=wdir)
+    execute(f"terraform init", wdir=wdir)
+    execute(f"terraform plan -out=tf.plan -var mode={args.mode}", wdir=wdir)
 
 def deploy(args , wdir):
     lexecute(f"terraform apply tf.plan", wdir=wdir)

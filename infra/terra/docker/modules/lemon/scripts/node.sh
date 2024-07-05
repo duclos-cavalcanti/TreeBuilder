@@ -8,6 +8,11 @@ command="$@"
 export ROLE="$role"
 TAR="/work/project.tar.gz"
 
+tzone() {
+    sudo ln -sf /usr/share/zoneinfo/America/New_York /etc/localtime && echo 'America/New_York' > /etc/timezone
+    cat /etc/timezone
+}
+
 edelay() {
     dur="$1"
     sudo tc qdisc add dev "eth0" root netem delay ${dur}ms
@@ -41,6 +46,8 @@ main() {
     pushd /work/project
         echo "-- ROLE: $role --"
 
+        tzone
+
         # even numbered workers with index greater than 0
         if [ $count -gt 0 ] && (( $count % 2 == 0)); then 
             idelay 0.3
@@ -50,8 +57,9 @@ main() {
         ${command} -v
 
         echo "RET: ${?}"
-        bash
     popd
 }
 
 main
+bash
+

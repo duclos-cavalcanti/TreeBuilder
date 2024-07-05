@@ -2,8 +2,6 @@ from .manager       import Manager
 from .worker        import Worker
 from .types         import Experiment, Logger
 
-from datetime       import datetime
-
 import os
 import json
 

@@ -136,7 +136,7 @@ Config_t parse(int argc, char **argv) {
             break;
 
         case 'f':
-            config.start = atoi(optarg);
+            config.start = atoll(optarg);
             break;
 
         case 'n':
@@ -194,8 +194,10 @@ void receiver(Config_t config) {
         n = recvfrom(sockfd, buf, sizeof(buf), 0, (struct sockaddr*) &senderaddr, (socklen_t *) &len);
         if (n < sz) {
             if (errno == EAGAIN || errno == EWOULDBLOCK) {
-                if (timestamp() >= deadline_ts) break;
-                continue;
+                if (timestamp() >= deadline_ts) 
+                    break;
+                else
+                    continue;
             } else {
                 log("ERROR OCCURRED: %d\n", errno);
                 break;
@@ -221,7 +223,7 @@ void sender(Config_t config) {
     int sockfd;
     int cnt = 0, n, total = config.addrs.size();
     auto step = 10;
-    auto packets = (2 * 60 * 1000) / (step);
+    auto packets = (2 * 1000) / (step);
 
     if ( (sockfd = socket(AF_INET, SOCK_DGRAM, 0)) < 0 ) {
         fprintf(stderr, "Failed to create socket\n");
@@ -252,9 +254,6 @@ void sender(Config_t config) {
             if ( n < 0 ) {
                 fprintf(stderr, "Failed to send\n");
                 exit(EXIT_FAILURE);
-            } else {
-                // if (config.verbose)
-                //     log("NODE: SENT[%4lu] => ADDR[%d]\n", i, j);
             }
         }
         std::this_thread::sleep_for(std::chrono::milliseconds(step));

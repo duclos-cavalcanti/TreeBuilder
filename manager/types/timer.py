@@ -5,7 +5,7 @@ class Timer():
         pass
 
     def ts(self) -> int: 
-        return int(time.time_ns() / 1_000)
+        return int(time.time() * 1_000_000)
 
     def future_ts(self, sec:float) -> int: 
         now = self.ts()
