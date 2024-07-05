@@ -31,15 +31,15 @@ build:
 	@cd build && cmake ..
 	@cd build && make
 
-udp: build
+udp:
 	@python3 -m deploy -a plan -i docker -m udp -s 8
 	@python3 -m deploy -a deploy -i docker
 
-mcast: build
+mcast:
 	@python3 -m deploy -a plan -i docker -m mcast -s 6 -f 2 -d 2
 	@python3 -m deploy -a deploy -i docker
 
-lemon: build
+lemon:
 	@python3 -m deploy -a plan -i docker -m lemon -s 3 -t 15
 	@python3 -m deploy -a deploy -i docker
 
