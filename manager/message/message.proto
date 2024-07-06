@@ -12,6 +12,7 @@ enum Flag {
     NONE = 0;
     PARENT = 1;
     MCAST = 2;
+    LEMON = 3;
 }
 
 message Metadata {
