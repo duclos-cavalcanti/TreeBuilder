@@ -52,7 +52,7 @@ resource "docker_container" "nodes" {
 
     networks_advanced {
         name         = docker_network.custom_network.name
-        ipv4_address = var.addrs[count.index]
+        ipv4_address = var.addrs[count.index + 1]
     }
 
     entrypoint = [ "/bin/bash", "/node.sh", "node${count.index}", count.index, var.commands[count.index]]
