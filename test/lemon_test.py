@@ -6,8 +6,6 @@ from manager import *
 L = Logger()
 
 class TestLemonDropClass:
-    S = Seed()
-
     def test_a(self):
         workers = [ 
                    "10.1.1.1", 
@@ -29,34 +27,45 @@ class TestLemonDropClass:
 
         OWD = np.random.uniform(low=0.1, high=10.0, size=(N, N))
         np.fill_diagonal(OWD, 0)
-        OWD = OWD.tolist()
+
+        OWD = np.array([
+            [  0.0, 12.5, 28.1, 15.3,  9.8, 11.6, 14.2, 25.9, 13.7, 10.5],
+            [ 12.5,  0.0, 22.4, 11.0, 13.2, 17.8, 10.1, 20.3, 14.9, 15.6],
+            [ 28.1, 22.4,  0.0, 23.6, 18.3, 24.5, 21.7, 16.2, 19.0, 27.5],
+            [ 15.3, 11.0, 23.6,  0.0, 14.1, 19.9, 12.8, 18.7, 16.5, 18.4],
+            [  9.8, 13.2, 18.3, 14.1,  0.0, 10.9, 13.0, 21.8, 12.6,  9.2],
+            [ 11.6, 17.8, 24.5, 19.9, 10.9,  0.0, 18.6, 27.3, 17.4, 11.1],
+            [ 14.2, 10.1, 21.7, 12.8, 13.0, 18.6,  0.0, 19.5, 15.7, 16.3],
+            [ 25.9, 20.3, 16.2, 18.7, 21.8, 27.3, 19.5,  0.0, 22.1, 26.4],
+            [ 13.7, 14.9, 19.0, 16.5, 12.6, 17.4, 15.7, 22.1,  0.0, 14.8],
+            [ 10.5, 15.6, 27.5, 18.4,  9.2, 11.1, 16.3, 26.4, 14.8,  0.0],
+        ])
+
+        LOAD = np.array([
+            [0.0, 1.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+            [0.0, 0.0, 0.0, 1.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+            [0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 1.0, 0.0, 0.0, 0.0],
+            [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+            [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+            [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+            [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+            [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+            [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+            [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+        ])
 
         LD = LemonDrop(N=N, K=K, D=D, F=F)
+        LD.OWD  = OWD
+        LD.LOAD = LOAD
+        LD.check(OWD, LOAD)
 
-        for i in range(N):
-            items = []
-            for value in OWD[i] :
-                item:ItemDict = {
-                        "addr":     workers[i],
-                        "p90":      0.0,
-                        "p75":      0.0,
-                        "p50":      value,
-                        "p25":      0.0,
-                        "stddev":   0.0,
-                        "recv":     0,
-                }
-                items.append(item)
+        start = time.time()
+        P = LD.FAQ(OWD, LOAD)
+        end   = time.time()
 
-            LD.owdi(i, items)
-            L.record(f"ROW: {i + 1}/{len(workers)}")
+        L.debug(message=f"P: \n{LD.to_string(P)}")
+        L.log(f"LEMONDROP TOOK {end - start} SECONDS")
 
-        narr, diff = LD.solve(workers)
-        tree = Tree(name="LEMON", root=narr[0], fanout=F, depth=D, arr=narr[1:])
-
-        L.log(f"LEMONDROP TOOK {diff} SECONDS")
-        L.log(f"TREE: {tree}")
-
-        assert len(narr)    == K
-        assert tree.depth   == D
-        assert tree.fanout  == F
-        assert tree.root.id == narr[0]
+        assert np.all(np.sum(P, axis=0) == 1)
+        assert np.all(np.sum(P, axis=1) == 1)
+        assert np.all((P == 0) | (P == 1))
