@@ -68,13 +68,14 @@ def runs(args):
     keys  = [ "p90", "heuristic" ]
     # keys  = [ "p90", "p75", "p50", "heuristic" ]
 
-    if args.mode == "lemondrop":
-        runs.append(run(name="LEMON", key="p90", args=args))
-    else: 
+    if args.mode == "default":
         for name in names:
             for key in keys:
                 r = run(name, key, args)
                 runs.append(r)
+
+    if args.mode == "lemondrop":
+        runs.append(run(name="LEMON", key="p90", args=args))
 
     return runs
 

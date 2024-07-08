@@ -54,7 +54,8 @@ main() {
         fi
     
         echo ${command}
-        ${command} -v
+        # ${command} -v
+        ${command}
 
         echo "RET: ${?}"
     popd

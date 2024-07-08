@@ -11,6 +11,11 @@ from queue import Queue
 N0_ADDR=f"localhost:7091"
 N1_ADDR=f"localhost:7090"
 
+MAP = {
+    N0_ADDR: "NODE0",
+    N1_ADDR: "NODE1",
+}
+
 L = Logger()
 
 class TestNodeClass:
@@ -32,7 +37,7 @@ class TestNodeClass:
         assert mtx == mrx
 
     def sender(self):
-        N = Node(name="sender", stype=zmq.REQ)
+        N = Node(name="sender", addr=N0_ADDR, stype=zmq.REQ, map=MAP)
         N.socket.setsockopt(zmq.RCVTIMEO, 5000)
         L.log(message=f"SENDER NODE UP")
         
@@ -41,7 +46,7 @@ class TestNodeClass:
 
         s = 10000 
         c = Command(addr=N1_ADDR, data=[f"STRING_{i}" for i in range(s)])
-        m = N.message(src=N0_ADDR, dst=N1_ADDR, t=Type.COMMAND, mdata=Metadata(command=c))
+        m = N.message(dst=N1_ADDR, t=Type.COMMAND, mdata=Metadata(command=c))
         self.Q.put(m)
 
         try: 
@@ -61,11 +66,11 @@ class TestNodeClass:
             return
 
     def receiver(self):
-        N = Node("receiver", stype=zmq.REP)
+        N = Node("receiver", addr=N1_ADDR, stype=zmq.REP, map=MAP)
         N.socket.setsockopt(zmq.RCVTIMEO, 5000)
         L.log(message=f"RECEIVER NODE UP")
 
-        N.bind(protocol="tcp", ip=N1_ADDR.split(":")[0], port=N1_ADDR.split(":")[1])
+        N.bind()
         L.log(message=f"RECEIVER NODE BOUND")
 
         try: 

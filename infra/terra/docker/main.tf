@@ -26,7 +26,7 @@ locals {
 
 module "default" {
     source  = "./modules/default/"
-    count   = (var.mode == "default") ? 1 : 0
+    count   = (var.mode == "default" || var.mode == "lemondrop") ? 1 : 0
 
     addrs   = local.addrs
     names   = local.names
@@ -55,14 +55,4 @@ module "lemon" {
 
     addrs    = local.addrs
     commands = local.commands
-}
-
-module "lemondrop" {
-    source = "./modules/lemondrop/"
-    count = (var.mode == "lemondrop") ? 1 : 0
-
-    addrs    = local.addrs
-    names    = local.names
-    commands = local.commands
-    port     = local.port
 }

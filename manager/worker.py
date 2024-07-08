@@ -1,11 +1,12 @@
 from .message   import *
 from .types     import Logger
 from .node      import Node
-from .task      import Task, Parent, Mcast
+from .task      import Task, Parent, Mcast, Lemon
 
 import zmq
 import threading
 import subprocess
+import time
 
 from typing     import List, Dict, Tuple
 from threading  import Thread
@@ -19,19 +20,21 @@ class Worker():
         self.tasks: Dict[str, Tuple[Task, Thread]]      = {}
         self.L                                          = Logger(name=f"{name}:{ip}")
 
-        self.node.bind()
-        self.L.state(f"{name.upper()} UP")
-
     def run(self, job:Job):
-        self.L.log(message=f"RUNNING JOB[{job.id}:{job.addr}]")
+        self.L.log(message=f"STARTED JOB[{job.id}:{job.addr}]")
+        start = time.time()
         try:
             p = subprocess.Popen(
-                job.instr, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True
+                job.instr, 
+                shell=True, 
+                stdout=subprocess.PIPE, 
+                stderr=subprocess.PIPE, 
+                text=True
             )
             stdout, stderr = p.communicate()
             output = (stdout if stdout else stderr)
-    
             data = [ s for s in output.split("\n") if s ]
+
             job.pid = p.pid
             job.ret = int(p.returncode)
     
@@ -44,6 +47,8 @@ class Worker():
             job.data.extend(data)
             job.end = True
 
+        end = time.time()
+        self.L.log(message=f"FINISHED JOB[{job.id}:{job.addr}] TOOK {end - start} SECONDS")
         return job
 
     def scatter(self, arr:List[Command]) -> List[Job]:
@@ -84,7 +89,7 @@ class Worker():
                 if rjob.end: 
                     arr[i].CopyFrom(rjob)
                     completed[i] = True 
-                    self.L.log(message=f"GATHERED DEPENDENCY[{i}][{rjob.id}:{rjob.addr}]")
+                    self.L.log(message=f"GATHERED JOB[{i}][{rjob.id}:{rjob.addr}]")
         return
 
     def launch(self, task:Task):
@@ -101,6 +106,7 @@ class Worker():
     def schedule(self, command:Command):
         if   command.flag == Flag.PARENT: Constructor = Parent
         elif command.flag == Flag.MCAST:  Constructor = Mcast
+        elif command.flag == Flag.LEMON:  Constructor = Lemon
         else:                             raise RuntimeError()
 
         task              = Constructor()
@@ -145,6 +151,7 @@ class Worker():
         raise NotImplementedError()
 
     def start(self):
+        self.node.bind()
         while(True):
             m = self.node.recv_message()
             self.L.state(f"STATE[{Type.Name(m.type)}]")

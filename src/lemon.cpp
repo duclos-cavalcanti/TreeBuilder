@@ -18,6 +18,7 @@
 
 using json = nlohmann::json;
 
+std::vector<std::string> vaddrs;
 std::vector<std::vector<int64_t>> latencies;
 std::vector<int64_t> recvs;
 
@@ -54,6 +55,7 @@ typedef struct Config {
         }
     
         json j;
+
         f >> j;
         f.close();
 
@@ -61,13 +63,16 @@ typedef struct Config {
             fprintf(stderr, "The key 'addrs' does not exist or is not an array in %s\n", path.c_str());
             exit(EXIT_FAILURE);
         }
-    
-        std::vector<std::string> addrs = j["addrs"].get<std::vector<std::string>>();
-        latencies.resize(addrs.size());
-        recvs.resize(addrs.size(), 0);
 
-        for (size_t i = 0; i < addrs.size(); ++i) {
-            const auto& addr = addrs[i];
+        for (size_t i = 1; i < j["addrs"].size(); ++i) {
+            vaddrs.push_back(j["addrs"][i]);
+        }
+
+        latencies.resize(vaddrs.size());
+        recvs.resize(vaddrs.size(), 0);
+
+        for (size_t i = 0; i < vaddrs.size(); ++i) {
+            const auto& addr = vaddrs[i];
             if (addr != this->ip) {
                 this->addrs.push_back( socketaddr(addr, this->port) );
             } else {
@@ -222,8 +227,9 @@ void receiver(Config_t config) {
 void sender(Config_t config) {
     int sockfd;
     int cnt = 0, n, total = config.addrs.size();
-    auto step = 10;
-    auto packets = (2 * 1000) / (step);
+    auto step = 10; // milliseconds
+    auto duration = 120; // seconds
+    auto packets = (duration * 1000) / (step);
 
     if ( (sockfd = socket(AF_INET, SOCK_DGRAM, 0)) < 0 ) {
         fprintf(stderr, "Failed to create socket\n");
@@ -254,6 +260,10 @@ void sender(Config_t config) {
             if ( n < 0 ) {
                 fprintf(stderr, "Failed to send\n");
                 exit(EXIT_FAILURE);
+            } else {
+                if (config.verbose) {
+                    log("NODE: SENT[%4lu] AT TS=%lu TO [%d] %d\n", cnt, m.ts, j, config.addrs[j].sin_addr.s_addr);
+                }
             }
         }
         std::this_thread::sleep_for(std::chrono::milliseconds(step));
@@ -271,6 +281,7 @@ int output(std::vector<std::vector<int64_t>>& data, std::vector<int64_t>& recvs)
         for (size_t i = 0; i < data.size(); ++i) {
             double median = 0;
             if (data[i].size() != 0) median = get_percentile(data[i], 50);
+            fprintf(stdout, "%s\n", vaddrs[i].c_str());
             fprintf(stdout, "%lf\n", median);
             fprintf(stdout, "%lu\n", recvs[i]);
         }

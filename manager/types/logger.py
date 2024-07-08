@@ -36,8 +36,9 @@ class Formatter(logging.Formatter):
         self.CLEAR  = "\033[0m"
         self.FORMATS = {
             RECORD: self.GREEN  + self.FORMAT + self.CLEAR,
-            STATE:  self.GREY   + self.FORMAT + self.CLEAR,
+            STATE:  self.BLUE   + self.FORMAT + self.CLEAR,
             40:     self.RED    + self.FORMAT + self.CLEAR,
+            # ERROR = 40
         }
 
 

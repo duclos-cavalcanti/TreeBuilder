@@ -108,7 +108,7 @@ class TestTreeClass:
         fout  = 4 
         depth = 1
         tb  = TreeBuilder(arr=arr, depth=depth, fanout=fout)
-        ret = tb.parent(rate=10, duration=10, port=8080)
+        ret = tb.parent(id="ID", rate=10, duration=10, port=8080)
 
         string = ""
         for i,c in enumerate(ret.buf):

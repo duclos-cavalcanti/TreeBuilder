@@ -48,12 +48,12 @@ class Task(ABC):
         ret = False
         if self.job.ret != 0:
             ret = True
-            self.job.ClearField['data']
+            self.job.ClearField('data')
             self.job.data.append(self.job.addr)
 
         for d in self.deps:
             if d.ret != 0: 
-                if not ret: self.job.ClearField['data']
+                if not ret: self.job.ClearField('data')
                 self.job.data.append(d.addr)
                 ret = True
 
