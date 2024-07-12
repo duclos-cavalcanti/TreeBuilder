@@ -62,9 +62,20 @@ class TestLemonDropClass:
         start = time.time()
         P = LD.FAQ(OWD, LOAD)
         end   = time.time()
+        M = LD.mapping(P, workers)
 
-        L.debug(message=f"P: \n{LD.to_string(P)}")
+
         L.log(f"LEMONDROP TOOK {end - start} SECONDS")
+        L.log(message=f"P:\n{LD.to_string(P)}")
+
+        for i in range(len(M)):
+            L.log(f"M_{i} => {M[i]}")
+
+        for i in range(K):
+            idx = np.argmax(P[i])
+            worker = workers[idx]
+            L.log(f"NODE_{i} => VM[{idx}]: {worker}")
+
 
         assert np.all(np.sum(P, axis=0) == 1)
         assert np.all(np.sum(P, axis=1) == 1)
