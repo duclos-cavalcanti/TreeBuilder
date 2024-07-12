@@ -46,6 +46,10 @@ lemon:
 image:
 	@python3 -m deploy -a build -i docker
 
+lemondrop:
+	@python3 -m deploy -a plan -i docker -m lemondrop -s 10 -d 2 -f 2 -p 9092
+	@python3 -m deploy -a deploy -i docker
+
 docker:
 	@python3 -m deploy -a plan -i docker -s 10 -p 9092 -r 5000 -t 3 -d 2
 	@python3 -m deploy -a deploy -i docker
