@@ -33,14 +33,15 @@ def manager(args):
 
             # lemondrop
             if run.data["name"] == "LEMON":
-                LD = LemonDrop(N=len(M.workers), K=run.tree.nmax, D=run.tree.dmax, F=run.tree.fanout)
+                OWD = []
                 for i,result in enumerate(M.lemon(run)): 
-                    LD.owdi(i, result["items"])
+                    OWD.append([ item["p50"] for item in result["items"] ])
                     L.record(f"ROW: {i}/{len(M.workers)}")
 
-                narr, diff = LD.solve(M.workers)
-                run.tree.n_add(narr)
-                L.record(f"LEMON TREE[{run.tree.name}] SELECTION TOOK {diff} seconds")
+                LD = LemonDrop(OWD=OWD, VMS=M.workers, K=run.tree.nmax, D=run.tree.dmax, F=run.tree.fanout)
+                mapping, P, converged, elapsed = LD.solve()
+                run.tree.n_add([ m[1] for m in mapping ])
+                L.record(f"LEMON TREE[{run.tree.name}] CONVERGENCE={converged} TOOK {elapsed} SECONDS")
 
 
             # heuristic

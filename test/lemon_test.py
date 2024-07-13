@@ -54,27 +54,18 @@ class TestLemonDropClass:
             [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
         ])
 
-        LD = LemonDrop(N=N, K=K, D=D, F=F)
-        LD.OWD  = OWD
-        LD.LOAD = LOAD
-        LD.check(OWD, LOAD)
+        LD = LemonDrop(OWD=OWD.tolist(), VMS=workers, K=K, D=D, F=F)
 
-        start = time.time()
-        P = LD.FAQ(OWD, LOAD)
-        end   = time.time()
-        M = LD.mapping(P, workers)
+        L.info(message=f"OWD: \n{LD.to_string(OWD)}")
+        L.info(message=f"LOAD:\n{LD.to_string(LOAD)}")
+        assert LOAD.all() == LD.LOAD.all()
 
+        mapping, P, converged, elapsed = LD.solve()
 
-        L.log(f"LEMONDROP TOOK {end - start} SECONDS")
-        L.log(message=f"P:\n{LD.to_string(P)}")
-
-        for i in range(len(M)):
-            L.log(f"M_{i} => {M[i]}")
-
+        L.log(f"LEMONDROP TOOK {elapsed} SECONDS: [CONVERGED={converged}]")
         for i in range(K):
-            idx = np.argmax(P[i])
-            worker = workers[idx]
-            L.log(f"NODE_{i} => VM[{idx}]: {worker}")
+            idx, addr = mapping[i]
+            L.log(f"NODE_{i} => VM[{idx}]: {addr}")
 
 
         assert np.all(np.sum(P, axis=0) == 1)
