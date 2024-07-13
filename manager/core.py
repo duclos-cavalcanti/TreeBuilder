@@ -40,7 +40,8 @@ def manager(args):
 
                 LD = LemonDrop(OWD=OWD, VMS=M.workers, K=run.tree.nmax, D=run.tree.dmax, F=run.tree.fanout)
                 mapping, P, converged, elapsed = LD.solve()
-                run.tree.n_add([ m[1] for m in mapping ])
+                run.tree.root.id = mapping[0][1]
+                run.tree.n_add([ m[1] for m in mapping[1:] ])
                 L.record(f"LEMON TREE[{run.tree.name}] CONVERGENCE={converged} TOOK {elapsed} SECONDS")
 
 

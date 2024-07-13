@@ -44,6 +44,12 @@ class TreeDict(TypedDict):
     root: str 
     nodes: List[str]
 
+class TimersDict(TypedDict):
+    build: float
+    convergence: float
+    perf:  float
+    total: float
+
 class RunDict(TypedDict):
     name:str 
     strategy: StrategyDict
@@ -52,3 +58,4 @@ class RunDict(TypedDict):
     pool: List[str] 
     stages: List[ResultDict]
     perf: ResultDict
+    timers: TimersDict

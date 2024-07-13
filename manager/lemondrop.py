@@ -73,7 +73,7 @@ class LemonDrop():
 
         return M, P, converged, elapsed
 
-    def FAQ(self, OWD:np.ndarray, LOAD:np.ndarray, epsilon=1e-4, max_i=100) -> Tuple[np.ndarray, bool, float]:
+    def FAQ(self, OWD:np.ndarray, LOAD:np.ndarray, epsilon=1e-4, max_i=1000) -> Tuple[np.ndarray, bool, float]:
         """
         1. Initialize P (doubly stochastic matrix).
         2. While a stopping condition isn't met:
