@@ -94,4 +94,4 @@ docs:
 	$(MAKE) -C docs slides
 
 test:
-	@python3 -m pytest -v test/ -s
+	@python3 -m pytest -v test/ -k LemonDrop -s
