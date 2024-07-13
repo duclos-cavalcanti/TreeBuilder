@@ -15,10 +15,6 @@ class LemonDrop():
         self.LOAD   = self.load(D, F)
         self.L      = Logger()
 
-    def to_string(self, matrix:np.ndarray):
-        ret = "\n".join(str(row) for row in matrix)
-        return f"{ret}"
-
     def load(self, D:int, F:int) -> np.ndarray:
         mat  = np.zeros((self.K, self.K), dtype=float)
         pmat = np.zeros((self.N, self.N), dtype=float)
@@ -43,7 +39,7 @@ class LemonDrop():
             OWD[i, :] = row
         return OWD
 
-    def solve(self) -> Tuple[List[Tuple[int, str]], np.ndarray, bool, float]:
+    def solve(self, epsilon=1e-4, max_i=1000) -> Tuple[List[Tuple[int, str]], np.ndarray, bool, float]:
         if self.OWD.shape != (self.N, self.N):
             raise RuntimeError(f"OWD SHAPE[{self.OWD.shape}] not ({self.N}, {self.N})")
 
@@ -53,12 +49,14 @@ class LemonDrop():
         if self.LOAD.shape != (self.N, self.N):
             raise RuntimeError(f"LOAD SHAPE[{self.LOAD.shape}] not ({self.N}, {self.N})")
 
-        self.L.debug(message=f"LEMONDROP:")
-        self.L.debug(message=f"OWD: \n{self.to_string(self.OWD)}")
-        self.L.debug(message=f"LOAD:\n{self.to_string(self.LOAD)}")
+        data = {}
+        data["OWD"]  = str(self.OWD.tolist())
+        data["LOAD"] = str(self.LOAD.tolist())
+
+        self.L.debug(message=f"LEMONDROP PRE-SOLVE:", data=data)
 
         M = []
-        P, converged, elapsed = self.FAQ(self.OWD, self.LOAD)
+        P, converged, elapsed = self.FAQ(self.OWD, self.LOAD, epsilon, max_i)
 
         if P.shape != (self.N, self.N):
             raise RuntimeError(f"P SHAPE[{P.shape}] not ({self.N}, {self.N})")
@@ -68,8 +66,9 @@ class LemonDrop():
             value = self.VMS[idx]
             M.append((idx, value))
 
-        self.L.debug(message=f"P: \n{self.to_string(P)}")
-        self.L.debug(message=f"M: \n{M}")
+        data["P"] = str(P.tolist())
+        data["M"] = str(M)
+        self.L.debug(message=f"LEMONDROP POST-SOLVE:", data=data)
 
         return M, P, converged, elapsed
 
@@ -86,7 +85,10 @@ class LemonDrop():
 
         Conditions: 
             thresh/epsilon = 1e-6 | Examples: 0.1, 1e-3, 1e-6
-            max iterations = 100, 1000 or 10000
+            max_i = 100, 1000 or 10000
+
+            ML: epsilon is chosen as 1e-5, 1e-6 and max_i as 100s or 1000s
+            Structural Optimization: epsilon might be 1e-3 with a few hundred iters
         """
         # Λ = LOAD_MATRIX: LOAD
         # Δ = OWD_MATRIX:  OWD

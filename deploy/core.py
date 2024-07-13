@@ -1,5 +1,5 @@
 from .utils  import *
-from manager import Timer, TreeBuilder, RunDict, StrategyDict, ParametersDict, TreeDict, ResultDict
+from manager import Timer, TreeBuilder, RunDict, StrategyDict, LemonDict, ParametersDict, TreeDict, ResultDict, TimersDict
 
 import os
 import json
@@ -29,9 +29,12 @@ def run(name:str, key:str, args):
             "name": name,
             "strategy": StrategyDict({
                 "key": key, 
-                "expr": {},
                 "reverse": name == "WORST",
                 "rand":    name == "RAND",
+                "lemon": LemonDict({
+                    "epsilon": 1e-4, 
+                    "max_i": 1000
+                 })
             }), 
             "parameters": ParametersDict({
                 "hyperparameter": args.fanout * 2,
@@ -58,6 +61,12 @@ def run(name:str, key:str, args):
                 "items": [],
                 "selected": []
     
+            }), 
+            "timers": TimersDict({
+                    "build": 0.0,
+                    "convergence": 0.0,
+                    "perf": 0.0,
+                    "total": 0.0,
             })
     })
     return r
@@ -73,6 +82,7 @@ def runs(args):
             for key in keys:
                 r = run(name, key, args)
                 runs.append(r)
+        runs.append(run(name="LEMON", key="p90", args=args))
 
     if args.mode == "lemondrop":
         runs.append(run(name="LEMON", key="p90", args=args))

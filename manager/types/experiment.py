@@ -5,6 +5,8 @@ from .tree      import Tree
 
 from typing     import List
 
+import time
+
 class Run():
     def __init__(self, run:RunDict, root:str, nodes:List, seed:int):
         self.data:RunDict = {
@@ -14,7 +16,13 @@ class Run():
                 "tree": TreeDict(run["tree"]),
                 "pool": [n for n in nodes], 
                 "stages": [],
-                "perf": ResultDict(run["perf"])
+                "perf": ResultDict(run["perf"]),
+                "timers": TimersDict({
+                    "build": 0.0,
+                    "convergence": 0.0,
+                    "perf": 0.0,
+                    "total": 0.0,
+                })
         }
         self.pool       = Pool([n for n in nodes], run["parameters"]["hyperparameter"], seed)
         self.tree       = Tree(name=run["name"], 

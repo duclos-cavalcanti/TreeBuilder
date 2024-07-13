@@ -6,6 +6,10 @@ from manager import *
 L = Logger()
 
 class TestLemonDropClass:
+    def tostring(self, matrix:np.ndarray):
+        ret = "\n".join(str(row) for row in matrix)
+        return f"{ret}"
+
     def test_a(self):
         workers = [ 
                    "10.1.1.1", 

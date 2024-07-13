@@ -24,11 +24,15 @@ class ResultDict(TypedDict):
     items: List[ItemDict]
     selected: List[str]
 
+class LemonDict(TypedDict):
+    epsilon: float 
+    max_i: int
+
 class StrategyDict(TypedDict):
     key: str 
-    expr: dict
     reverse: bool 
     rand: bool 
+    lemon: LemonDict
 
 class ParametersDict(TypedDict):
     hyperparameter: int 
