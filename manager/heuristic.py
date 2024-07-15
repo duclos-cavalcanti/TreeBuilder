@@ -49,7 +49,7 @@ class Heuristic():
         self.flag                  = job.flag
         self.data:ResultDict       = data
 
-        if strategy["key"] not in EXPRESSIONS:
+        if strategy["key"] not in EXPRESSIONS and strategy["key"] != "NONE":
             raise RuntimeError(f"Invalid Key: {strategy['key']}")
 
     def process(self, key:str=""):
