@@ -157,7 +157,7 @@ class Plotter():
 
         sel     = [ self.A.map(s) for s in result["selected"] ]
 
-        clabels  = ["SCORE", "90(%)-OWD", "75(%)-OWD", "50(%)-OWD", "STDDEV", "RX(%)"]
+        clabels  = ["SCORE", "90(%)-OWD", "50(%)-OWD", "STDDEV", "RX(%)", "TIMERS(sec)"]
         rlabels  = [ self.A.map(d["addr"]) for d in result["items"] ]
 
         rowcolors   = ['white'] * len(result["items"])
@@ -171,19 +171,22 @@ class Plotter():
             if addr in sel:
                 if key in KEYS:
                     cellcolors[i][0] = self.pargs.red
-                    cellcolors[i][KEYS.index(key) + 1] = self.pargs.red
-                else:
+                    cellcolors[i][1] = self.pargs.red
+                elif key == "heuristic":
                     cellcolors[i][0] = self.pargs.red
-                    cellcolors[i][KEYS.index("p90")    + 1] = self.pargs.red
-                    cellcolors[i][KEYS.index("stddev") + 1] = self.pargs.red
+                    cellcolors[i][1] = self.pargs.red
+                    cellcolors[i][-3] = self.pargs.red
 
             perc = 100 * (float(d["recv"]/total))
             data.append([ rnd(float(score)),
                           d["p90"], 
-                          d["p75"], 
                           d["p50"], 
                           rnd(d['stddev']),
-                          rnd(perc)])
+                          rnd(perc), 
+                         ""])
+
+        for i, (k,v) in enumerate(run["timers"]):
+            data[i][-1] = f"{k.upper()}={rnd(v)}"
 
         th = ( 0.075 * (len(rlabels)) )
         ret = table(ax, 
@@ -215,7 +218,7 @@ class Plotter():
 
         sel     = [ self.A.map(s) for s in result["selected"] ]
 
-        clabels  = ["SCORE", "90(%)-OWD", "75(%)-OWD", "50(%)-OWD", "STDDEV", "RX(%)"]
+        clabels  = ["SCORE", "90(%)-OWD", "50(%)-OWD", "STDDEV", "RX(%)", "TIMERS(sec)"]
         rlabels  = [ self.A.map(d["addr"]) for d in result["items"] ]
 
         rowcolors   = ['white'] * len(result["items"])
@@ -238,10 +241,13 @@ class Plotter():
             perc = 100 * (float(d["recv"]/total))
             data.append([ rnd(float(score)),
                           d["p90"], 
-                          d["p75"], 
                           d["p50"], 
                           rnd(d['stddev']),
-                          rnd(perc)])
+                          rnd(perc), 
+                         ""])
+
+        for i, (k,v) in enumerate(run["timers"]):
+            data[i][-1] = f"{k.upper()}={rnd(v)}"
 
         th = ( 0.075 * (len(rlabels)) )
         ret = table(ax, 
@@ -319,11 +325,12 @@ class Plotter():
             # plt.tight_layout()
             yield plt,fig
 
-    def performance(self, G, run:RunDict):
+    def performance(self, G, run:RunDict, perf:ResultDict, iter:int):
         R = Run(run, run['tree']['root'], [ p.split(":")[0] for p in run['pool'] ], 1)
 
         name     = R.data['name']
         key      = R.data['strategy']['key']
+        params   = R.data['parameters']
         rate     = R.data['parameters']['rate']
         duration = R.data['parameters']['duration']
         K        = R.data['parameters']['hyperparameter']
@@ -333,7 +340,7 @@ class Plotter():
         fanout   = R.data['tree']['fanout']
         N        = R.data['tree']['n']
         cloud    = self.A.schema['infra'].upper()
-        sel      = [self.A.map(s) for s in run["perf"]["selected"]]
+        sel      = [self.A.map(s) for s in perf["selected"]]
         cmap     = ([self.pargs.blue] * len(G.nodes()))
 
         for i,node in enumerate(G.nodes()):
@@ -342,17 +349,23 @@ class Plotter():
 
         # fig, ax1 = plt.subplots(figsize=(self.pargs.w, self.pargs.h))
         fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(self.pargs.w, self.pargs.h))
-        title = fig.suptitle(f"{name} Tree - Performance - N={N}, D={depth}, F={fanout}, K={K}, KEY={key}, P={P}, {cloud}", fontsize=self.pargs.tfont, fontweight='bold')
+        title = fig.suptitle(f"{name} Tree - Performance[i={iter}] - N={N}, D={depth}, F={fanout}, K={K}, KEY={key}, P={P}, {cloud}", fontsize=self.pargs.tfont, fontweight='bold')
         # self.draw_subtitle(f"CLOUD: {cloud}")
         ax1.axis("off")
         ax2.axis("off")
+
+        if R.data['name'] == "LEMON":
+            epsilon = params["epsilon"]
+            max_i   = params["max_i"]
+            conv    = params["converge"]
+            self.draw_subtitle(f"EPS={epsilon}, ITER={max_i}, C={conv}")
 
         # gs = fig.add_gridspec(2, 1, height_ratios=[0.6, 0.4])  # 60% for the first subplot, 40% for the second
         # ax1 = fig.add_subplot(gs[0])
         # ax2 = fig.add_subplot(gs[1])
 
         # table
-        self.performance_table(run, run["perf"], ax1)
+        self.performance_table(run, perf, ax1)
 
         # graph
         self.draw_graph(G, ax2, cmap)
@@ -459,10 +472,12 @@ class Plotter():
 
             # plot tree performance
             print(f"PLOTTING TREE[{name}:{key}] PERF")
+
             G = self.A.graph(run)
-            plt,fig = self.performance(G, run)
-            plt.savefig(f"{dir}/TREE-{name}-{key}-PERF.png", format="png")
-            plt.close(fig)
+            for i, perf in enumerate(run["perf"]):
+                plt,fig = self.performance(G, run, perf, i + 1)
+                plt.savefig(f"{dir}/TREE-{name}-{key}-PERF-{i}.png", format="png")
+                plt.close(fig)
 
             trees.append(G)
             runs.append(run)

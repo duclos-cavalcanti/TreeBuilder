@@ -22,22 +22,6 @@ EXPRESSIONS = {
 
 class Heuristic():
     def __init__(self, strategy:StrategyDict, command:Command, job:Job):
-        self.strategy:StrategyDict = strategy
-        self.flag = job.flag
-        self.data:ResultDict = {
-                "root": job.addr,
-                "key": self.strategy["key"],
-                "select": command.select, 
-                "rate": command.rate,
-                "duration": command.duration,
-                "items": self.items(job),
-                "selected": []
-        }
-
-        if strategy["key"] not in EXPRESSIONS:
-            raise RuntimeError(f"Invalid Key: {strategy['key']}")
-
-    def items(self, job:Job) -> List[ItemDict]:
         items = []
         for j,i in enumerate(range(0, len(job.floats), 5)):
             item: ItemDict = {
@@ -51,7 +35,22 @@ class Heuristic():
             }
             items.append(item)
 
-        return items
+        data:ResultDict = {
+                "root": job.addr,
+                "key": strategy["key"],
+                "select": command.select, 
+                "rate": command.rate,
+                "duration": command.duration,
+                "items": items,
+                "selected": []
+        }
+
+        self.strategy:StrategyDict = strategy
+        self.flag                  = job.flag
+        self.data:ResultDict       = data
+
+        if strategy["key"] not in EXPRESSIONS:
+            raise RuntimeError(f"Invalid Key: {strategy['key']}")
 
     def process(self, key:str=""):
         key     = self.data["key"] if not key else key

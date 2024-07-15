@@ -9,12 +9,6 @@ class ItemDict(TypedDict):
     stddev: float 
     recv: int
 
-class Parameters(TypedDict):
-    select: int 
-    rate: int
-    duration: int
-    packets: int
-
 class ResultDict(TypedDict):
     root: str
     key:  str
@@ -24,20 +18,17 @@ class ResultDict(TypedDict):
     items: List[ItemDict]
     selected: List[str]
 
-class LemonDict(TypedDict):
-    epsilon: float 
-    max_i: int
-
 class StrategyDict(TypedDict):
     key: str 
     reverse: bool 
-    rand: bool 
-    lemon: LemonDict
 
 class ParametersDict(TypedDict):
     hyperparameter: int 
     rate: int 
     duration: int 
+    epsilon: float 
+    max_i: int
+    converge: bool
 
 class TreeDict(TypedDict):
     name: str 
@@ -51,7 +42,7 @@ class TreeDict(TypedDict):
 class TimersDict(TypedDict):
     build: float
     convergence: float
-    perf:  float
+    perf:  List[float]
     total: float
 
 class RunDict(TypedDict):
@@ -61,5 +52,5 @@ class RunDict(TypedDict):
     tree: TreeDict
     pool: List[str] 
     stages: List[ResultDict]
-    perf: ResultDict
+    perf: List[ResultDict]
     timers: TimersDict

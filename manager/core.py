@@ -43,9 +43,10 @@ def manager(args):
                     L.record(f"LEMON RESULT: {j + 1}/{len(M.workers)}")
 
                 LD = LemonDrop(OWD=buf, VMS=M.workers, K=run.tree.nmax, D=run.tree.dmax, F=run.tree.fanout)
-                mapping, P, converged, elapsed = LD.solve(epsilon=run.data["strategy"]["lemon"]["epsilon"], max_i=run.data["strategy"]["lemon"]["max_i"])
-                run.data["timers"]["convergence"] = elapsed
-                run.tree.root.id = mapping[0][1]
+                mapping, P, converged, elapsed = LD.solve(epsilon=run.data["parameters"]["epsilon"], max_i=run.data["parameters"]["max_i"])
+                run.data["timers"]["convergence"]  = elapsed
+                run.data["parameters"]["converge"] = converged
+                run.tree.root.id                   = mapping[0][1]
                 run.tree.n_add([ m[1] for m in mapping[1:] ])
                 L.record(f"LEMON TREE[{run.tree.name}] CONVERGENCE={converged} TOOK {elapsed} SECONDS")
 
@@ -64,10 +65,11 @@ def manager(args):
             run.data["tree"] = run.tree.get()
             
             # evaluate tree
-            result, elapsed = M.evaluate(run)
-            run.data["perf"]            = result
-            run.data["timers"]["perf"]  = elapsed
-            L.record(f"TREE[{run.tree.name}] PERFORMANCE[{result['selected'][0]}]: {result['items'][0]['p90']}")
+            for i in range(len(run.data["perf"])):
+                result, elapsed = M.evaluate(run)
+                run.data["perf"][i]            = result
+                run.data["timers"]["perf"][i]  = elapsed
+                L.record(f"TREE[{run.tree.name}] PERFORMANCE[{result['selected'][0]}] I={i + 1}: {result['items'][0]['p90']}")
             
 
             # record run

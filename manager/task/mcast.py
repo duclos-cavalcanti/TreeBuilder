@@ -98,5 +98,5 @@ class Mcast(Task):
         H = Heuristic(run.data["strategy"], self.command, job)
         H.process(key="p90")
 
-        self.L.debug(message=f"TASK[{Flag.Name(job.flag)}][{job.id}:{job.addr}]", data=H.data)
+        self.L.debug(message=f"TASK EVAL[{Flag.Name(job.flag)}][{job.id}:{job.addr}]", data=H.data)
         return H.data

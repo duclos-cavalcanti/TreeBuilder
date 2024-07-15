@@ -95,5 +95,5 @@ class Parent(Task):
         H = Heuristic(run.data["strategy"], self.command, job)
         H.process()
 
-        self.L.debug(message=f"TASK PROCESS[{Flag.Name(job.flag)}][{job.id}:{job.addr}]", data=H.data)
+        self.L.debug(message=f"TASK EVAL[{Flag.Name(job.flag)}][{job.id}:{job.addr}]", data=H.data)
         return H.data

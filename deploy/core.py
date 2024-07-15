@@ -1,5 +1,5 @@
 from .utils  import *
-from manager import Timer, TreeBuilder, RunDict, StrategyDict, LemonDict, ParametersDict, TreeDict, ResultDict, TimersDict
+from manager import Timer, TreeBuilder, RunDict, StrategyDict, ParametersDict, TreeDict, ResultDict, TimersDict
 
 import os
 import json
@@ -30,16 +30,14 @@ def run(name:str, key:str, args):
             "strategy": StrategyDict({
                 "key": key, 
                 "reverse": name == "WORST",
-                "rand":    name == "RAND",
-                "lemon": LemonDict({
-                    "epsilon": 1e-4, 
-                    "max_i": 1000
-                 })
             }), 
             "parameters": ParametersDict({
                 "hyperparameter": args.fanout * 2,
                 "rate": args.rate, 
                 "duration": args.duration,
+                "epsilon": 1e-4, 
+                "max_i": 1000,
+                "converge": False
             }),
             "tree": TreeDict({
                 "name": "", 
@@ -52,7 +50,7 @@ def run(name:str, key:str, args):
             }), 
             "pool": [],
             "stages": [],
-            "perf": ResultDict({
+            "perf":  [ ResultDict({
                 "root": "",
                 "key": key,
                 "select": 0, 
@@ -60,12 +58,11 @@ def run(name:str, key:str, args):
                 "duration": args.duration,
                 "items": [],
                 "selected": []
-    
-            }), 
+            }) for _ in range(args.num) ], 
             "timers": TimersDict({
                     "build": 0.0,
                     "convergence": 0.0,
-                    "perf": 0.0,
+                    "perf": [ 0.0 for _ in range(args.num) ],
                     "total": 0.0,
             })
     })
@@ -73,19 +70,20 @@ def run(name:str, key:str, args):
 
 def runs(args):
     runs = []
-    names = [ "BEST", "WORST", "RAND"]
-    keys  = [ "p90", "heuristic" ]
-    # keys  = [ "p90", "p75", "p50", "heuristic" ]
+    names = [ "BEST", "WORST"]
+    keys  = [ "p90", "p50", "heuristic" ]
 
     if args.mode == "default":
         for name in names:
             for key in keys:
                 r = run(name, key, args)
                 runs.append(r)
-        runs.append(run(name="LEMON", key="p90", args=args))
+
+        runs.append(run(name="RAND",  key="NONE", args=args))
+        runs.append(run(name="LEMON", key="NONE", args=args))
 
     if args.mode == "lemondrop":
-        runs.append(run(name="LEMON", key="p90", args=args))
+        runs.append(run(name="LEMON", key="NONE", args=args))
 
     return runs
 

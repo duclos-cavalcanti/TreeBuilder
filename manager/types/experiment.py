@@ -16,11 +16,11 @@ class Run():
                 "tree": TreeDict(run["tree"]),
                 "pool": [n for n in nodes], 
                 "stages": [],
-                "perf": ResultDict(run["perf"]),
+                "perf": [ ResultDict(perf) for perf in run["perf"] ],
                 "timers": TimersDict({
                     "build": 0.0,
                     "convergence": 0.0,
-                    "perf": 0.0,
+                    "perf": [ 0.0 for _ in range(len(run["perf"])) ],
                     "total": 0.0,
                 })
         }

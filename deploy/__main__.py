@@ -76,6 +76,14 @@ def parse():
     )
 
     arg_def.add_argument(
+        "-n", "--number",
+        type=int,
+        default=5,
+        required=False,
+        dest="num",
+    )
+
+    arg_def.add_argument(
         "-p", "--port",
         type=int,
         default=9091,

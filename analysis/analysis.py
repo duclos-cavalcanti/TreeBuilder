@@ -80,11 +80,26 @@ class Analyzer():
         G = nx.DiGraph()
         G.name = f"{run['name']}-{run['strategy']['key']}"
         G.add_node(self.map(root))
-        for i, result in enumerate(run['stages']):
-            parent   = self.map(result['root'])
-            children = [ self.map(s) for s in result['selected'] ]
-        
-            for child in children:
-                G.add_edge(parent, child) 
+
+        if len(run['stages']) > 0:
+            for i, result in enumerate(run['stages']):
+                parent   = self.map(result['root'])
+                children = [ self.map(s) for s in result['selected'] ]
+            
+                for child in children:
+                    G.add_edge(parent, child) 
+
+        else:
+            parents = [ self.map(root) ]
+            nodes   = run['tree']['nodes'][1:]
+            
+            for i in range(0, len(nodes), run['tree']['fanout']):
+                p = parents[0]
+                parents.pop(0)
+            
+                for j in range(run['tree']['fanout']):
+                    child = self.map(nodes[i + j])
+                    G.add_edge(p, child) 
+                    parents.append(child)
 
         return G
