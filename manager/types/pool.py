@@ -29,7 +29,7 @@ class Pool():
         self.pool.clear()
         self.pool.extend([b for b in self.base])
 
-    def select(self, pool:Optional[List]):
+    def select(self, pool:Optional[List]=None):
         if pool is None: pool = self.pool
         idx = self.rng.randint(0, len(pool) - 1)
         el = pool[idx]

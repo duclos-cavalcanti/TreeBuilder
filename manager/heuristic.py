@@ -7,17 +7,16 @@ import heapq
 
 KEYS = [
     "p90",
-    "p75",
     "p50",
     "stddev",
 ]
 
 EXPRESSIONS = {
     "p90":          lambda x, k="p90": x[k],
-    "p75":          lambda x, k="p75": x[k],
     "p50":          lambda x, k="p50": x[k],
     "stddev":       lambda x, k="stddev": x[k],
-    "heuristic":    lambda x: x["p90"]*0.3 + x["stddev"]*0.7
+    "heuristic":    lambda x: x["p90"]*0.3 + x["stddev"]*0.7,
+    "NONE":         lambda x, k="p90": x[k],
 }
 
 class Heuristic():

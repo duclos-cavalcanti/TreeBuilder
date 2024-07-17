@@ -3,7 +3,7 @@ import numpy as np
 
 import csv
 
-from manager import Run, RunDict
+from manager import Run, RunDict, ResultDict
 from typing import List
 
 class UDP():
@@ -49,6 +49,26 @@ class Analyzer():
     def map(self, addr:str):
         return self.M[addr.split(":")[0]]
 
+    def worst(self, perf1:List[ResultDict], perf2:List[ResultDict]):
+        i       = 0 
+        j       = 0
+        max     = 0
+
+        for idx, perf in enumerate(perf1):
+            latency = perf["items"][0]["p90"]
+            if latency > max: 
+                max = latency
+                i   = idx
+
+        max     = 0
+        for idx, perf in enumerate(perf2):
+            latency = perf["items"][0]["p90"]
+            if latency > max: 
+                max = latency
+                j   = idx
+        
+        return i, j
+
     def pool(self, pool):
         spool = sorted([int(p.split('_')[1]) for p in pool])
         ret = []
@@ -78,7 +98,10 @@ class Analyzer():
     def graph(self, run:RunDict):
         root    = run["tree"]["root"].split(":")[0]
         G = nx.DiGraph()
-        G.name = f"{run['name']}-{run['strategy']['key']}"
+        if run["name"] == "LEMON" or run["name"] == "RAND":
+            G.name = f"{run['name']}"
+        else:
+            G.name = f"{run['name']}-{run['strategy']['key']}"
         G.add_node(self.map(root))
 
         if len(run['stages']) > 0:

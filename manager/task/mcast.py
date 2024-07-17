@@ -1,5 +1,5 @@
 from ..message      import *
-from ..types        import TreeBuilder, Run, StrategyDict, ResultDict
+from ..types        import TreeBuilder, Run, ResultDict
 from ..heuristic    import Heuristic
 from .task          import Task
 

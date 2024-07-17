@@ -91,6 +91,14 @@ def parse():
         dest="port",
     )
 
+    arg_def.add_argument(
+        "-c", "--choices",
+        type=int,
+        default=2,
+        required=False,
+        dest="choices",
+    )
+
     args = arg_def.parse_args()
     return args
 
@@ -102,6 +110,8 @@ def main():
 
     if not os.path.isdir(wdir): 
         raise RuntimeError(f"Not a directory: {wdir}")
+
+    assert args.choices >= 1
 
     match args.action:
         case "plan":    plan(args, wdir)

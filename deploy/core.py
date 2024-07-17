@@ -24,7 +24,7 @@ def compress(dst:str):
     command = f"{command} {dst}/project.tar.gz ."
     execute(command)
 
-def run(name:str, key:str, args):
+def run(name:str, key:str, args, epsilon:float=1e-4, max_i:int=1000):
     r:RunDict = RunDict({
             "name": name,
             "strategy": StrategyDict({
@@ -32,11 +32,13 @@ def run(name:str, key:str, args):
                 "reverse": name == "WORST",
             }), 
             "parameters": ParametersDict({
+                "num": args.num,
+                "choices": args.choices,
                 "hyperparameter": args.fanout * 2,
                 "rate": args.rate, 
                 "duration": args.duration,
-                "epsilon": 1e-4, 
-                "max_i": 1000,
+                "epsilon": epsilon, 
+                "max_i": max_i,
                 "converge": False
             }),
             "tree": TreeDict({
@@ -61,6 +63,7 @@ def run(name:str, key:str, args):
             }) for _ in range(args.num) ], 
             "timers": TimersDict({
                     "build": 0.0,
+                    "stages": [],
                     "convergence": 0.0,
                     "perf": [ 0.0 for _ in range(args.num) ],
                     "total": 0.0,
@@ -70,8 +73,9 @@ def run(name:str, key:str, args):
 
 def runs(args):
     runs = []
-    names = [ "BEST", "WORST"]
+    names = [ "BEST" ] # [ "BEST", "WORST" ]
     keys  = [ "p90", "p50", "heuristic" ]
+    hyperparameters = [(1e-4, 1000), (1e-5, 1000), (1e-5, 10000) ]
 
     if args.mode == "default":
         for name in names:
@@ -80,7 +84,10 @@ def runs(args):
                 runs.append(r)
 
         runs.append(run(name="RAND",  key="NONE", args=args))
-        runs.append(run(name="LEMON", key="NONE", args=args))
+
+        for tup in hyperparameters:
+            epsilon, max_i = tup
+            runs.append(run(name="LEMON", key="NONE", args=args, epsilon=epsilon, max_i=max_i))
 
     if args.mode == "lemondrop":
         runs.append(run(name="LEMON", key="NONE", args=args))

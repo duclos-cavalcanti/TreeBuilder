@@ -23,6 +23,8 @@ class StrategyDict(TypedDict):
     reverse: bool 
 
 class ParametersDict(TypedDict):
+    num: int
+    choices: int
     hyperparameter: int 
     rate: int 
     duration: int 
@@ -41,6 +43,7 @@ class TreeDict(TypedDict):
 
 class TimersDict(TypedDict):
     build: float
+    stages:  List[float]
     convergence: float
     perf:  List[float]
     total: float

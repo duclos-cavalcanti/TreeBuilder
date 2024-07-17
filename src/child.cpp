@@ -22,6 +22,7 @@ int output(std::vector<int64_t>& data, unsigned long cnt);
 typedef struct Config {
     std::string name, ip;
     int port, rate, duration;
+    float killfactor;
     bool verbose;
 
     bool valid(void) {
@@ -42,6 +43,7 @@ typedef struct Config {
               port(0),
               rate(0), 
               duration(0), 
+              killfactor(0.0),
               verbose(false)
               {};
 } Config_t;
@@ -61,7 +63,7 @@ void usage(int e) {
 int parse(int argc, char **argv) {
     int opt = 0;
     int ret = 0;
-    while ( (opt = getopt (argc, argv, "hi:p:t:d:r:n:v") ) != -1 ) {
+    while ( (opt = getopt (argc, argv, "hi:p:t:d:r:n:k:v") ) != -1 ) {
         switch (opt) {
         case 'h':
             usage(EXIT_SUCCESS);
@@ -85,6 +87,10 @@ int parse(int argc, char **argv) {
 
         case 'n':
             config.name = std::string{optarg};
+            break;
+
+        case 'k': 
+            config.killfactor = std::stof(optarg);
             break;
 
         case 'd':
@@ -112,8 +118,9 @@ int child(void) {
     int sz = sizeof(MsgUDP_t);
     uint64_t now;
     std::vector<int64_t> latencies;
+    float killfactor = ( config.killfactor == 0.0 ? 1.5 : config.killfactor );
 
-    auto deadline_ts = deadline(1.5  * config.duration);
+    auto deadline_ts = deadline((killfactor) * config.duration);
     auto t = timeout(1);
 
     if ( (sockfd = socket(AF_INET, SOCK_DGRAM, 0)) < 0 ) {

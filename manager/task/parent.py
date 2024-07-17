@@ -1,19 +1,17 @@
 from ..message      import *
-from ..types        import TreeBuilder, Run, StrategyDict, ResultDict
+from ..types        import TreeBuilder, Run, ResultDict
 from ..heuristic    import Heuristic
 from .task          import Task
 
 from typing     import List, Tuple
 
 class Parent(Task):
-    def build(self, run:Run) -> Command:
+    def build(self, run:Run, port:int=8080) -> Command:
         id      = self.generate()
         addr    = run.tree.next()
         arr     = [addr] + run.pool.slice()
         tb      = TreeBuilder(arr=arr, depth=1, fanout=len(arr[1:])) 
-        ret     = tb.parent(rate=run.data["parameters"]["rate"], 
-                            duration=run.data["parameters"]["duration"], 
-                            id=id)
+        ret     = tb.parent(rate=run.data["parameters"]["rate"], duration=run.data["parameters"]["duration"], id=id, port=port)
 
         c = Command()
         c.flag      = Flag.PARENT

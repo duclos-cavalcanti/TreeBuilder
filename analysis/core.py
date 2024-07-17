@@ -94,9 +94,8 @@ def process(args):
     if args.mode == "default":
         dir = isdir("analysis/data")
         dir = find(dir=dir, pattern=f"treefinder-{args.infra}-{args.prefix}")
-        dir = os.path.join(dir, "logs")
-        runs   = read(dir)
-        schema, map = load(dir, args.infra)
+        runs   = read(os.path.join(dir, "logs"))
+        schema, map = load(os.path.join(dir, "logs"), args.infra)
         A = Analyzer(runs, schema,  map)
         P = Plotter(A)
         P.plot(dir, view=args.view)

@@ -31,16 +31,18 @@ def manager(args):
         L.record(f"CONNECTED[{len(M.workers)}]")
 
         for i,run in enumerate(exp.runs):
-            L.state(f"STATE[RUN={run.data['name']}] {i + 1}/{total}")
+            RUN = f"[RUN={run.data['name']}] {i + 1}/{total}"
+            L.state(f"STATE{RUN}")
             start = time.time()
 
             # lemondrop
             if run.data["name"] == "LEMON":
                 for j,ret in enumerate(M.lemon(run, interval=10)): 
                     result, elapsed = ret
-                    run.data["timers"]["build"] = elapsed
                     buf.append([ item["p50"] for item in result["items"] ])
-                    L.record(f"LEMON RESULT: {j + 1}/{len(M.workers)}")
+                    L.record(f"LEMON RESULT: {j + 1}/{len(M.workers)} {RUN}")
+
+                run.data["timers"]["build"] = (time.time() - start)
 
                 LD = LemonDrop(OWD=buf, VMS=M.workers, K=run.tree.nmax, D=run.tree.dmax, F=run.tree.fanout)
                 mapping, P, converged, elapsed = LD.solve(epsilon=run.data["parameters"]["epsilon"], max_i=run.data["parameters"]["max_i"])
@@ -48,18 +50,20 @@ def manager(args):
                 run.data["parameters"]["converge"] = converged
                 run.tree.root.id                   = mapping[0][1]
                 run.tree.n_add([ m[1] for m in mapping[1:] ])
-                L.record(f"LEMON TREE[{run.tree.name}] CONVERGENCE={converged} TOOK {elapsed} SECONDS")
+                L.record(f"LEMON TREE[{run.tree.name}] CONVERGENCE={converged} TOOK {elapsed} SECONDS {RUN}")
 
             # heuristic
             else:
-                for ret in M.build(run):
+                for i,ret in enumerate(M.build(run)):
                     result, elapsed = ret
                     addrs = [ d for d in result["selected"] ]
                     run.tree.n_add(addrs)
                     run.pool.n_remove(addrs)
                     run.data["stages"].append(result)
-                    run.data["timers"]["build"] = elapsed
-                    L.record(f"TREE[{run.tree.name}] SELECTION[{run.tree.n}/{run.tree.nmax}]: PARENT[{result['root']}] => CHILDREN {[ a for a in result['selected'] ]}")
+                    run.data["timers"]["stages"].append(elapsed)
+                    L.record(f"TREE[{run.tree.name}] SELECTION[ROOT: {result['root']} => {run.tree.n}/{run.tree.nmax}]: {RUN}")
+
+                run.data["timers"]["build"] = (time.time() - start)
 
             # store tree
             run.data["tree"] = run.tree.get()
@@ -69,7 +73,7 @@ def manager(args):
                 result, elapsed = M.evaluate(run)
                 run.data["perf"][i]            = result
                 run.data["timers"]["perf"][i]  = elapsed
-                L.record(f"TREE[{run.tree.name}] PERFORMANCE[{result['selected'][0]}] I={i + 1}: {result['items'][0]['p90']}")
+                L.record(f"TREE[{run.tree.name}] PERFORMANCE[{result['selected'][0]}] I={i + 1}: {result['items'][0]['p90']} {RUN}")
             
 
             # record run

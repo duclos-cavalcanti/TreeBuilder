@@ -41,4 +41,5 @@ class Rand(Task):
         for _ in range(run.tree.fanout):    
             data["selected"].append(run.pool.select(arr))
         
+        self.L.debug(message=f"TASK EVAL[{Flag.Name(job.flag)}][{job.id}:{job.addr}]", data=data)
         return data

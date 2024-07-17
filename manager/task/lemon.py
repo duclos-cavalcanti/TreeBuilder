@@ -75,5 +75,5 @@ class Lemon(Task):
             }
             data["items"].append(item)
 
-        self.L.debug(message=f"TASK[{Flag.Name(job.flag)}][{job.id}:{job.addr}]", data=data)
+        self.L.debug(message=f"TASK EVAL[{Flag.Name(job.flag)}][{job.id}:{job.addr}]", data=data)
         return data

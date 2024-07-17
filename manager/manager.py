@@ -27,10 +27,10 @@ class Manager():
             _ = self.node.handshake(m)
 
     def build(self, run) -> Generator[Tuple[ResultDict, float], None, None]:
-        start = time.time()
         i = 0
         while(not run.tree.full()):
             self.L.state(f"STATE[BUILD[{i}]")
+            start = time.time()
             if   run.data["name"] == "RAND":   result = self.rand(run)
             else:                              result = self.parent(run)
             yield result, (time.time() - start)

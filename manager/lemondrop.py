@@ -50,8 +50,14 @@ class LemonDrop():
             raise RuntimeError(f"LOAD SHAPE[{self.LOAD.shape}] not ({self.N}, {self.N})")
 
         data = {}
-        data["OWD"]  = str(self.OWD.tolist())
-        data["LOAD"] = str(self.LOAD.tolist())
+        OWD_DICT  = {}
+        LOAD_DICT = {}
+
+        for i, row in enumerate(self.OWD):
+            data[f"OWD[{i}]"]  = row
+
+        for i, row in enumerate(self.LOAD):
+            data[f"LOAD[{i}]"]  = row
 
         self.L.debug(message=f"LEMONDROP PRE-SOLVE:", data=data)
 
@@ -66,8 +72,12 @@ class LemonDrop():
             value = self.VMS[idx]
             M.append((idx, value))
 
-        data["P"] = str(P.tolist())
-        data["M"] = str(M)
+        for i, row in enumerate(P):
+            data[f"P[{i}]"]  = row
+
+        for i, row in enumerate(M):
+            data[f"M[{i}]"]  = row
+
         self.L.debug(message=f"LEMONDROP POST-SOLVE:", data=data)
 
         return M, P, converged, elapsed
