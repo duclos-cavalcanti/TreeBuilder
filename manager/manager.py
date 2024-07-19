@@ -28,8 +28,9 @@ class Manager():
 
     def build(self, run) -> Generator[Tuple[ResultDict, float], None, None]:
         i = 0
+        n = ( (run.tree.nmax - 1) / run.tree.fanout ) 
         while(not run.tree.full()):
-            self.L.state(f"STATE[BUILD[{i}]")
+            self.L.state(f"STATE[BUILD[{i + 1} / {n}]")
             start = time.time()
             if   run.data["name"] == "RAND":   result = self.rand(run)
             else:                              result = self.parent(run)

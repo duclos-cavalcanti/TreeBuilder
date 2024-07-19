@@ -20,6 +20,11 @@ setup() {
     popd
 }
 
+tzone() {
+    sudo ln -sf /usr/share/zoneinfo/America/New_York /etc/localtime && echo 'America/New_York' > /etc/timezone
+    cat /etc/timezone
+}
+
 edelay() {
     dur="$1"
     sudo tc qdisc add dev "eth0" root netem delay ${dur}ms
@@ -53,19 +58,31 @@ main() {
     pushd /work/project
         echo "-- ROLE: $role [ ${addr}:${port} ] --"
     
-        # even numbered workers with index greater than 0
-        if [ $count -gt 0 ] && (( $count % 2 == 0)); then 
-            idelay 0.4
+        tzone
 
-        # odd numbered workers above 5
+        # node0 0
+        if [ $count -eq 0 ]; then 
+            # make obviously a bad choice
+            # 500 us
+            idelay 0.5
         else
-            if [ $count -gt 7 ]; then
-                # 0.1 ms with 10ms standard deviation
-                # idelay_probabilistic 0.1 10
-                echo
+            # all even numbered nodes
+
+            # slightly worst
+            if (( $count % 2 == 0)); then 
+                # delay of 200 us
+                idelay 0.2
+
+            # odd numbered workers
+            else
+                # greater than 9
+                if [ $count -gt 9 ]; then
+                    # 400 us delay with 150 us standard deviation
+                    idelay_probabilistic 0.4 0.25
+                fi
             fi
         fi
-    
+
         echo python3 -m manager -a worker -n ${role}  -i ${addr} -p ${port} -s schemas/docker.json
         python3 -m manager -a worker -n ${role}  -i ${addr} -p ${port} -s schemas/docker.json
         bash

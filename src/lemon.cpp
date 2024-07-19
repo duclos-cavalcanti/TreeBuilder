@@ -167,7 +167,7 @@ void receiver(Config_t config) {
     struct sockaddr_in senderaddr = { 0 };
     socklen_t len = sizeof(senderaddr);
     uint64_t now;
-    int64_t deadline_ts = future(config.start , (2.2));
+    int64_t deadline_ts = future(config.start, 120 * (1.2));
     auto t = timeout(1);
 
     if ( (sockfd = socket(AF_INET, SOCK_DGRAM, 0)) < 0 ) {

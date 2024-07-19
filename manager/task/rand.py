@@ -1,6 +1,5 @@
-
 from ..message      import *
-from ..types        import Run, ResultDict, ItemDict
+from ..types        import Run, ItemDict, ResultDict
 from .task          import Task
 
 from typing     import List, Tuple
@@ -16,6 +15,8 @@ class Rand(Task):
         return Job()
 
     def evaluate(self, job:Job, run:Run) -> ResultDict:
+        arr = run.pool.slice()
+
         data:ResultDict = {
                 "root": run.tree.next(),
                 "key": run.data["strategy"]["key"],
@@ -25,7 +26,7 @@ class Rand(Task):
                 "items": [],
                 "selected": []
         }
-        arr = run.pool.slice()
+
         for a in arr:                       
             item: ItemDict = {
                     "addr":     a,

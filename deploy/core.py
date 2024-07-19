@@ -75,22 +75,26 @@ def runs(args):
     runs = []
     names = [ "BEST" ] # [ "BEST", "WORST" ]
     keys  = [ "p90", "p50", "heuristic" ]
-    hyperparameters = [(1e-4, 1000), (1e-5, 1000), (1e-5, 10000) ]
-
     if args.mode == "default":
         for name in names:
             for key in keys:
                 r = run(name, key, args)
                 runs.append(r)
 
-        runs.append(run(name="RAND",  key="NONE", args=args))
+        runs.append(run(name="WORST",  key="p90", args=args))
 
+        runs.append(run(name="RAND",   key="NONE", args=args))
+
+        hyperparameters = [ (1e-4, 1000) ]
         for tup in hyperparameters:
             epsilon, max_i = tup
             runs.append(run(name="LEMON", key="NONE", args=args, epsilon=epsilon, max_i=max_i))
 
     if args.mode == "lemondrop":
-        runs.append(run(name="LEMON", key="NONE", args=args))
+        hyperparameters = [(1e-4, 1000), (8.5e-05, 100000), (5.5e-05, 100000) ]
+        for tup in hyperparameters:
+            epsilon, max_i = tup
+            runs.append(run(name="LEMON", key="NONE", args=args, epsilon=epsilon, max_i=max_i))
 
     return runs
 

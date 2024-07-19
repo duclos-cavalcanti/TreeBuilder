@@ -1,5 +1,5 @@
 from ..message      import *
-from ..types        import TreeBuilder, Run, ResultDict
+from ..types        import TreeBuilder, Run, ItemDict, ResultDict
 from ..heuristic    import Heuristic
 from .task          import Task
 
@@ -30,18 +30,9 @@ class Parent(Task):
         return c
 
     def handle(self, command:Command) -> Tuple[Job, List[Command]]:
-        self.command   = command
-        self.job.id    = command.id
-        self.job.flag  = command.flag
-        self.job.instr = command.instr[0]
-        self.job.addr  = command.addr
-
-        addrs       = command.data[1:]
-        instr       = command.instr[1:]
         commands    = []  
-
         if command.layer:
-            for addr,i in zip(addrs, instr):
+            for addr,i in zip(command.data[1:], command.instr[1:]):
                 c = Command()
                 c.id    = command.id
                 c.flag  = command.flag
@@ -58,7 +49,7 @@ class Parent(Task):
         if self.err():
             return self.job
 
-        if self.command.layer == 0:
+        if self.job.layer == 0:
             recv  = int(self.job.data[0])
             p90   = float(self.job.data[1])
             p75   = float(self.job.data[2])
@@ -70,7 +61,7 @@ class Parent(Task):
             self.job.ClearField('integers')
             self.job.ClearField('floats')
 
-            self.job.data.append(self.command.addr)
+            self.job.data.append(self.job.addr)
             self.job.integers.append(recv)
             self.job.floats.extend([p90, p75, p50, p25, dev])
         else: 
@@ -90,7 +81,29 @@ class Parent(Task):
         if job.ret != 0:  
             raise RuntimeError("Failed Job")
 
-        H = Heuristic(run.data["strategy"], self.command, job)
+        data:ResultDict = {
+                "root": job.addr,
+                "key": run.data["strategy"]["key"],
+                "select": job.select, 
+                "rate": job.rate,
+                "duration": job.duration,
+                "items": [],
+                "selected": []
+        }
+
+        for j,i in enumerate(range(0, len(job.floats), 5)):
+            item: ItemDict = {
+                    "addr":     job.data[j],
+                    "p90":      job.floats[i],
+                    "p75":      job.floats[i + 1],
+                    "p50":      job.floats[i + 2],
+                    "p25":      job.floats[i + 3],
+                    "stddev":   job.floats[i + 4],
+                    "recv":     job.integers[j],
+            }
+            data["items"].append(item)
+
+        H = Heuristic(data, run.data["strategy"])
         H.process()
 
         self.L.debug(message=f"TASK EVAL[{Flag.Name(job.flag)}][{job.id}:{job.addr}]", data=H.data)

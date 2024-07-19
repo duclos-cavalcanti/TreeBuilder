@@ -31,10 +31,6 @@ class Run():
                                fanout=run["tree"]["fanout"], 
                                depth=run["tree"]["depth"])
 
-class Result():
-    def __init__(self, result:ResultDict):
-        self.data:ResultDict = ResultDict(result)
-
 class Experiment():
     def __init__(self, schema:dict):
         self.manager = f"{schema['addrs'][0]}"

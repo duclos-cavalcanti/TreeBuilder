@@ -1,16 +1,25 @@
 from ..message      import *
-from ..types        import Logger, Run, ResultDict
+from ..types        import Logger, Run, StrategyDict, ResultDict
 
 import random 
 import string
 
-from typing     import List, Tuple
+from typing     import List, Tuple, Optional
 from abc        import ABC, abstractmethod
 
 class Task(ABC):
-    def __init__(self):
-        self.command        = Command()
-        self.job            = Job()
+    def __init__(self, command:Optional[Command]=None):
+        self.job = Job()
+        if not command is None:        
+            self.job.id       = command.id
+            self.job.flag     = command.flag
+            self.job.addr     = command.addr
+            self.job.layer    = command.layer
+            self.job.select   = command.select
+            self.job.rate     = command.rate
+            self.job.duration = command.duration
+            self.job.instr    = command.instr[0]
+
         self.deps           = []
         self.L              = Logger()
 

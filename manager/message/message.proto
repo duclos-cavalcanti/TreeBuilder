@@ -52,13 +52,18 @@ message Job {
     Flag flag = 1;
     string id = 2;
     string addr = 3;
-    string instr = 4;
-    int32  pid = 5;
-    bool   end = 6;
-    int32  ret = 7;
-    repeated int32  integers = 8;
-    repeated float  floats = 9;
-    repeated string data = 10;
+    int32  layer = 4;
+    int32  select = 5;
+    int32  rate = 6;
+    int32  duration = 7;
+    bool   stress = 8;
+    string instr = 9;
+    int32  pid = 10;
+    int32  ret = 11;
+    bool   end = 12;
+    repeated int32  integers = 13;
+    repeated float  floats = 14;
+    repeated string data = 15;
 }
 
 message Error {

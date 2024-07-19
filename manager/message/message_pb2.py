@@ -20,7 +20,7 @@ DESCRIPTOR = _descriptor.FileDescriptor(
   syntax='proto3',
   serialized_options=None,
   create_key=_descriptor._internal_create_key,
-  serialized_pb=b'\n\rmessage.proto\"]\n\x08Metadata\x12\x1b\n\x07\x63ommand\x18\x04 \x01(\x0b\x32\x08.CommandH\x00\x12\x13\n\x03job\x18\x05 \x01(\x0b\x32\x04.JobH\x00\x12\x17\n\x05\x65rror\x18\x06 \x01(\x0b\x32\x06.ErrorH\x00\x42\x06\n\x04\x64\x61ta\"w\n\x07Message\x12\n\n\x02id\x18\x01 \x01(\x05\x12\n\n\x02ts\x18\x02 \x01(\x03\x12\x0b\n\x03ref\x18\x03 \x01(\t\x12\x0b\n\x03src\x18\x04 \x01(\t\x12\x0b\n\x03\x64st\x18\x05 \x01(\t\x12\x13\n\x04type\x18\x06 \x01(\x0e\x32\x05.Type\x12\x18\n\x05mdata\x18\x07 \x01(\x0b\x32\t.Metadata\"\xc4\x01\n\x07\x43ommand\x12\x13\n\x04\x66lag\x18\x01 \x01(\x0e\x32\x05.Flag\x12\n\n\x02id\x18\x02 \x01(\t\x12\x0c\n\x04\x61\x64\x64r\x18\x03 \x01(\t\x12\r\n\x05layer\x18\x04 \x01(\x05\x12\x0e\n\x06select\x18\x05 \x01(\x05\x12\x0c\n\x04rate\x18\x06 \x01(\x05\x12\x10\n\x08\x64uration\x18\x07 \x01(\x05\x12\x0f\n\x07timeout\x18\x08 \x01(\x05\x12\r\n\x05\x64\x65pth\x18\t \x01(\x05\x12\x0e\n\x06\x66\x61nout\x18\n \x01(\x05\x12\r\n\x05instr\x18\x0b \x03(\t\x12\x0c\n\x04\x64\x61ta\x18\x0c \x03(\t\"\x9a\x01\n\x03Job\x12\x13\n\x04\x66lag\x18\x01 \x01(\x0e\x32\x05.Flag\x12\n\n\x02id\x18\x02 \x01(\t\x12\x0c\n\x04\x61\x64\x64r\x18\x03 \x01(\t\x12\r\n\x05instr\x18\x04 \x01(\t\x12\x0b\n\x03pid\x18\x05 \x01(\x05\x12\x0b\n\x03\x65nd\x18\x06 \x01(\x08\x12\x0b\n\x03ret\x18\x07 \x01(\x05\x12\x10\n\x08integers\x18\x08 \x03(\x05\x12\x0e\n\x06\x66loats\x18\t \x03(\x02\x12\x0c\n\x04\x64\x61ta\x18\n \x03(\t\"*\n\x05\x45rror\x12\x13\n\x04\x66lag\x18\x01 \x01(\x0e\x32\x05.Flag\x12\x0c\n\x04\x64\x65sc\x18\x02 \x01(\t*>\n\x04Type\x12\x07\n\x03\x41\x43K\x10\x00\x12\x0b\n\x07\x43ONNECT\x10\x01\x12\x0b\n\x07\x43OMMAND\x10\x02\x12\n\n\x06REPORT\x10\x03\x12\x07\n\x03\x45RR\x10\x04*2\n\x04\x46lag\x12\x08\n\x04NONE\x10\x00\x12\n\n\x06PARENT\x10\x01\x12\t\n\x05MCAST\x10\x02\x12\t\n\x05LEMON\x10\x03\x62\x06proto3'
+  serialized_pb=b'\n\rmessage.proto\"]\n\x08Metadata\x12\x1b\n\x07\x63ommand\x18\x04 \x01(\x0b\x32\x08.CommandH\x00\x12\x13\n\x03job\x18\x05 \x01(\x0b\x32\x04.JobH\x00\x12\x17\n\x05\x65rror\x18\x06 \x01(\x0b\x32\x06.ErrorH\x00\x42\x06\n\x04\x64\x61ta\"w\n\x07Message\x12\n\n\x02id\x18\x01 \x01(\x05\x12\n\n\x02ts\x18\x02 \x01(\x03\x12\x0b\n\x03ref\x18\x03 \x01(\t\x12\x0b\n\x03src\x18\x04 \x01(\t\x12\x0b\n\x03\x64st\x18\x05 \x01(\t\x12\x13\n\x04type\x18\x06 \x01(\x0e\x32\x05.Type\x12\x18\n\x05mdata\x18\x07 \x01(\x0b\x32\t.Metadata\"\xc4\x01\n\x07\x43ommand\x12\x13\n\x04\x66lag\x18\x01 \x01(\x0e\x32\x05.Flag\x12\n\n\x02id\x18\x02 \x01(\t\x12\x0c\n\x04\x61\x64\x64r\x18\x03 \x01(\t\x12\r\n\x05layer\x18\x04 \x01(\x05\x12\x0e\n\x06select\x18\x05 \x01(\x05\x12\x0c\n\x04rate\x18\x06 \x01(\x05\x12\x10\n\x08\x64uration\x18\x07 \x01(\x05\x12\x0f\n\x07timeout\x18\x08 \x01(\x05\x12\r\n\x05\x64\x65pth\x18\t \x01(\x05\x12\x0e\n\x06\x66\x61nout\x18\n \x01(\x05\x12\r\n\x05instr\x18\x0b \x03(\t\x12\x0c\n\x04\x64\x61ta\x18\x0c \x03(\t\"\xe9\x01\n\x03Job\x12\x13\n\x04\x66lag\x18\x01 \x01(\x0e\x32\x05.Flag\x12\n\n\x02id\x18\x02 \x01(\t\x12\x0c\n\x04\x61\x64\x64r\x18\x03 \x01(\t\x12\r\n\x05layer\x18\x04 \x01(\x05\x12\x0e\n\x06select\x18\x05 \x01(\x05\x12\x0c\n\x04rate\x18\x06 \x01(\x05\x12\x10\n\x08\x64uration\x18\x07 \x01(\x05\x12\x0e\n\x06stress\x18\x08 \x01(\x08\x12\r\n\x05instr\x18\t \x01(\t\x12\x0b\n\x03pid\x18\n \x01(\x05\x12\x0b\n\x03ret\x18\x0b \x01(\x05\x12\x0b\n\x03\x65nd\x18\x0c \x01(\x08\x12\x10\n\x08integers\x18\r \x03(\x05\x12\x0e\n\x06\x66loats\x18\x0e \x03(\x02\x12\x0c\n\x04\x64\x61ta\x18\x0f \x03(\t\"*\n\x05\x45rror\x12\x13\n\x04\x66lag\x18\x01 \x01(\x0e\x32\x05.Flag\x12\x0c\n\x04\x64\x65sc\x18\x02 \x01(\t*>\n\x04Type\x12\x07\n\x03\x41\x43K\x10\x00\x12\x0b\n\x07\x43ONNECT\x10\x01\x12\x0b\n\x07\x43OMMAND\x10\x02\x12\n\n\x06REPORT\x10\x03\x12\x07\n\x03\x45RR\x10\x04*2\n\x04\x46lag\x12\x08\n\x04NONE\x10\x00\x12\n\n\x06PARENT\x10\x01\x12\t\n\x05MCAST\x10\x02\x12\t\n\x05LEMON\x10\x03\x62\x06proto3'
 )
 
 _TYPE = _descriptor.EnumDescriptor(
@@ -58,8 +58,8 @@ _TYPE = _descriptor.EnumDescriptor(
   ],
   containing_type=None,
   serialized_options=None,
-  serialized_start=633,
-  serialized_end=695,
+  serialized_start=712,
+  serialized_end=774,
 )
 _sym_db.RegisterEnumDescriptor(_TYPE)
 
@@ -94,8 +94,8 @@ _FLAG = _descriptor.EnumDescriptor(
   ],
   containing_type=None,
   serialized_options=None,
-  serialized_start=697,
-  serialized_end=747,
+  serialized_start=776,
+  serialized_end=826,
 )
 _sym_db.RegisterEnumDescriptor(_FLAG)
 
@@ -376,50 +376,85 @@ _JOB = _descriptor.Descriptor(
       is_extension=False, extension_scope=None,
       serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
     _descriptor.FieldDescriptor(
-      name='instr', full_name='Job.instr', index=3,
-      number=4, type=9, cpp_type=9, label=1,
-      has_default_value=False, default_value=b"".decode('utf-8'),
+      name='layer', full_name='Job.layer', index=3,
+      number=4, type=5, cpp_type=1, label=1,
+      has_default_value=False, default_value=0,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
     _descriptor.FieldDescriptor(
-      name='pid', full_name='Job.pid', index=4,
+      name='select', full_name='Job.select', index=4,
       number=5, type=5, cpp_type=1, label=1,
       has_default_value=False, default_value=0,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
     _descriptor.FieldDescriptor(
-      name='end', full_name='Job.end', index=5,
-      number=6, type=8, cpp_type=7, label=1,
-      has_default_value=False, default_value=False,
+      name='rate', full_name='Job.rate', index=5,
+      number=6, type=5, cpp_type=1, label=1,
+      has_default_value=False, default_value=0,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
     _descriptor.FieldDescriptor(
-      name='ret', full_name='Job.ret', index=6,
+      name='duration', full_name='Job.duration', index=6,
       number=7, type=5, cpp_type=1, label=1,
       has_default_value=False, default_value=0,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
     _descriptor.FieldDescriptor(
-      name='integers', full_name='Job.integers', index=7,
-      number=8, type=5, cpp_type=1, label=3,
+      name='stress', full_name='Job.stress', index=7,
+      number=8, type=8, cpp_type=7, label=1,
+      has_default_value=False, default_value=False,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+    _descriptor.FieldDescriptor(
+      name='instr', full_name='Job.instr', index=8,
+      number=9, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=b"".decode('utf-8'),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+    _descriptor.FieldDescriptor(
+      name='pid', full_name='Job.pid', index=9,
+      number=10, type=5, cpp_type=1, label=1,
+      has_default_value=False, default_value=0,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+    _descriptor.FieldDescriptor(
+      name='ret', full_name='Job.ret', index=10,
+      number=11, type=5, cpp_type=1, label=1,
+      has_default_value=False, default_value=0,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+    _descriptor.FieldDescriptor(
+      name='end', full_name='Job.end', index=11,
+      number=12, type=8, cpp_type=7, label=1,
+      has_default_value=False, default_value=False,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+    _descriptor.FieldDescriptor(
+      name='integers', full_name='Job.integers', index=12,
+      number=13, type=5, cpp_type=1, label=3,
       has_default_value=False, default_value=[],
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
     _descriptor.FieldDescriptor(
-      name='floats', full_name='Job.floats', index=8,
-      number=9, type=2, cpp_type=6, label=3,
+      name='floats', full_name='Job.floats', index=13,
+      number=14, type=2, cpp_type=6, label=3,
       has_default_value=False, default_value=[],
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
     _descriptor.FieldDescriptor(
-      name='data', full_name='Job.data', index=9,
-      number=10, type=9, cpp_type=9, label=3,
+      name='data', full_name='Job.data', index=14,
+      number=15, type=9, cpp_type=9, label=3,
       has_default_value=False, default_value=[],
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
@@ -437,7 +472,7 @@ _JOB = _descriptor.Descriptor(
   oneofs=[
   ],
   serialized_start=433,
-  serialized_end=587,
+  serialized_end=666,
 )
 
 
@@ -475,8 +510,8 @@ _ERROR = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=589,
-  serialized_end=631,
+  serialized_start=668,
+  serialized_end=710,
 )
 
 _METADATA.fields_by_name['command'].message_type = _COMMAND

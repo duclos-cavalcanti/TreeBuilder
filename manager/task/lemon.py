@@ -1,6 +1,5 @@
 from ..message      import *
-from ..types        import TreeBuilder, Run, StrategyDict, ResultDict, ItemDict
-from ..heuristic    import Heuristic
+from ..types        import Run, ItemDict, ResultDict
 from .task          import Task
 
 from typing     import List, Tuple
@@ -13,14 +12,12 @@ class Lemon(Task):
         c.layer     = 1
         c.depth     = 1
         c.fanout    = 0
+        c.rate      = 100
+        c.duration  = 120
         return c
 
     def handle(self, command:Command) -> Tuple[Job, List[Command]]:
-        self.command   = command
-        self.job.id    = command.id
-        self.job.flag  = command.flag
-        self.job.instr = command.instr[0]
-        self.job.addr  = command.addr
+        self.job.stress = False
         return self.job, []
 
     def process(self) -> Job:
@@ -56,9 +53,9 @@ class Lemon(Task):
         data:ResultDict = {
                 "root": job.addr,
                 "key": run.data["strategy"]["key"],
-                "select": 1, 
-                "rate": 100,
-                "duration": 120,
+                "select": job.select, 
+                "rate": job.rate,
+                "duration": job.duration,
                 "items": [],
                 "selected": []
         }

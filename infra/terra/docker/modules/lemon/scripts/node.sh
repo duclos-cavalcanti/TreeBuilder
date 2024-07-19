@@ -55,7 +55,7 @@ main() {
     
         echo ${command}
         # ${command} -v
-        ${command}
+        time ${command}
 
         echo "RET: ${?}"
     popd

@@ -20,6 +20,11 @@ setup() {
     popd
 }
 
+tzone() {
+    sudo ln -sf /usr/share/zoneinfo/America/New_York /etc/localtime && echo 'America/New_York' > /etc/timezone
+    cat /etc/timezone
+}
+
 upload() {
     local TS=$(date +"%m-%d-%H:%M:%S")
     local FOLDER="treefinder-docker-$TS"
@@ -40,6 +45,8 @@ main() {
     setup
     pushd /work/project
         echo "-- ROLE: $role --"
+
+        tzone
 
         echo python3 -m manager -a manager -n ${role}  -i ${addr} -p ${port} -s schemas/docker.json
         python3 -m manager -a manager -n ${role}  -i ${addr} -p ${port} -s schemas/docker.json

@@ -22,7 +22,13 @@ class Worker():
 
     def run(self, job:Job):
         self.L.log(message=f"STARTED JOB[{job.id}:{job.addr}]")
-        start = time.time()
+        start  = time.time()
+        stress = None
+        if job.stress:
+            self.L.log(message=f"ADDING STRESS TO JOB[{job.id}:{job.addr}]")
+            command = f"stress-ng --cpu $(nproc) --cpu-load 80"
+            stress = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+
         try:
             p = subprocess.Popen(
                 job.instr, 
@@ -46,6 +52,8 @@ class Worker():
             job.ClearField('data')
             job.data.extend(data)
             job.end = True
+            if stress:
+                stress.kill()
 
         end = time.time()
         self.L.log(message=f"FINISHED JOB[{job.id}:{job.addr}] TOOK {end - start} SECONDS")
@@ -109,7 +117,7 @@ class Worker():
         elif command.flag == Flag.LEMON:  Constructor = Lemon
         else:                             raise RuntimeError()
 
-        task              = Constructor()
+        task              = Constructor(command)
         job, commands     = task.handle(command)
         jobs              = self.scatter(commands)
 
@@ -148,7 +156,10 @@ class Worker():
         return self.node.ack_message(m, mdata=Metadata(job=ret))
 
     def errorACK(self, m:Message):
-        raise NotImplementedError()
+        desc    = m.mdata.error.desc
+        e       = self.req.message(dst=self.manager, ref=m.ref, t=Type.ERR, mdata=Metadata(error=Error(desc=desc)), id=m.id)
+        _       = self.req.handshake(e)
+        return self.node.ack_message(m)
 
     def start(self):
         self.node.bind()

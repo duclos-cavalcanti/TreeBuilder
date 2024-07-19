@@ -1,7 +1,8 @@
 from ..message      import *
-from ..types        import TreeBuilder, Run, ResultDict
-from ..heuristic    import Heuristic
+from ..types        import TreeBuilder, Run, ItemDict, ResultDict
 from .task          import Task
+
+import heapq
 
 from typing     import List, Tuple
 
@@ -28,14 +29,7 @@ class Mcast(Task):
         return c
 
     def handle(self, command:Command) -> Tuple[Job, List[Command]]:
-        self.command   = command
-        self.job.id    = command.id
-        self.job.flag  = command.flag
-        self.job.instr = command.instr[0]
-        self.job.addr  = command.addr
-
         commands    = []  
-
         if command.layer:
             addrT   = TreeBuilder(arr=command.data,  depth=command.layer, fanout=command.fanout) 
             instrT  = TreeBuilder(arr=command.instr, depth=command.layer, fanout=command.fanout) 
@@ -63,7 +57,7 @@ class Mcast(Task):
         if self.err():
             return self.job
 
-        if self.command.layer == 0:
+        if self.job.layer == 0:
             recv  = int(self.job.data[0])
             p90   = float(self.job.data[1])
             p75   = float(self.job.data[2])
@@ -75,7 +69,7 @@ class Mcast(Task):
             self.job.ClearField('integers')
             self.job.ClearField('floats')
 
-            self.job.data.append(self.command.addr)
+            self.job.data.append(self.job.addr)
             self.job.integers.append(recv)
             self.job.floats.extend([p90, p75, p50, p25, dev])
         else:
@@ -95,8 +89,33 @@ class Mcast(Task):
         if job.ret != 0:  
             raise RuntimeError("Failed Job")
 
-        H = Heuristic(run.data["strategy"], self.command, job)
-        H.process(key="p90")
+        data:ResultDict = {
+                "root": job.addr,
+                "key": run.data["strategy"]["key"],
+                "select": job.select, 
+                "rate": job.rate,
+                "duration": job.duration,
+                "items": [],
+                "selected": []
+        }
 
-        self.L.debug(message=f"TASK EVAL[{Flag.Name(job.flag)}][{job.id}:{job.addr}]", data=H.data)
-        return H.data
+        for j,i in enumerate(range(0, len(job.floats), 5)):
+            item: ItemDict = {
+                    "addr":     job.data[j],
+                    "p90":      job.floats[i],
+                    "p75":      job.floats[i + 1],
+                    "p50":      job.floats[i + 2],
+                    "p25":      job.floats[i + 3],
+                    "stddev":   job.floats[i + 4],
+                    "recv":     job.integers[j],
+            }
+            data["items"].append(item)
+
+        sorted = heapq.nlargest(len(data["items"]),  data["items"], key=lambda x, k="p90": x[k])
+        data["selected"] = [ s["addr"] for s in sorted[:1] ]
+
+        for i in range(len(data["items"])):
+            data["items"][i] = sorted[i]
+
+        self.L.debug(message=f"TASK EVAL[{Flag.Name(job.flag)}][{job.id}:{job.addr}]", data=data)
+        return data
