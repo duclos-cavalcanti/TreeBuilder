@@ -13,9 +13,9 @@ analysis/graphs/*
 
 !analysis/archive/*.tar*
 
-analysis/plot
-analysis/plot/
-analysis/plot/*
+# analysis/plot
+# analysis/plot/
+# analysis/plot/*
 
 *.csv 
 *.plan 
