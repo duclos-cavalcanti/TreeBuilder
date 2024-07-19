@@ -6,7 +6,8 @@ import json
 
 from manager import RunDict
 
-from .analysis  import Analyzer, UDP
+from .analysis  import Analyzer
+from .udp       import UDP
 from .plot      import Plotter
 from .slides    import export
 from .utils     import *
@@ -96,9 +97,8 @@ def process(args):
         dir = find(dir=dir, pattern=f"treefinder-{args.infra}-{args.prefix}")
         runs   = read(os.path.join(dir, "logs"))
         schema, map = load(os.path.join(dir, "logs"), args.infra)
-        A = Analyzer(runs, schema,  map)
-        P = Plotter(A)
-        P.plot(dir, view=args.view)
+        P = Plotter(runs, schema,  map, dir)
+        P.plot(view=args.view)
 
     elif args.mode == "udp":
         dir  = isdir("infra/terra/docker/modules/default/volume")

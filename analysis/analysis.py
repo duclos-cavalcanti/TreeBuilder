@@ -1,44 +1,7 @@
 import networkx as nx 
-import numpy as np
 
-import csv
-
-from manager import Run, RunDict, ResultDict
+from manager import RunDict, ResultDict
 from typing import List
-
-class UDP():
-    def __init__(self):
-        pass
-
-    def read(self, f:str):
-        data = []
-        name = f.split("/")[-1]
-        name = name.split(".csv")[0]
-
-        with open(f, 'r') as csvfile:
-            reader = csv.reader(csvfile)
-            for row in reader:
-                data.append(int(row[1]))
-        
-        return data, name
-
-    def process(self, files:List):
-        for f in files: 
-            data, name = self.read(f)
-            data = np.array(data)
-            p90     = np.percentile(data, 90)
-            p75     = np.percentile(data, 75)
-            p50     = np.percentile(data, 50)
-            p25     = np.percentile(data, 25)
-            std_dev = np.std(data)
-
-            print(f"RESULTS[{name}]:")
-            print(f"p90: {p90}")
-            print(f"p75: {p75}")
-            print(f"p50: {p50}")
-            print(f"p25: {p25}")
-            print(f"dev: {std_dev}")
-            print()
 
 class Analyzer():
     def __init__(self, runs:List[RunDict], schema:dict, map:dict):
@@ -49,25 +12,32 @@ class Analyzer():
     def map(self, addr:str):
         return self.M[addr.split(":")[0]]
 
-    def worst(self, perf1:List[ResultDict], perf2:List[ResultDict]):
+    def descr(self, run:RunDict):
+        ret  = ""
+        name = run["name"]
+
+        if "LEMON" in name: 
+            epsilon = run["parameters"]["epsilon"]
+            max_i   = run["parameters"]["max_i"]
+            conv    = run["parameters"]["converge"]
+            ret     = f"EPS={epsilon}, MAX={max_i}, CONV={conv}"
+        else:
+            if run['strategy']['key'] == "heuristic":
+                ret = f"Expr: (0.7 x stddev) + (0.3 * p90)"
+
+        return ret
+
+    def worst(self, lperf:List[ResultDict]):
         i       = 0 
-        j       = 0
         max     = 0
 
-        for idx, perf in enumerate(perf1):
-            latency = perf["items"][0]["p90"]
+        for idx, result in enumerate(lperf):
+            latency = result["items"][0]["p90"]
             if latency > max: 
                 max = latency
                 i   = idx
 
-        max     = 0
-        for idx, perf in enumerate(perf2):
-            latency = perf["items"][0]["p90"]
-            if latency > max: 
-                max = latency
-                j   = idx
-        
-        return i, j
+        return i
 
     def pool(self, pool):
         spool = sorted([int(p.split('_')[1]) for p in pool])
@@ -96,12 +66,16 @@ class Analyzer():
         return "[ " + ", ".join(ret) + " ]"
 
     def graph(self, run:RunDict):
-        root    = run["tree"]["root"].split(":")[0]
-        G = nx.DiGraph()
-        if run["name"] == "LEMON" or run["name"] == "RAND":
-            G.name = f"{run['name']}"
-        else:
-            G.name = f"{run['name']}-{run['strategy']['key']}"
+        G       = nx.DiGraph()
+
+        name    = run['name']
+        root    = run["tree"]["root"]
+        key     = run['strategy']['key']
+
+        if   name == "LEMON": G.name = f"{name}"
+        elif name == "RAND":  G.name = f"{name}"
+        else:                 G.name = f"{name}-{key}"
+
         G.add_node(self.map(root))
 
         if len(run['stages']) > 0:
