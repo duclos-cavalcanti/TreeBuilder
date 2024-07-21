@@ -12,8 +12,8 @@ from .plot      import Plotter
 from .slides    import export
 from .utils     import *
 
-def load(dir:str, infra:str):
-    f = "docker.json" if infra == "docker" else "default.json"
+def load(dir:str):
+    f = "default.json"
     file = os.path.join(dir, f)
     map  = {}
 
@@ -52,7 +52,7 @@ def gpull(prefix:str):
     for a in arr:
         if prefix in a:
             print(f"PULLING {a}")
-            return a
+            yield a
 
     raise RuntimeError(f"No bucket found on GCP matching: {prefix}")
 
@@ -61,12 +61,14 @@ def gcopy(src:str, dst:str, bucket:str="gs://exp-results-nyu-systems-multicast")
 
 def pull(args):
     if args.infra == "gcp":
-        res = gpull(args.prefix)
-        src = res.split('/')[-2]
-        dst = os.path.join(os.getcwd(), "analysis", "data")
-        path = os.path.join(os.getcwd(), "analysis", "data", src)
-        file = os.path.join(path, "results.tar.gz", "results.tar.gz")
-        if not os.path.isdir(path):
+        for res in gpull(args.prefix):
+            src = res.split('/')[-2]
+            dst = os.path.join(os.getcwd(), "analysis", "data")
+            path = os.path.join(os.getcwd(), "analysis", "data", src)
+            file = os.path.join(path, "results.tar.gz", "results.tar.gz")
+            if not os.path.isdir(path):
+                os.mkdir(path)
+
             gcopy(src, dst)
             if os.path.exists(file):
                 shutil.move(file, f"{path}/tmp.tar.gz")
@@ -74,9 +76,7 @@ def pull(args):
                 shutil.move(f"{path}/tmp.tar.gz", f"{path}/results.tar.gz")
                 extract(f"{path}")
             else:
-                raise RuntimeError(f"results.tar.gz not found in {path}")
-        else:
-            raise RuntimeError(f"Bucket: {path} has been pulled already")
+                raise RuntimeError(f"Bucket: {path} has been pulled already")
         return
 
     elif args.infra == "docker":
@@ -95,8 +95,8 @@ def process(args):
     if args.mode == "default":
         dir = isdir("analysis/data")
         dir = find(dir=dir, pattern=f"treefinder-{args.infra}-{args.prefix}")
-        runs   = read(os.path.join(dir, "logs"))
-        schema, map = load(os.path.join(dir, "logs"), args.infra)
+        runs   = read(os.path.join(dir, "manager", "logs"))
+        schema, map = load(os.path.join(dir, "manager", "logs"))
         P = Plotter(runs, schema,  map, dir)
         P.plot(view=args.view)
 

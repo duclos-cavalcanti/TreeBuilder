@@ -21,8 +21,11 @@ def extract(dir:str):
     print(f"Extracting: {dir}")
     for f in os.listdir(dir):
         if f.endswith(".tar.gz"):
+            name = f.split(".tar.gz")[0]
+            path = os.path.join(dir, name)
+            os.mkdir(path)
             with tarfile.open(os.path.join(dir, f)) as tar:
-                tar.extractall(path=dir)
+                tar.extractall(path=path)
                 print(f"DECOMPRESSED: {f}")
 
 def iswithin(arr:List[str]):

@@ -46,7 +46,7 @@ typedef struct Config {
     }
     
     int read(void) {
-        std::string path = "schemas/docker.json";
+        std::string path = "schemas/default.json";
         std::ifstream f(path);
     
         if (!f.is_open()) {

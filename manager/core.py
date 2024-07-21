@@ -88,6 +88,7 @@ def manager(args):
 
     finally:
         L.flush()
+        M.flush()
         M.node.socket.close()
 
     L.record("FINISHED!")
@@ -112,3 +113,4 @@ def worker(args):
         L.flush()
         W.node.socket.close()
 
+    L.record("FINISHED!")

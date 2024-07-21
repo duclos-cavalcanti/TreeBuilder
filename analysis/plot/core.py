@@ -67,7 +67,7 @@ class Plotter():
             print(f"PLOTTING TREE[{name}:{key}:{root}]")
 
             # plot build stages
-            # self.stages(run)
+            self.stages(run)
 
             # plot tree performance
             self.performance(run)

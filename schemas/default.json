@@ -1,5 +1,6 @@
 {
     "infra": "gcp",
+    "suffix": "2024-07-21-13-08-04",
     "port": 9092,
     "addrs": [
         "10.1.25.1",
@@ -22,7 +23,12 @@
         "10.1.25.18",
         "10.1.25.19",
         "10.1.25.20",
-        "10.1.25.21"
+        "10.1.25.21",
+        "10.1.25.22",
+        "10.1.25.23",
+        "10.1.25.24",
+        "10.1.25.25",
+        "10.1.25.26"
     ],
     "saddrs": [
         "10.0.25.1",
@@ -45,7 +51,12 @@
         "10.0.25.18",
         "10.0.25.19",
         "10.0.25.20",
-        "10.0.25.21"
+        "10.0.25.21",
+        "10.0.25.22",
+        "10.0.25.23",
+        "10.0.25.24",
+        "10.0.25.25",
+        "10.0.25.26"
     ],
     "names": [
         "manager",
@@ -68,7 +79,12 @@
         "worker16",
         "worker17",
         "worker18",
-        "worker19"
+        "worker19",
+        "worker20",
+        "worker21",
+        "worker22",
+        "worker23",
+        "worker24"
     ],
     "map": {
         "10.1.25.1:9092": "manager",
@@ -91,21 +107,29 @@
         "10.1.25.18:9092": "worker16",
         "10.1.25.19:9092": "worker17",
         "10.1.25.20:9092": "worker18",
-        "10.1.25.21:9092": "worker19"
+        "10.1.25.21:9092": "worker19",
+        "10.1.25.22:9092": "worker20",
+        "10.1.25.23:9092": "worker21",
+        "10.1.25.24:9092": "worker22",
+        "10.1.25.25:9092": "worker23",
+        "10.1.25.26:9092": "worker24"
     },
     "runs": [
         {
             "name": "BEST",
             "strategy": {
                 "key": "p90",
-                "expr": {},
-                "reverse": false,
-                "rand": false
+                "reverse": false
             },
             "parameters": {
+                "num": 3,
+                "choices": 2,
                 "hyperparameter": 4,
                 "rate": 5000,
-                "duration": 20
+                "duration": 20,
+                "epsilon": 0.0001,
+                "max_i": 1000,
+                "converge": false
             },
             "tree": {
                 "name": "",
@@ -118,28 +142,65 @@
             },
             "pool": [],
             "stages": [],
-            "perf": {
-                "root": "",
-                "key": "p90",
-                "select": 0,
-                "rate": 5000,
-                "duration": 20,
-                "items": [],
-                "selected": []
+            "perf": [
+                {
+                    "id": "",
+                    "root": "",
+                    "key": "p90",
+                    "select": 0,
+                    "rate": 5000,
+                    "duration": 20,
+                    "items": [],
+                    "selected": []
+                },
+                {
+                    "id": "",
+                    "root": "",
+                    "key": "p90",
+                    "select": 0,
+                    "rate": 5000,
+                    "duration": 20,
+                    "items": [],
+                    "selected": []
+                },
+                {
+                    "id": "",
+                    "root": "",
+                    "key": "p90",
+                    "select": 0,
+                    "rate": 5000,
+                    "duration": 20,
+                    "items": [],
+                    "selected": []
+                }
+            ],
+            "timers": {
+                "build": 0.0,
+                "stages": [],
+                "convergence": 0.0,
+                "perf": [
+                    0.0,
+                    0.0,
+                    0.0
+                ],
+                "total": 0.0
             }
         },
         {
             "name": "BEST",
             "strategy": {
-                "key": "p75",
-                "expr": {},
-                "reverse": false,
-                "rand": false
+                "key": "p50",
+                "reverse": false
             },
             "parameters": {
+                "num": 3,
+                "choices": 2,
                 "hyperparameter": 4,
                 "rate": 5000,
-                "duration": 20
+                "duration": 20,
+                "epsilon": 0.0001,
+                "max_i": 1000,
+                "converge": false
             },
             "tree": {
                 "name": "",
@@ -152,28 +213,65 @@
             },
             "pool": [],
             "stages": [],
-            "perf": {
-                "root": "",
-                "key": "p75",
-                "select": 0,
-                "rate": 5000,
-                "duration": 20,
-                "items": [],
-                "selected": []
+            "perf": [
+                {
+                    "id": "",
+                    "root": "",
+                    "key": "p50",
+                    "select": 0,
+                    "rate": 5000,
+                    "duration": 20,
+                    "items": [],
+                    "selected": []
+                },
+                {
+                    "id": "",
+                    "root": "",
+                    "key": "p50",
+                    "select": 0,
+                    "rate": 5000,
+                    "duration": 20,
+                    "items": [],
+                    "selected": []
+                },
+                {
+                    "id": "",
+                    "root": "",
+                    "key": "p50",
+                    "select": 0,
+                    "rate": 5000,
+                    "duration": 20,
+                    "items": [],
+                    "selected": []
+                }
+            ],
+            "timers": {
+                "build": 0.0,
+                "stages": [],
+                "convergence": 0.0,
+                "perf": [
+                    0.0,
+                    0.0,
+                    0.0
+                ],
+                "total": 0.0
             }
         },
         {
             "name": "BEST",
             "strategy": {
-                "key": "p50",
-                "expr": {},
-                "reverse": false,
-                "rand": false
+                "key": "heuristic",
+                "reverse": false
             },
             "parameters": {
+                "num": 3,
+                "choices": 2,
                 "hyperparameter": 4,
                 "rate": 5000,
-                "duration": 20
+                "duration": 20,
+                "epsilon": 0.0001,
+                "max_i": 1000,
+                "converge": false
             },
             "tree": {
                 "name": "",
@@ -186,62 +284,65 @@
             },
             "pool": [],
             "stages": [],
-            "perf": {
-                "root": "",
-                "key": "p50",
-                "select": 0,
-                "rate": 5000,
-                "duration": 20,
-                "items": [],
-                "selected": []
-            }
-        },
-        {
-            "name": "BEST",
-            "strategy": {
-                "key": "heuristic",
-                "expr": {},
-                "reverse": false,
-                "rand": false
-            },
-            "parameters": {
-                "hyperparameter": 4,
-                "rate": 5000,
-                "duration": 20
-            },
-            "tree": {
-                "name": "",
-                "depth": 3,
-                "fanout": 2,
-                "n": 0,
-                "max": 0,
-                "root": "",
-                "nodes": []
-            },
-            "pool": [],
-            "stages": [],
-            "perf": {
-                "root": "",
-                "key": "heuristic",
-                "select": 0,
-                "rate": 5000,
-                "duration": 20,
-                "items": [],
-                "selected": []
+            "perf": [
+                {
+                    "id": "",
+                    "root": "",
+                    "key": "heuristic",
+                    "select": 0,
+                    "rate": 5000,
+                    "duration": 20,
+                    "items": [],
+                    "selected": []
+                },
+                {
+                    "id": "",
+                    "root": "",
+                    "key": "heuristic",
+                    "select": 0,
+                    "rate": 5000,
+                    "duration": 20,
+                    "items": [],
+                    "selected": []
+                },
+                {
+                    "id": "",
+                    "root": "",
+                    "key": "heuristic",
+                    "select": 0,
+                    "rate": 5000,
+                    "duration": 20,
+                    "items": [],
+                    "selected": []
+                }
+            ],
+            "timers": {
+                "build": 0.0,
+                "stages": [],
+                "convergence": 0.0,
+                "perf": [
+                    0.0,
+                    0.0,
+                    0.0
+                ],
+                "total": 0.0
             }
         },
         {
             "name": "WORST",
             "strategy": {
                 "key": "p90",
-                "expr": {},
-                "reverse": true,
-                "rand": false
+                "reverse": true
             },
             "parameters": {
+                "num": 3,
+                "choices": 2,
                 "hyperparameter": 4,
                 "rate": 5000,
-                "duration": 20
+                "duration": 20,
+                "epsilon": 0.0001,
+                "max_i": 1000,
+                "converge": false
             },
             "tree": {
                 "name": "",
@@ -254,62 +355,65 @@
             },
             "pool": [],
             "stages": [],
-            "perf": {
-                "root": "",
-                "key": "p90",
-                "select": 0,
-                "rate": 5000,
-                "duration": 20,
-                "items": [],
-                "selected": []
+            "perf": [
+                {
+                    "id": "",
+                    "root": "",
+                    "key": "p90",
+                    "select": 0,
+                    "rate": 5000,
+                    "duration": 20,
+                    "items": [],
+                    "selected": []
+                },
+                {
+                    "id": "",
+                    "root": "",
+                    "key": "p90",
+                    "select": 0,
+                    "rate": 5000,
+                    "duration": 20,
+                    "items": [],
+                    "selected": []
+                },
+                {
+                    "id": "",
+                    "root": "",
+                    "key": "p90",
+                    "select": 0,
+                    "rate": 5000,
+                    "duration": 20,
+                    "items": [],
+                    "selected": []
+                }
+            ],
+            "timers": {
+                "build": 0.0,
+                "stages": [],
+                "convergence": 0.0,
+                "perf": [
+                    0.0,
+                    0.0,
+                    0.0
+                ],
+                "total": 0.0
             }
         },
         {
             "name": "WORST",
             "strategy": {
-                "key": "p75",
-                "expr": {},
-                "reverse": true,
-                "rand": false
-            },
-            "parameters": {
-                "hyperparameter": 4,
-                "rate": 5000,
-                "duration": 20
-            },
-            "tree": {
-                "name": "",
-                "depth": 3,
-                "fanout": 2,
-                "n": 0,
-                "max": 0,
-                "root": "",
-                "nodes": []
-            },
-            "pool": [],
-            "stages": [],
-            "perf": {
-                "root": "",
-                "key": "p75",
-                "select": 0,
-                "rate": 5000,
-                "duration": 20,
-                "items": [],
-                "selected": []
-            }
-        },
-        {
-            "name": "WORST",
-            "strategy": {
                 "key": "p50",
-                "expr": {},
-                "reverse": true,
-                "rand": false
+                "reverse": true
             },
             "parameters": {
+                "num": 3,
+                "choices": 2,
                 "hyperparameter": 4,
                 "rate": 5000,
-                "duration": 20
+                "duration": 20,
+                "epsilon": 0.0001,
+                "max_i": 1000,
+                "converge": false
             },
             "tree": {
                 "name": "",
@@ -322,62 +426,65 @@
             },
             "pool": [],
             "stages": [],
-            "perf": {
-                "root": "",
-                "key": "p50",
-                "select": 0,
-                "rate": 5000,
-                "duration": 20,
-                "items": [],
-                "selected": []
-            }
-        },
-        {
-            "name": "WORST",
-            "strategy": {
-                "key": "heuristic",
-                "expr": {},
-                "reverse": true,
-                "rand": false
-            },
-            "parameters": {
-                "hyperparameter": 4,
-                "rate": 5000,
-                "duration": 20
-            },
-            "tree": {
-                "name": "",
-                "depth": 3,
-                "fanout": 2,
-                "n": 0,
-                "max": 0,
-                "root": "",
-                "nodes": []
-            },
-            "pool": [],
-            "stages": [],
-            "perf": {
-                "root": "",
-                "key": "heuristic",
-                "select": 0,
-                "rate": 5000,
-                "duration": 20,
-                "items": [],
-                "selected": []
+            "perf": [
+                {
+                    "id": "",
+                    "root": "",
+                    "key": "p50",
+                    "select": 0,
+                    "rate": 5000,
+                    "duration": 20,
+                    "items": [],
+                    "selected": []
+                },
+                {
+                    "id": "",
+                    "root": "",
+                    "key": "p50",
+                    "select": 0,
+                    "rate": 5000,
+                    "duration": 20,
+                    "items": [],
+                    "selected": []
+                },
+                {
+                    "id": "",
+                    "root": "",
+                    "key": "p50",
+                    "select": 0,
+                    "rate": 5000,
+                    "duration": 20,
+                    "items": [],
+                    "selected": []
+                }
+            ],
+            "timers": {
+                "build": 0.0,
+                "stages": [],
+                "convergence": 0.0,
+                "perf": [
+                    0.0,
+                    0.0,
+                    0.0
+                ],
+                "total": 0.0
             }
         },
         {
             "name": "RAND",
             "strategy": {
-                "key": "p90",
-                "expr": {},
-                "reverse": false,
-                "rand": true
+                "key": "NONE",
+                "reverse": false
             },
             "parameters": {
+                "num": 3,
+                "choices": 2,
                 "hyperparameter": 4,
                 "rate": 5000,
-                "duration": 20
+                "duration": 20,
+                "epsilon": 0.0001,
+                "max_i": 1000,
+                "converge": false
             },
             "tree": {
                 "name": "",
@@ -390,28 +497,65 @@
             },
             "pool": [],
             "stages": [],
-            "perf": {
-                "root": "",
-                "key": "p90",
-                "select": 0,
-                "rate": 5000,
-                "duration": 20,
-                "items": [],
-                "selected": []
+            "perf": [
+                {
+                    "id": "",
+                    "root": "",
+                    "key": "NONE",
+                    "select": 0,
+                    "rate": 5000,
+                    "duration": 20,
+                    "items": [],
+                    "selected": []
+                },
+                {
+                    "id": "",
+                    "root": "",
+                    "key": "NONE",
+                    "select": 0,
+                    "rate": 5000,
+                    "duration": 20,
+                    "items": [],
+                    "selected": []
+                },
+                {
+                    "id": "",
+                    "root": "",
+                    "key": "NONE",
+                    "select": 0,
+                    "rate": 5000,
+                    "duration": 20,
+                    "items": [],
+                    "selected": []
+                }
+            ],
+            "timers": {
+                "build": 0.0,
+                "stages": [],
+                "convergence": 0.0,
+                "perf": [
+                    0.0,
+                    0.0,
+                    0.0
+                ],
+                "total": 0.0
             }
         },
         {
-            "name": "RAND",
+            "name": "LEMON",
             "strategy": {
-                "key": "p75",
-                "expr": {},
-                "reverse": false,
-                "rand": true
+                "key": "NONE",
+                "reverse": false
             },
             "parameters": {
+                "num": 3,
+                "choices": 2,
                 "hyperparameter": 4,
                 "rate": 5000,
-                "duration": 20
+                "duration": 20,
+                "epsilon": 0.0001,
+                "max_i": 1000,
+                "converge": false
             },
             "tree": {
                 "name": "",
@@ -424,28 +568,65 @@
             },
             "pool": [],
             "stages": [],
-            "perf": {
-                "root": "",
-                "key": "p75",
-                "select": 0,
-                "rate": 5000,
-                "duration": 20,
-                "items": [],
-                "selected": []
+            "perf": [
+                {
+                    "id": "",
+                    "root": "",
+                    "key": "NONE",
+                    "select": 0,
+                    "rate": 5000,
+                    "duration": 20,
+                    "items": [],
+                    "selected": []
+                },
+                {
+                    "id": "",
+                    "root": "",
+                    "key": "NONE",
+                    "select": 0,
+                    "rate": 5000,
+                    "duration": 20,
+                    "items": [],
+                    "selected": []
+                },
+                {
+                    "id": "",
+                    "root": "",
+                    "key": "NONE",
+                    "select": 0,
+                    "rate": 5000,
+                    "duration": 20,
+                    "items": [],
+                    "selected": []
+                }
+            ],
+            "timers": {
+                "build": 0.0,
+                "stages": [],
+                "convergence": 0.0,
+                "perf": [
+                    0.0,
+                    0.0,
+                    0.0
+                ],
+                "total": 0.0
             }
         },
         {
-            "name": "RAND",
+            "name": "LEMON",
             "strategy": {
-                "key": "p50",
-                "expr": {},
-                "reverse": false,
-                "rand": true
+                "key": "NONE",
+                "reverse": false
             },
             "parameters": {
+                "num": 3,
+                "choices": 2,
                 "hyperparameter": 4,
                 "rate": 5000,
-                "duration": 20
+                "duration": 20,
+                "epsilon": 5.5e-05,
+                "max_i": 10000,
+                "converge": false
             },
             "tree": {
                 "name": "",
@@ -458,48 +639,48 @@
             },
             "pool": [],
             "stages": [],
-            "perf": {
-                "root": "",
-                "key": "p50",
-                "select": 0,
-                "rate": 5000,
-                "duration": 20,
-                "items": [],
-                "selected": []
-            }
-        },
-        {
-            "name": "RAND",
-            "strategy": {
-                "key": "heuristic",
-                "expr": {},
-                "reverse": false,
-                "rand": true
-            },
-            "parameters": {
-                "hyperparameter": 4,
-                "rate": 5000,
-                "duration": 20
-            },
-            "tree": {
-                "name": "",
-                "depth": 3,
-                "fanout": 2,
-                "n": 0,
-                "max": 0,
-                "root": "",
-                "nodes": []
-            },
-            "pool": [],
-            "stages": [],
-            "perf": {
-                "root": "",
-                "key": "heuristic",
-                "select": 0,
-                "rate": 5000,
-                "duration": 20,
-                "items": [],
-                "selected": []
+            "perf": [
+                {
+                    "id": "",
+                    "root": "",
+                    "key": "NONE",
+                    "select": 0,
+                    "rate": 5000,
+                    "duration": 20,
+                    "items": [],
+                    "selected": []
+                },
+                {
+                    "id": "",
+                    "root": "",
+                    "key": "NONE",
+                    "select": 0,
+                    "rate": 5000,
+                    "duration": 20,
+                    "items": [],
+                    "selected": []
+                },
+                {
+                    "id": "",
+                    "root": "",
+                    "key": "NONE",
+                    "select": 0,
+                    "rate": 5000,
+                    "duration": 20,
+                    "items": [],
+                    "selected": []
+                }
+            ],
+            "timers": {
+                "build": 0.0,
+                "stages": [],
+                "convergence": 0.0,
+                "perf": [
+                    0.0,
+                    0.0,
+                    0.0
+                ],
+                "total": 0.0
             }
         }
     ]

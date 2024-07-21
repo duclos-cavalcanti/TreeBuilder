@@ -2,15 +2,20 @@
 
 ROLE=${ROLE}
 CLOUD=${CLOUD}
+SUFFIX=${SUFFIX}
 BUCKET=${BUCKET}
 IP_ADDR=${IP_ADDR}
 PORT=${PORT}
+
+FOLDER="treefinder-$CLOUD-$SUFFIX"
 
 echo "---- STARTUP ------"
 echo "ROLE: $ROLE"
 echo "CLOUD: $CLOUD"
 echo "BUCKET: $BUCKET"
 echo "IP_ADDR: $IP_ADDR"
+echo "SUFFIX: $SUFFIX"
+echo "FOLDER: $FOLDER"
 
 setup() {
     mkdir -p /work/logs
@@ -38,30 +43,20 @@ ttcs() {
     popd
 }
 
-upload() {
-    local TS=$(date +"%m-%d-%H:%M:%S")
-    local RESULTS="exp-results-nyu-systems-multicast"
-    local FOLDER="treefinder-$CLOUD-$TS/results.tar.gz"
-    pushd /work 
-        echo "COMPRESSING LOGS"
-        mv project/schemas/default.json /work/logs/
-        tar -zcvf results.tar.gz ./logs
-        gcloud storage cp results.tar.gz "gs://$RESULTS/$FOLDER/results.tar.gz"
-        echo "FINISHED UPLOAD"
-    popd
-}
-
 main() {
     sleep 1s
 
     setup
+
+    echo "FOLDER: $FOLDER"
+    gcloud storage cp /work/project/schemas/default.json "gs://exp-results-nyu-systems-multicast/$FOLDER/"
+
     ttcs
 
     pushd /work/project
         echo "-- ROLE: $ROLE --"
-
-        echo python3 -m manager -a manager -n $ROLE  -i $IP_ADDR -p $PORT
-        # upload
+        echo python3 -m manager -a manager -n $ROLE  -i $IP_ADDR -p $PORT -s schemas/default.json
+        echo /work/project/scripts/upload.sh $ROLE $CLOUD $FOLDER
     popd
 }
 

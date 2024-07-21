@@ -4,13 +4,17 @@ role="$1"
 addr="$2"
 port="$3"
 count=$4
+suffix="$5"
 
 export ROLE="$role"
 TAR="/work/project.tar.gz"
 
+FOLDER="treefinder-docker-${suffix}"
+
 setup() {
     mkdir -p /work/logs
     mkdir -p /work/project
+    mkdir -p /work/results
     tar -xzf ${TAR} -C /work/project
 
     mkdir /work/project/build
@@ -53,6 +57,15 @@ idelay_probabilistic() {
     echo "SUCCESSFUL INGRESS DELAY: ${dur}ms ± ${stddev}ms (normal distribution)"
 }
 
+upload() {
+    local TARFILE="${role}.tar.gz"
+    pushd /work
+        echo "COMPRESSING"
+        tar -zcvf ${TARFILE} ./logs
+        mv ${TARFILE} /work/results/${FOLDER}/
+    popd 
+}
+
 main() {
     setup
     pushd /work/project
@@ -65,26 +78,32 @@ main() {
             # make obviously a bad choice
             # 500 us
             idelay 0.5
+            edelay 0.5
         else
             # all even numbered nodes
 
             # slightly worst
-            if (( $count % 2 == 0)); then 
+            if  (( $count % 2 == 0)); then 
                 # delay of 200 us
-                idelay 0.2
+                if [ $count -gt 10 ]; then
+                    idelay 0.4
+                fi
 
             # odd numbered workers
             else
                 # greater than 9
                 if [ $count -gt 9 ]; then
                     # 400 us delay with 150 us standard deviation
-                    idelay_probabilistic 0.4 0.25
+                    idelay_probabilistic 0.2 0.02
                 fi
             fi
         fi
 
-        echo python3 -m manager -a worker -n ${role}  -i ${addr} -p ${port} -s schemas/docker.json
-        python3 -m manager -a worker -n ${role}  -i ${addr} -p ${port} -s schemas/docker.json
+        echo python3 -m manager -a worker -n ${role}  -i ${addr} -p ${port} -s schemas/default.json
+        python3 -m manager -a worker -n ${role}  -i ${addr} -p ${port} -s schemas/default.json
+
+        upload
+
         bash
     popd
 }

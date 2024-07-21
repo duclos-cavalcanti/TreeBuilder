@@ -67,6 +67,14 @@ double get_variance(const std::vector<int64_t>& data) {
     return variance;
 }
 
+double get_mean(const std::vector<int64_t>& data) {
+    if (data.empty()) {
+        throw std::runtime_error("Data vector is empty");
+    }
+    double mean = std::accumulate(data.begin(), data.end(), 0.0) / data.size();
+    return mean;
+}
+
 double get_stdev(const std::vector<int64_t>& data) {
     if (data.empty()) {
         throw std::runtime_error("Data vector is empty");
@@ -84,12 +92,16 @@ double get_stdev(const std::vector<int64_t>& data) {
     return stddev;
 }
 
-int write_csv(const std::vector<int64_t>& data, std::string name) {
+int write_csv(const std::vector<int64_t>& data, std::string name, std::string header) {
     std::string filename    = "/work/logs/" + name + ".csv";
     std::ofstream f(filename);
 
     if (!f.is_open())
         return -1;
+
+    if (header != "") {
+        f << header << "\n";
+    }
 
     for (size_t i = 0; i < data.size(); ++i)
         f << i << "," << data[i] << "\n";

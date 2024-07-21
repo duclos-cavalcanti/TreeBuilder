@@ -51,6 +51,7 @@ class Lemon(Task):
             raise RuntimeError("Failed Job")
 
         data:ResultDict = {
+                "id": "lemon",
                 "root": job.addr,
                 "key": run.data["strategy"]["key"],
                 "select": job.select, 
@@ -68,6 +69,7 @@ class Lemon(Task):
                     "p50":      job.floats[i],
                     "p25":      0.0,
                     "stddev":   0.0,
+                    "mean":     0.0,
                     "recv":     job.integers[i],
             }
             data["items"].append(item)

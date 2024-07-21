@@ -6,6 +6,7 @@ enum Type {
     COMMAND = 2;
     REPORT = 3;
     ERR = 4;
+    LOG = 5;
 }
 
 enum Flag {

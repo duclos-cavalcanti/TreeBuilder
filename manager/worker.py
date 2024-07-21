@@ -161,6 +161,9 @@ class Worker():
         _       = self.req.handshake(e)
         return self.node.ack_message(m)
 
+    def logACK(self, m:Message):
+        return self.node.ack_message(m)
+
     def start(self):
         self.node.bind()
         while(True):
@@ -172,5 +175,8 @@ class Worker():
                 case Type.COMMAND:  self.commandACK(m)
                 case Type.REPORT:   self.reportACK(m)
                 case Type.ERR:      self.errorACK(m)
+                case Type.LOG:      self.logACK(m)
                 case _:             raise NotImplementedError()
+            
+            if m.type == Type.LOG: break
 

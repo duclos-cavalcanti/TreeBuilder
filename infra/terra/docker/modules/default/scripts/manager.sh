@@ -3,14 +3,17 @@
 role="$1"
 addr="$2"
 port="$3"
+suffix="$4"
 
 export ROLE="$role"
 TAR="/work/project.tar.gz"
-BUCKET=
+
+FOLDER="treefinder-docker-${suffix}"
 
 setup() {
     mkdir -p /work/logs
     mkdir -p /work/project
+    mkdir -p /work/results
     tar -xzf ${TAR} -C /work/project
 
     mkdir /work/project/build
@@ -18,6 +21,8 @@ setup() {
         cmake ..
         make
     popd
+
+    mkdir -p /work/results/${FOLDER}
 }
 
 tzone() {
@@ -26,19 +31,12 @@ tzone() {
 }
 
 upload() {
-    local TS=$(date +"%m-%d-%H:%M:%S")
-    local FOLDER="treefinder-docker-$TS"
-    pushd /work 
-        echo "COMPRESSING LOGS"
-        mv project/schemas/docker.json /work/logs/
-        tar -zcvf results.tar.gz ./logs
-
-        echo "MAKING DIR=$FOLDER"
-        mkdir /work/logs/$FOLDER
-
-        mv results.tar.gz /work/logs/$FOLDER
-        echo "FINISHED UPLOAD"
-    popd
+    local TARFILE="${role}.tar.gz"
+    pushd /work
+        echo "COMPRESSING"
+        tar -zcvf ${TARFILE} ./logs
+        mv ${TARFILE} /work/results/${FOLDER}/
+    popd 
 }
 
 main() {
@@ -48,8 +46,11 @@ main() {
 
         tzone
 
-        echo python3 -m manager -a manager -n ${role}  -i ${addr} -p ${port} -s schemas/docker.json
-        python3 -m manager -a manager -n ${role}  -i ${addr} -p ${port} -s schemas/docker.json
+        mv project/schemas/default.json /work/results/${FOLDER}
+
+        echo python3 -m manager -a manager -n ${role}  -i ${addr} -p ${port} -s schemas/default.json
+        time python3 -m manager -a manager -n ${role}  -i ${addr} -p ${port} -s schemas/default.json
+
         upload
 
         bash

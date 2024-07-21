@@ -25,6 +25,12 @@ variable "bucket" {
     default     = "treefinder-nyu-systems"
 }
 
+variable "suffix" {
+    description = "suffix to folder created in bucket"
+    type        = string
+    default     = "example"
+}
+
 variable "addrs" {
     description = "List of ip addresses"
     type        = list(string)
@@ -100,24 +106,12 @@ resource "google_compute_instance" "manager_instance" {
         "enable-oslogin" = "TRUE"
         "startup-script" = templatefile("${path.cwd}/modules/default/scripts/manager.sh", {
             ROLE         = var.names[0],
-            CLOUD        = "GCP",
+            CLOUD        = "gcp",
+            SUFFIX       = var.suffix,
             IP_ADDR      = var.addrs[0],
             PORT         = var.port,
             BUCKET       = var.bucket
         })
-    }
-
-    provisioner "file" {
-        content     = templatefile("${path.cwd}/modules/default/scripts/upload.sh", {
-            CLOUD        = "GCP",
-        })
-        destination = "/work/upload.sh"
-    }
-
-    provisioner "remote-exec" {
-        inline = [
-            "chmod +x /work/upload.sh",
-        ]
     }
 
     network_interface {
@@ -164,7 +158,8 @@ resource "google_compute_instance" "worker_instance" {
         "enable-oslogin" = "TRUE"
         "startup-script" = templatefile("${path.cwd}/modules/default/scripts/worker.sh", {
             ROLE         = var.names[count.index + 1],
-            CLOUD        = "GCP",
+            CLOUD        = "gcp",
+            SUFFIX       = var.suffix,
             IP_ADDR      = var.addrs[count.index + 1],
             PORT         = var.port,
             BUCKET       = var.bucket

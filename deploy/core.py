@@ -4,6 +4,8 @@ from manager import Timer, TreeBuilder, RunDict, StrategyDict, ParametersDict, T
 import os
 import json
 
+from datetime import datetime
+
 def compress(dst:str):
     command = "tar --exclude=jasper \
 		       --exclude=project.tar.gz \
@@ -53,6 +55,7 @@ def run(name:str, key:str, args, epsilon:float=1e-4, max_i:int=1000):
             "pool": [],
             "stages": [],
             "perf":  [ ResultDict({
+                "id": "",
                 "root": "",
                 "key": key,
                 "select": 0, 
@@ -82,10 +85,11 @@ def runs(args):
                 runs.append(r)
 
         runs.append(run(name="WORST",  key="p90", args=args))
+        runs.append(run(name="WORST",  key="p50", args=args))
 
         runs.append(run(name="RAND",   key="NONE", args=args))
 
-        hyperparameters = [ (1e-4, 1000) ]
+        hyperparameters = [ (1e-4, 1000), (5.5e-5, 10000) ]
         for tup in hyperparameters:
             epsilon, max_i = tup
             runs.append(run(name="LEMON", key="NONE", args=args, epsilon=epsilon, max_i=max_i))
@@ -104,7 +108,7 @@ def commands(args, addrs):
     match args.mode:
         case "mcast":
             tb  = TreeBuilder(arr=addrs, depth=args.depth, fanout=args.fanout)
-            ret = tb.mcast(rate=args.rate, duration=args.duration)
+            ret = tb.mcast(rate=args.rate, duration=args.duration, id="example")
             commands.extend(ret.buf)
 
         case "udp":
@@ -130,6 +134,7 @@ def config(args, path):
     names       = [ "manager" ] + [ f"worker{i}" for i in range(args.size) ]
     data        = {
             "infra": args.infra,
+            "suffix": datetime.now().strftime("%Y-%m-%d-%H-%M-%S"),
             "port": args.port,
             "addrs": addrs,
             "saddrs": saddrs,
@@ -147,7 +152,7 @@ def config(args, path):
 
     del data["commands"]
 
-    with open("schemas/default.json" if data["infra"] == "gcp" else "schemas/docker.json", "w") as file: 
+    with open("schemas/default.json", "w") as file: 
         json.dump(data, file, indent=4)
 
     return data

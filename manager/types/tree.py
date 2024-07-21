@@ -58,15 +58,17 @@ class TreeBuilder():
             c   =   f"./bin/mcast "
             c   +=  f" -r {data.rate} -d {data.duration}"
             c   +=  f" -i {node.id.split(':')[0]} -p {data.port}"
+            c   +=  f" -n {node.id.split(':')[0]}_{data.id}"
 
         data.buf.append(c)
 
-    def mcast(self, rate, duration, port:int=7070):
+    def mcast(self, rate, duration, id, port:int=7070):
         class Data:
             def __init__(self, rate, duration, port):
                 self.rate       = rate
                 self.duration   = duration
                 self.port       = port
+                self.id         = id
                 self.buf        = []
 
         data = Data(rate, duration, port)

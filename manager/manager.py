@@ -52,7 +52,7 @@ class Manager():
             task    = Lemon()
             c       = task.build(run)
             c.addr  = addr
-            c.instr.append(f"./bin/lemon -i {self.node.ip(addr)} -p {port} -s docker -f {ts}")
+            c.instr.append(f"./bin/lemon -i {self.node.ip(addr)} -p {port} -s default -f {ts}")
             m       = self.node.message(dst=addr, t=Type.COMMAND, mdata=Metadata(command=c))
             r       = self.node.handshake(m, field="job")
             job     = r.mdata.job
@@ -103,3 +103,10 @@ class Manager():
 
             if rjob.end: return task.evaluate(rjob, run)
             else:        self.node.timer.sleep_sec(interval)
+
+    def flush(self):
+        self.L.state(f"STATE[FLUSH]")
+
+        for addr in self.workers:
+            m = self.node.message(dst=addr, t=Type.LOG)
+            _ = self.node.handshake(m)

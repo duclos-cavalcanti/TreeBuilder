@@ -7,9 +7,11 @@ class ItemDict(TypedDict):
     p50: float 
     p25: float 
     stddev: float 
+    mean: float 
     recv: int
 
 class ResultDict(TypedDict):
+    id: str
     root: str
     key:  str
     select: int 

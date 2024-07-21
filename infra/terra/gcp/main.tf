@@ -40,6 +40,7 @@ locals {
     saddrs  = local.data.saddrs
     port    = local.data.port
     names   = local.data.names
+    suffix  = local.data.suffix
 }
 
 provider "google" {
@@ -59,6 +60,7 @@ module "default" {
     saddrs  = local.saddrs
     port    = local.port
     names   = local.names
+    suffix  = local.suffix
 }
 
 module "test" {

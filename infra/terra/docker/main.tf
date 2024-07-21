@@ -22,6 +22,7 @@ locals {
     port     = local.data.port
     names    = local.data.names
     commands = local.data.commands
+    suffix   = local.data.suffix
 }
 
 module "default" {
@@ -31,6 +32,7 @@ module "default" {
     addrs   = local.addrs
     names   = local.names
     port    = local.port
+    suffix  = local.suffix
 }
 
 module "udp" {

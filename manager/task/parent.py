@@ -56,6 +56,7 @@ class Parent(Task):
             p50   = float(self.job.data[3])
             p25   = float(self.job.data[4])
             dev   = float(self.job.data[5])
+            mean  = float(self.job.data[6])
             
             self.job.ClearField('data')
             self.job.ClearField('integers')
@@ -63,7 +64,7 @@ class Parent(Task):
 
             self.job.data.append(self.job.addr)
             self.job.integers.append(recv)
-            self.job.floats.extend([p90, p75, p50, p25, dev])
+            self.job.floats.extend([p90, p75, p50, p25, dev, mean])
         else: 
             self.job.ClearField('data')
             self.job.ClearField('integers')
@@ -82,6 +83,7 @@ class Parent(Task):
             raise RuntimeError("Failed Job")
 
         data:ResultDict = {
+                "id": job.id,
                 "root": job.addr,
                 "key": run.data["strategy"]["key"],
                 "select": job.select, 
@@ -91,7 +93,7 @@ class Parent(Task):
                 "selected": []
         }
 
-        for j,i in enumerate(range(0, len(job.floats), 5)):
+        for j,i in enumerate(range(0, len(job.floats), 6)):
             item: ItemDict = {
                     "addr":     job.data[j],
                     "p90":      job.floats[i],
@@ -99,6 +101,7 @@ class Parent(Task):
                     "p50":      job.floats[i + 2],
                     "p25":      job.floats[i + 3],
                     "stddev":   job.floats[i + 4],
+                    "mean":     job.floats[i + 5],
                     "recv":     job.integers[j],
             }
             data["items"].append(item)

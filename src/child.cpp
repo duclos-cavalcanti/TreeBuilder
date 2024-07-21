@@ -181,8 +181,8 @@ int child(void) {
 int output(std::vector<int64_t>& data, unsigned long cnt) {
     int     ret = 0;
     int64_t ts  = timestamp();
-    std::string errout = "-1\n-1\n-1\n-1\n-1";
-    std::string name = ( config.name == "" ? "results" : config.name ) + "_" + std::to_string(ts);
+    std::string errout = "-1\n-1\n-1\n-1\n-1\n-1";
+    std::string name = ( config.name == "" ? "results" : config.name ) + "_child_" + std::to_string(ts);
 
     try {
         double p90 = get_percentile(data, 90);
@@ -190,6 +190,7 @@ int output(std::vector<int64_t>& data, unsigned long cnt) {
         double p50 = get_percentile(data, 50);
         double p25 = get_percentile(data, 25);
         double dev = get_stdev(data);
+        double mean = get_mean(data);
 
         fprintf(stdout, "%lu\n", cnt);
         fprintf(stdout, "%lf\n", p90);
@@ -197,6 +198,7 @@ int output(std::vector<int64_t>& data, unsigned long cnt) {
         fprintf(stdout, "%lf\n", p50);
         fprintf(stdout, "%lf\n", p25);
         fprintf(stdout, "%lf\n", dev);
+        fprintf(stdout, "%lf\n", mean);
         ret = EXIT_SUCCESS;
 
     } catch (const std::runtime_error& e) {
@@ -204,8 +206,13 @@ int output(std::vector<int64_t>& data, unsigned long cnt) {
         ret = EXIT_FAILURE;
     }
 
+    std::string header =   config.ip + ","
+                         + std::to_string(config.rate) + "," 
+                         + std::to_string(config.duration) + ","
+                         + std::to_string(ts);
+
     if (ret)    return ret;
-    else        return (ret = write_csv(data, name));
+    else        return (ret = write_csv(data, name, header));
 }
 
 int main(int argc, char **argv) {

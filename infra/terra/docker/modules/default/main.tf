@@ -33,13 +33,19 @@ variable "names" {
     default     = ["name"]
 }
 
+variable "suffix" {
+    description = "suffix to folder created in bucket"
+    type        = string
+    default     = "example"
+}
+
 resource "docker_container" "manager" {
     name  = "manager"
     image = "ubuntu-base:jammy"
 
     volumes {
         host_path = "${path.cwd}/modules/default/volume/"
-        container_path = "/work/logs"
+        container_path = "/work/results"
         # volume_name    = docker_volume.shared_volume.name
     }
 
@@ -60,7 +66,7 @@ resource "docker_container" "manager" {
         ipv4_address = var.addrs[0]
     }
 
-    entrypoint = ["/bin/bash", "/manager.sh", var.names[0], var.addrs[0], var.port ]
+    entrypoint = ["/bin/bash", "/manager.sh", var.names[0], var.addrs[0], var.port, var.suffix ]
 
     rm         = true
     tty        = true
@@ -74,7 +80,7 @@ resource "docker_container" "workers" {
 
     volumes {
         host_path = "${path.cwd}/modules/default/volume/"
-        container_path = "/work/logs"
+        container_path = "/work/results"
         # volume_name    = docker_volume.shared_volume.name
     }
 
@@ -95,7 +101,7 @@ resource "docker_container" "workers" {
         ipv4_address = var.addrs[1 + count.index]
     }
 
-    entrypoint = ["/bin/bash", "/worker.sh", var.names[count.index + 1], var.addrs[count.index + 1], var.port, count.index]
+    entrypoint = ["/bin/bash", "/worker.sh", var.names[count.index + 1], var.addrs[count.index + 1], var.port, count.index, var.suffix]
 
     privileged = true
     rm         = true

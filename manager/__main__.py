@@ -48,6 +48,14 @@ def parse():
         dest="name",
     )
 
+    arg_def.add_argument(
+        "-f", "--folder",
+        type=str,
+        default="",
+        required=False,
+        dest="folder",
+    )
+
     args = arg_def.parse_args()
     return args
 

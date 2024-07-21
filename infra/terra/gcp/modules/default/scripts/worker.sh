@@ -2,17 +2,20 @@
 
 ROLE=${ROLE}
 CLOUD=${CLOUD}
+SUFFIX=${SUFFIX}
 BUCKET=${BUCKET}
 IP_ADDR=${IP_ADDR}
 PORT=${PORT}
+
+FOLDER="treefinder-$CLOUD-$SUFFIX"
 
 echo "---- STARTUP ------"
 echo "ROLE: $ROLE"
 echo "CLOUD: $CLOUD"
 echo "BUCKET: $BUCKET"
 echo "IP_ADDR: $IP_ADDR"
-
-sleep 1s
+echo "SUFFIX: $SUFFIX"
+echo "FOLDER: $FOLDER"
 
 setup() {
     mkdir -p /work/logs
@@ -48,7 +51,10 @@ main() {
 
     pushd /work/project
         echo "-- ROLE: $ROLE --"
-        python3 -m manager -a worker -n $ROLE  -i $IP_ADDR -p $PORT
+        python3 -m manager -a worker -n $ROLE  -i $IP_ADDR -p $PORT -s schemas/default.json
+
+        echo /work/project/scripts/upload.sh $ROLE $CLOUD $FOLDER
+        /work/project/scripts/upload.sh $ROLE $CLOUD $FOLDER
     popd
 }
 

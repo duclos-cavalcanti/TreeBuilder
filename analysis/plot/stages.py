@@ -20,6 +20,7 @@ def stages(run:RunDict, A:Analyzer, dir:str):
     cloud    = A.schema['infra'].upper()
 
     for i,result in enumerate(run["stages"]):
+        iter = i
         G.name = f"{run['name']}-STAGE-{i}"
 
         # meta
@@ -65,18 +66,18 @@ def stages(run:RunDict, A:Analyzer, dir:str):
         cellcolors  = [ ['white' for _ in range(len(clabels))] for _ in range(len(rlabels)) ]
         data        = []
 
-        for i,d in enumerate(result["items"]):
-            addr = rlabels[i]
+        for j,d in enumerate(result["items"]):
+            addr = rlabels[j]
             score = EXPRESSIONS[key](d)
 
             if addr in sel:
                 if key in KEYS:
-                    cellcolors[i][0] = pargs.blue
-                    cellcolors[i][KEYS.index(key) + 1] = pargs.red
+                    cellcolors[j][0] = pargs.blue
+                    cellcolors[j][KEYS.index(key) + 1] = pargs.red
                 elif key == "heuristic":
-                    cellcolors[i][0] = pargs.blue
-                    cellcolors[i][KEYS.index("p90")    + 1] = pargs.red
-                    cellcolors[i][KEYS.index("stddev") + 1] = pargs.red
+                    cellcolors[j][0] = pargs.blue
+                    cellcolors[j][KEYS.index("p90")    + 1] = pargs.red
+                    cellcolors[j][KEYS.index("stddev") + 1] = pargs.red
 
             perc = 100 * (float(d["recv"]/total))
             data.append([ rnd(float(score)),
@@ -117,8 +118,8 @@ def stages(run:RunDict, A:Analyzer, dir:str):
                    fontsize=pargs.font + 3)
 
         # plt.tight_layout()
-        print(f"PLOTTING TREE[{name}:{key}:{root}] STAGE[{i + 1}]")
-        plt.savefig(f"{dir}/stages/TREE-{name}-{key}-{root}-STAGE{i + 1}.png", format="png")
+        print(f"PLOTTING TREE[{name}:{key}:{root}] STAGE[{iter + 1}]")
+        plt.savefig(f"{dir}/stages/TREE-{name}-{key}-{root}-STAGE{iter + 1}.png", format="png")
         plt.close('all')
         plt.clf()
         del fig 

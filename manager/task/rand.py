@@ -18,6 +18,7 @@ class Rand(Task):
         arr = run.pool.slice()
 
         data:ResultDict = {
+                "id": "rand",
                 "root": run.tree.next(),
                 "key": run.data["strategy"]["key"],
                 "select": 1, 
@@ -35,6 +36,7 @@ class Rand(Task):
                     "p50":      0.0,
                     "p25":      0.0,
                     "stddev":   0.0,
+                    "mean":     0.0,
                     "recv":     0,
             }
             data["items"].append(item)
