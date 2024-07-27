@@ -18,6 +18,7 @@ class Worker():
         self.manager                                    = manager
         self.map                                        = map
         self.tasks: Dict[str, Tuple[Task, Thread]]      = {}
+        self.errors                                     = []
         self.L                                          = Logger(name=f"{name}:{ip}")
 
     def run(self, job:Job):
@@ -119,10 +120,14 @@ class Worker():
 
         task              = Constructor(command)
         job, commands     = task.handle(command)
-        jobs              = self.scatter(commands)
+        
+        try:
+            jobs = self.scatter(commands)
+            if jobs: task.deps.extend(jobs)
+            self.launch(task)
 
-        if jobs: task.deps.extend(jobs)
-        self.launch(task)
+        except Exception as e:
+            job.ret = -1
 
         return job
 
@@ -156,10 +161,7 @@ class Worker():
         return self.node.ack_message(m, mdata=Metadata(job=ret))
 
     def errorACK(self, m:Message):
-        desc    = m.mdata.error.desc
-        e       = self.req.message(dst=self.manager, ref=m.ref, t=Type.ERR, mdata=Metadata(error=Error(desc=desc)), id=m.id)
-        _       = self.req.handshake(e)
-        return self.node.ack_message(m)
+        raise RuntimeError()
 
     def logACK(self, m:Message):
         return self.node.ack_message(m)
@@ -169,7 +171,7 @@ class Worker():
         while(True):
             m = self.node.recv_message()
             self.L.state(f"STATE[{Type.Name(m.type)}]")
-        
+
             match m.type:
                 case Type.CONNECT:  self.connectACK(m)
                 case Type.COMMAND:  self.commandACK(m)

@@ -3,13 +3,12 @@ import matplotlib.pyplot as plt
 
 from matplotlib.table import table
 
-matplotlib.use('agg')
-
 from ..analysis import Analyzer
+from ..utils    import rnd
+
 from manager    import RunDict, ResultDict, KEYS, EXPRESSIONS
 
 from .draw      import draw_subtitle, draw_graph
-from .utils     import rnd
 from .args      import pargs
 
 def comparison(G1, G2, data1:RunDict, data2:RunDict, A:Analyzer, dir:str):
@@ -181,7 +180,7 @@ def comparison(G1, G2, data1:RunDict, data2:RunDict, A:Analyzer, dir:str):
         name_1  = f"{name_1}x{data1['parameters']['epsilon']}x{data1['parameters']['max_i']}"
     
     if "LEMON" in name_2:
-        name_2  = f"{name_1}x{data2['parameters']['epsilon']}x{data2['parameters']['max_i']}"
+        name_2  = f"{name_2}x{data2['parameters']['epsilon']}x{data2['parameters']['max_i']}"
 
     fig.legend(handles=handles,  loc='center', fontsize=pargs.font)
     plt.tight_layout()

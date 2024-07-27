@@ -80,7 +80,7 @@ class Parent(Task):
 
     def evaluate(self, job:Job, run:Run) -> ResultDict:
         if job.ret != 0:  
-            raise RuntimeError("Failed Job")
+            raise RuntimeError(f"JOB FAILURE: {job}")
 
         data:ResultDict = {
                 "id": job.id,

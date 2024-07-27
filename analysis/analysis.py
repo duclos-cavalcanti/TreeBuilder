@@ -72,7 +72,7 @@ class Analyzer():
         root    = run["tree"]["root"]
         key     = run['strategy']['key']
 
-        if   name == "LEMON": G.name = f"{name}"
+        if   "LEMON" in name: G.name = f"{name}"
         elif name == "RAND":  G.name = f"{name}"
         else:                 G.name = f"{name}-{key}"
 

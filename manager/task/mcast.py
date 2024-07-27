@@ -11,7 +11,7 @@ class Mcast(Task):
         id  = self.generate()
         arr = run.tree.arr()
         tb  = TreeBuilder(arr=arr, depth=run.tree.d, fanout=run.tree.fanout) 
-        ret = tb.mcast(rate=run.data["parameters"]["rate"], duration=run.data["parameters"]["duration"], id=id)
+        ret = tb.mcast(rate=run.data["parameters"]["rate"], duration=run.data["parameters"]["evaluation"], id=id)
 
         c = Command()
         c.flag      = Flag.MCAST
@@ -22,7 +22,7 @@ class Mcast(Task):
         c.fanout    = run.tree.fanout
         c.select    = 1
         c.rate      = run.data["parameters"]["rate"]
-        c.duration  = run.data["parameters"]["duration"]
+        c.duration  = run.data["parameters"]["evaluation"]
         c.instr.extend([ i for i in ret.buf ])
         c.data.extend([ a for a in arr   ])
 
@@ -89,7 +89,7 @@ class Mcast(Task):
 
     def evaluate(self, job:Job, run:Run) -> ResultDict:
         if job.ret != 0:  
-            raise RuntimeError("Failed Job")
+            raise RuntimeError(f"JOB FAILURE: {job}")
 
         data:ResultDict = {
                 "id": job.id,

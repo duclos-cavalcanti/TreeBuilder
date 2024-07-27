@@ -3,13 +3,11 @@ import matplotlib.pyplot as plt
 
 from matplotlib.table import table
 
-matplotlib.use('agg')
-
-from ..analysis import Analyzer
 from manager    import RunDict, ResultDict, KEYS, EXPRESSIONS
+from ..analysis import Analyzer
+from ..utils    import rnd
 
 from .draw      import draw_subtitle, draw_graph
-from .utils     import rnd
 from .args      import pargs
 
 def performance(G, run:RunDict, iter:int, A:Analyzer, dir:str):
@@ -112,7 +110,7 @@ def performance(G, run:RunDict, iter:int, A:Analyzer, dir:str):
         plt.Line2D([0], [0], marker='s', color='w', markerfacecolor='black', markersize=10, label=f"Evaluation: {rnd(run['timers']['perf'][iter], 4)}sec"),
     ]
     
-    if name == "LEMON":
+    if "LEMON" in name:
         handles.append(plt.Line2D([0], [0], marker='s', color='w', markerfacecolor='black', markersize=10, label=f"Converged: {rnd(run['timers']['convergence'], 4)}sec"))
 
     plt.legend(handles = handles,

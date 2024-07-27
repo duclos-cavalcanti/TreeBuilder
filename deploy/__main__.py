@@ -68,6 +68,14 @@ def parse():
     )
 
     arg_def.add_argument(
+        "-e", "--evaluation",
+        type=int,
+        default=30,
+        required=False,
+        dest="evaluation",
+    )
+
+    arg_def.add_argument(
         "-s", "--size",
         type=int,
         default=9,

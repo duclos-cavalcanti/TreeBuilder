@@ -1,5 +1,6 @@
 import os 
 import shutil
+import matplotlib
 
 from manager        import RunDict
 
@@ -56,7 +57,8 @@ class Plotter():
                 comparison(trees[i], trees[j], self.A.runs[i], self.A.runs[j], self.A, self.dir)
                 cnt += 1
 
-    def plot(self, view:bool=False):
+    def process(self, view:bool=False):
+        matplotlib.use('agg')
         self.setup()
 
         for run in self.A.runs:

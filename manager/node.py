@@ -54,16 +54,24 @@ class Node():
         m = Message()
         m.ParseFromString(self.socket.recv())
         typ         = Type.Name(m.type)
+        src         = self.ip(m.src)
+        msrc        = self.map[m.src]
         dst         = self.ip(m.dst)
-        self.L.log(f"{typ}[{dst}] RECV")
+        mdst        = self.map[m.dst]
+        s           = f"[{typ}] {mdst.upper()}[{dst}] RECV FROM {msrc.upper()}[{src}]"
+        self.L.log(s)
         self.L.debug(f"{self.name} RECV", data=m)
         return m
 
     def send_message(self, m:Message) -> Message:
         self.socket.send(m.SerializeToString())
         typ         = Type.Name(m.type)
+        src         = self.ip(m.src)
+        msrc        = self.map[m.src]
         dst         = self.ip(m.dst)
-        self.L.log(f"{typ}[{dst}] SENT")
+        mdst        = self.map[m.dst]
+        s           = f"[{typ}] {msrc.upper()}[{src}] SENT TO {mdst.upper()}[{dst}]"
+        self.L.log(s)
         self.L.debug(f"{self.name} SENT", data=m)
         self.tick   += 1
         return m
@@ -73,7 +81,8 @@ class Node():
         return self.send_message(r)
 
     def err_message(self, m:Message, desc:str):
-        e = self.message(dst=m.src, ref=m.ref, t=Type.ERR, mdata=Metadata(error=Error(desc=desc)), id=m.id)
+        err = Error(flag=m.flag, addr=m.src, desc=desc)
+        e = self.message(dst=m.src, t=Type.ERR, mdata=Metadata(error=err), id=m.id)
         return self.send_message(e)
 
     def handshake(self, m:Message, field:str="") -> Message:

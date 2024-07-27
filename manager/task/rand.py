@@ -15,10 +15,8 @@ class Rand(Task):
         return Job()
 
     def evaluate(self, job:Job, run:Run) -> ResultDict:
-        arr = run.pool.slice()
-
         data:ResultDict = {
-                "id": "rand",
+                "id": f"rand-{run.tree.root.id}",
                 "root": run.tree.next(),
                 "key": run.data["strategy"]["key"],
                 "select": 1, 
@@ -28,21 +26,8 @@ class Rand(Task):
                 "selected": []
         }
 
-        for a in arr:                       
-            item: ItemDict = {
-                    "addr":     a,
-                    "p90":      0.0,
-                    "p75":      0.0,
-                    "p50":      0.0,
-                    "p25":      0.0,
-                    "stddev":   0.0,
-                    "mean":     0.0,
-                    "recv":     0,
-            }
-            data["items"].append(item)
-
         for _ in range(run.tree.fanout):    
-            data["selected"].append(run.pool.select(arr))
+            data["selected"].append(run.pool.select())
         
         self.L.debug(message=f"TASK EVAL[{Flag.Name(job.flag)}][{job.id}:{job.addr}]", data=data)
         return data

@@ -63,6 +63,7 @@ class Task(ABC):
         for d in self.deps:
             if d.ret != 0: 
                 if not ret: self.job.ClearField('data')
+                self.job.ret = d.ret
                 self.job.data.append(d.addr)
                 ret = True
 

@@ -39,6 +39,7 @@ def run(name:str, key:str, args, epsilon:float=1e-4, max_i:int=1000):
                 "hyperparameter": args.fanout * 2,
                 "rate": args.rate, 
                 "duration": args.duration,
+                "evaluation": args.evaluation,
                 "epsilon": epsilon, 
                 "max_i": max_i,
                 "converge": False
@@ -86,16 +87,15 @@ def runs(args):
 
         runs.append(run(name="WORST",  key="p90", args=args))
         runs.append(run(name="WORST",  key="p50", args=args))
-
         runs.append(run(name="RAND",   key="NONE", args=args))
 
-        hyperparameters = [ (1e-4, 1000), (5.5e-5, 10000) ]
+        hyperparameters = [ (1e-4, 1000) ]
         for tup in hyperparameters:
             epsilon, max_i = tup
             runs.append(run(name="LEMON", key="NONE", args=args, epsilon=epsilon, max_i=max_i))
 
     if args.mode == "lemondrop":
-        hyperparameters = [(1e-4, 1000), (8.5e-05, 100000), (5.5e-05, 100000) ]
+        hyperparameters = [ (1e-4, 1000), (5.5e-5, 10000), (1e-5, 10000) ]
         for tup in hyperparameters:
             epsilon, max_i = tup
             runs.append(run(name="LEMON", key="NONE", args=args, epsilon=epsilon, max_i=max_i))

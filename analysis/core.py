@@ -1,4 +1,3 @@
-import glob
 import subprocess
 import os
 import shutil
@@ -6,11 +5,10 @@ import json
 
 from manager import RunDict
 
-from .analysis  import Analyzer
-from .udp       import UDP
-from .plot      import Plotter
-from .slides    import export
-from .utils     import *
+from .analysis      import Analyzer
+from .supervisor    import Supervisor
+from .plot          import Plotter
+from .utils         import *
 
 def load(dir:str):
     f = "default.json"
@@ -52,7 +50,7 @@ def gpull(prefix:str):
     for a in arr:
         if prefix in a:
             print(f"PULLING {a}")
-            yield a
+            return a
 
     raise RuntimeError(f"No bucket found on GCP matching: {prefix}")
 
@@ -61,27 +59,22 @@ def gcopy(src:str, dst:str, bucket:str="gs://exp-results-nyu-systems-multicast")
 
 def pull(args):
     if args.infra == "gcp":
-        for res in gpull(args.prefix):
-            src = res.split('/')[-2]
-            dst = os.path.join(os.getcwd(), "analysis", "data")
-            path = os.path.join(os.getcwd(), "analysis", "data", src)
-            file = os.path.join(path, "results.tar.gz", "results.tar.gz")
-            if not os.path.isdir(path):
-                os.mkdir(path)
+        res = gpull(args.prefix)
+        src = res.split('/')[-2]
+        dst = os.path.join(os.getcwd(), "analysis", "data")
+        path = os.path.join(os.getcwd(), "analysis", "data", src)
 
-            gcopy(src, dst)
-            if os.path.exists(file):
-                shutil.move(file, f"{path}/tmp.tar.gz")
-                shutil.rmtree(os.path.join(path, "results.tar.gz"))
-                shutil.move(f"{path}/tmp.tar.gz", f"{path}/results.tar.gz")
-                extract(f"{path}")
-            else:
-                raise RuntimeError(f"Bucket: {path} has been pulled already")
+        if os.path.isdir(path):
+            print(f"FOLDER ALREADY EXISTS: {path}")
+            return
+
+        gcopy(src, dst)
+        extract(path)
         return
 
     elif args.infra == "docker":
         dir = isdir("infra/terra/docker/modules/default/volume")
-        src = find(dir=dir, pattern=f"treefinder-docker-{args.prefix}")
+        src = finddir(dir=dir, patt=f"treefinder-docker-{args.prefix}")
         dst = isdir("analysis/data")
         shutil.move(src,  dst)
         print(f"MOVED: {src} -> {dst}")
@@ -94,23 +87,19 @@ def pull(args):
 def process(args):
     if args.mode == "default":
         dir = isdir("analysis/data")
-        dir = find(dir=dir, pattern=f"treefinder-{args.infra}-{args.prefix}")
+        dir = finddir(dir=dir, patt=f"treefinder-{args.infra}-{args.prefix}")
         runs   = read(os.path.join(dir, "manager", "logs"))
-        schema, map = load(os.path.join(dir, "manager", "logs"))
+        schema, map = load(dir)
         P = Plotter(runs, schema,  map, dir)
-        P.plot(view=args.view)
+        P.process(view=args.view)
 
-    elif args.mode == "udp":
-        dir  = isdir("infra/terra/docker/modules/default/volume")
-        csvs = glob.glob(os.path.join(dir, '*.csv'))
-        U = UDP()
-        U.process(csvs)
+    elif args.mode == "super":
+        dir = isdir("analysis/data")
+        dir = finddir(dir=dir, patt=f"treefinder-{args.infra}-{args.prefix}")
+        runs   = read(os.path.join(dir, "manager", "logs"))
+        schema, map = load(dir)
+        S = Supervisor(runs, schema, map, dir)
+        S.process()
 
     else: 
         raise NotImplementedError()
-
-def generate(args):
-    dir     = isdir("analysis/data")
-    dir     = find(dir=dir, pattern=f"treefinder-{args.infra}-{args.prefix}")
-    dir     = os.path.join(dir, "logs", "plot")
-    export(dir)

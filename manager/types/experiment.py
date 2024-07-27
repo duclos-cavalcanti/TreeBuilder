@@ -49,10 +49,16 @@ class Experiment():
             pairs.append((root, workers))
 
         for run in schema["runs"]:
-            if run["name"] == "LEMON": 
-                self.runs.append(Run(run, "NONE", self.workers, self.seed.get()))
-            else:                      
-                for pair in pairs: 
-                    root, workers = pair
-                    self.runs.append(Run(run, root, workers, self.seed.get()))
+            name = run["name"]
+            for i,pair in enumerate(pairs):
+                root, workers = pair
+                if name == "LEMON":
+                    run["name"] = f"LEMON-{i+1}"
+                    self.runs.append(Run(run, "NONE", self.workers, self.seed.get())  )
+
+                if name == "RAND":  
+                    self.runs.append(Run(run, root,   workers,      int(time.time())) )
+
+                else:               
+                    self.runs.append(Run(run, root,   workers,      self.seed.get())  )
 

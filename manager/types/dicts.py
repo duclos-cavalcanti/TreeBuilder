@@ -30,6 +30,7 @@ class ParametersDict(TypedDict):
     hyperparameter: int 
     rate: int 
     duration: int 
+    evaluation: int 
     epsilon: float 
     max_i: int
     converge: bool

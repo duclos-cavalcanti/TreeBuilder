@@ -77,24 +77,24 @@ main() {
         if [ $count -eq 0 ]; then 
             # make obviously a bad choice
             # 500 us
-            idelay 0.5
-            edelay 0.5
+            idelay 0.3
+            edelay 0.3
         else
             # all even numbered nodes
 
             # slightly worst
             if  (( $count % 2 == 0)); then 
                 # delay of 200 us
-                if [ $count -gt 10 ]; then
+                if [ $count -gt 12 ]; then
                     idelay 0.4
                 fi
 
             # odd numbered workers
             else
                 # greater than 9
-                if [ $count -gt 9 ]; then
+                if [ $count -gt 11 ]; then
                     # 400 us delay with 150 us standard deviation
-                    idelay_probabilistic 0.2 0.02
+                    idelay_probabilistic 0.4 0.02
                 fi
             fi
         fi

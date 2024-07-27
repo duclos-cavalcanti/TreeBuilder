@@ -5,11 +5,10 @@ import matplotlib.pyplot as plt
 
 from matplotlib.table import table
 
-matplotlib.use('agg')
-
 from manager    import Run, RunDict, ResultDict, KEYS, EXPRESSIONS
 from ..analysis import Analyzer
-from .utils     import rnd
+from ..utils    import rnd
+
 from .draw      import draw_subtitle, draw_graph
 from .args      import pargs
 

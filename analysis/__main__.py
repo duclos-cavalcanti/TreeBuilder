@@ -1,6 +1,6 @@
 import argparse
 
-from .core import pull, process, generate
+from .core import pull, process
 
 def parse():
     arg_def = argparse.ArgumentParser(
@@ -11,7 +11,7 @@ def parse():
     arg_def.add_argument(
         "-a", "--action",
         type=str,
-        choices=["pull", "process", "generate"],
+        choices=["pull", "process"],
         required=True,
         dest="action",
     )
@@ -21,7 +21,7 @@ def parse():
         type=str,
         required=False,
         default="default",
-        choices=["default", "udp", "mcast"],
+        choices=["default", "super"],
         dest="mode",
     )
 
@@ -64,7 +64,6 @@ def main():
     match args.action:
         case "pull":     pull(args)
         case "process":  process(args)
-        case "generate": generate(args)
         case _:         raise NotImplementedError()
 
     return

@@ -18,10 +18,8 @@ ifeq (, $(shell which terraform))
 $(error terraform not found)
 endif
 
-# 07-19-00:29:55
-#
-PREFIX  := 07-19-19:33:39
-GPREFIX := 06-22-22:19:00
+PREFIX  := 2024-07-21-15-07-42
+GPREFIX := 2024-07-21-13-08-04
 
 .PHONY: proto build udp mcast docker pull process clean rm docs test 
 all: build
@@ -49,11 +47,11 @@ image:
 	@python3 -m deploy -a build -i docker
 
 lemondrop:
-	@python3 -m deploy -a plan -i docker -m lemondrop -s 10 -d 2 -f 2 -p 9092 -n 1
+	@python3 -m deploy -a plan -i docker -m lemondrop -s 20 -d 3 -f 2 -p 9092 -n 1
 	@python3 -m deploy -a deploy -i docker
 
 docker:
-	@python3 -m deploy -a plan -i docker -s 20 -p 9092 -r 5000 -t 10 -d 3 -f 2 -n 3
+	@python3 -m deploy -a plan -i docker -s 20 -p 9092 -r 5000 -t 10 -e 30 -d 3 -f 2 -n 3 -c 2
 	@python3 -m deploy -a deploy -i docker
 
 pull:
@@ -64,11 +62,17 @@ process:
 	python3 -m analysis -a process -i docker -v yes -p ${PREFIX}
 	@#python3 -m analysis -a process -i docker -m udp
 
+super:
+	@python3 -m analysis -a process -i gcp -m super -p ${GPREFIX}
+
 destroy:
 	@python3 -m deploy -a destroy -i docker
 
+gimage:
+	@python3 -m deploy -a build -i gcp
+
 gcp:
-	@python3 -m deploy -a plan -i gcp -s 20 -p 9092 -r 5000 -t 20 -d 3
+	@python3 -m deploy -a plan -i gcp -s 25 -p 9092 -r 5000 -t 20 -d 3 -f 2 -n 3
 	@python3 -m deploy -a deploy -i gcp
 
 gpull:

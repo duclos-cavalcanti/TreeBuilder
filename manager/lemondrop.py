@@ -39,7 +39,7 @@ class LemonDrop():
             OWD[i, :] = row
         return OWD
 
-    def solve(self, epsilon=1e-4, max_i=1000) -> Tuple[List[Tuple[int, str]], np.ndarray, bool, float]:
+    def solve(self, epsilon=1e-4, max_i=1000) -> Tuple[List[Tuple[int, str]], bool, float]:
         if self.OWD.shape != (self.N, self.N):
             raise RuntimeError(f"OWD SHAPE[{self.OWD.shape}] not ({self.N}, {self.N})")
 
@@ -78,7 +78,7 @@ class LemonDrop():
 
         self.L.debug(message=f"LEMONDROP POST-SOLVE:", data=data)
 
-        return M, P, converged, elapsed
+        return M, converged, elapsed
 
     def FAQ(self, OWD:np.ndarray, LOAD:np.ndarray, epsilon=1e-4, max_i=1000) -> Tuple[np.ndarray, bool, float]:
         """

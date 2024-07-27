@@ -21,8 +21,6 @@ setup() {
         cmake ..
         make
     popd
-
-    mkdir -p /work/results/${FOLDER}
 }
 
 tzone() {
@@ -46,12 +44,14 @@ main() {
 
         tzone
 
-        mv project/schemas/default.json /work/results/${FOLDER}
+        mkdir -p /work/results/${FOLDER}
+        cp schemas/default.json /work/results/${FOLDER}
 
         echo python3 -m manager -a manager -n ${role}  -i ${addr} -p ${port} -s schemas/default.json
         time python3 -m manager -a manager -n ${role}  -i ${addr} -p ${port} -s schemas/default.json
 
         upload
+        echo "FOLDER: $FOLDER"
 
         bash
     popd

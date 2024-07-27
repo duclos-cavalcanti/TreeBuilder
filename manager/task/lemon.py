@@ -48,10 +48,10 @@ class Lemon(Task):
 
     def evaluate(self, job:Job, run:Run) -> ResultDict:
         if job.ret != 0:  
-            raise RuntimeError("Failed Job")
+            raise RuntimeError(f"JOB FAILURE: {job}")
 
         data:ResultDict = {
-                "id": "lemon",
+                "id": job.id,
                 "root": job.addr,
                 "key": run.data["strategy"]["key"],
                 "select": job.select, 
