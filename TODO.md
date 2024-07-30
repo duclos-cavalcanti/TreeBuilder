@@ -1,11 +1,21 @@
-- [ ] Manager
-    - [ ] Make Parent Jobs parallel on a layer-basis
-    - [ ] Add variable deadline cut-off to jobs 
-    - [ ] Add `ng-stress` to LemonDrop Job 
-    - [ ] Is warmup necessary?
-    - [ ] how many different worst trees are needed?
-    - [ ] implement root selection mechanism
+# TO-DO
 
+- [ ] warmup ,lemondrop no warmup, extra flag to binaries
+- [X] lemondrop multiple roots attempt => see if root repeats itself
+- [ ] lemondrop with and without stress
+- [X] worst tree for every best? R: No, only p90
+- [ ] new sensing job, how do latency profiles look like?
+- [ ] parallel layers for parent x child jobs
+- [ ] root selection mechanism
+- [X] 30 second evaluation
+
+## Heuristic
+
+### Root Selection 
+1. Select based off of subset of pool before tree construction.
+2. Select based off of remaining pool and first proxy layer
+
+### Ideas:
 ```
  - difference between 99% latency of worst leaf and 99% latency of best leaf
  - informs how much each leaf should hold data for
@@ -13,9 +23,3 @@
  - look at measurements first, before you create/include them in a heuristic
 ```
 
-- implement warm up
-- look at stats, from there see a good time frame for parent jobs 
-- make lemondrop find multiple trees, see if root is always chosen 
-- 30 seconds for evaluation period
-- make a better heuristic expression
-- compare
