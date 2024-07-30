@@ -5,6 +5,7 @@ import glob
 import numpy as np
 import shutil
 
+import multiprocessing as mp
 import matplotlib.pyplot as plt
 import matplotlib
 import networkx as nx
@@ -18,7 +19,7 @@ from manager import RunDict, ResultDict, ItemDict
 from typing import List, Dict, TypedDict
 
 from ..utils        import *
-from ..plot         import stages, performance, comparison, cdf, tsp, COLORS, MARKERS, LINESTYLES, PlotArgs, pargs
+from ..plot         import *
 from ..analysis     import Analyzer
 
 class Job():
@@ -57,11 +58,11 @@ class Job():
         self.ritem = item
 
 class Supervisor():
-    def __init__(self, runs:List[RunDict], schema:Dict, map:Dict, dir:str, mode:str, view:bool=False):
-        self.A    = Analyzer(runs, schema,  map)
-        self.dir  = dir
-        self.mode = mode
-        self.view = view
+    def __init__(self, runs:List[RunDict], schema:Dict, map:Dict, dir:str, mode:str, multi:bool=False):
+        self.A     = Analyzer(runs, schema,  map)
+        self.dir   = dir
+        self.mode  = mode
+        self.multi = multi
 
     def setup(self):
         path = os.path.join(self.dir, "plot")
@@ -179,6 +180,31 @@ class Supervisor():
 
         return ret
 
+    def analyze(self, jobs:List[Job]):
+        ret  = True
+        idxs = [[]]
+        keys = [ 
+                "p90", 
+                "p75", 
+                "p50", 
+                "mean", 
+                "stddev"
+        ]
+
+        for i,job in enumerate(jobs):
+            item  = job.item
+            ritem = job.ritem
+
+            for j,k in enumerate(keys):
+                ref = item[k]
+                val = ritem[k]
+
+                if not bounded(reference=ref, value=val, perc=2): 
+                    ret = False 
+                    idxs[i].append(j)
+
+        return ret, idxs
+
     def color(self, data, style):
         return Text(str(data), style=style)
 
@@ -197,6 +223,9 @@ class Supervisor():
         
         for header in headers: 
             table.add_column(header)
+
+        max_x    = 0
+        max_y    = 0
         
         for i,job in enumerate(jobs):
             item  = job.item
@@ -234,7 +263,7 @@ class Supervisor():
 
         return table
 
-    def tsp(self, title:str, dir:str, file:str, result:ResultDict, i:int, jobs:List[Job]):
+    def tsp(self, title:str, dir:str, file:str, result:ResultDict, i:int, jobs:List[Job], typ:str):
         select = [ s.split(":")[0] for s in result["selected"] ]
         parent = self.A.map(result["root"])
         rate   = result["rate"]
@@ -242,6 +271,8 @@ class Supervisor():
 
         fig1, ax = plt.subplots(figsize=(28, 16))
         handles  = []
+        max_x    = 0
+        max_y    = 0
         
         for j,job in enumerate(jobs):
             label     = job.mname
@@ -256,12 +287,23 @@ class Supervisor():
             if job.addr in select: linestyle = '-'
             else:                  color = 'gray'
         
-            line   = tsp(ax, label=label, color=color, linestyle=linestyle, step=rate, data=data)
+            if typ.upper() == "MEDIAN":
+                line, max_xi, max_yi   = tsp(ax, label=label, color=color, linestyle=linestyle, step=rate, data=data)
+            else:
+                line, max_xi, max_yi   = tsp_var(ax, label=label, color=color, linestyle=linestyle, step=rate, data=data)
+
+            max_x = max(max_x, max_xi)
+            max_y = max(max_y, max_yi)
+
             handle = plt.Line2D([0], [0], color=color, linestyle=linestyle, label=label)
             handles.append(handle)
         
         fig1.suptitle(f"{title}", fontsize=pargs.tfont, fontweight='bold')
-        ax.set_title(f"TIME SERIES MEDIAN OWD LATENCY", fontsize=pargs.nfont + 2)
+        ax.set_title(f"TIME SERIES {typ.upper()} OWD LATENCY", fontsize=pargs.nfont + 2)
+
+        ax.set_xlim(0, max_x + 1)
+        ax.set_ylim(0, max_y * 1.5)
+        ax.set_xticks(np.arange(1, max_x + 1, 1))
 
         ax.set_ylabel("OWD(us)", fontsize=pargs.nfont)
         ax.set_xlabel("t(s)", fontsize=pargs.nfont)
@@ -278,8 +320,9 @@ class Supervisor():
         for _ in range((2*len(jobs)) - (len(handles))):
             handles.append(plt.Line2D([0], [0], marker='s', color='w', alpha=0, label=f" "))
         
-        ax.legend(handles=handles, loc='lower right', fancybox=True, fontsize=pargs.nfont + 1, ncol=2)
+        ax.legend(handles=handles, loc='best', fancybox=True, fontsize=pargs.nfont + 1, ncol=2)
         fig1.savefig(f"{dir}/{file}.png", format="png")
+        return fig1
 
     def cdf(self, title:str, dir:str, file:str, result:ResultDict, i:int, jobs:List[Job]):
         select = [ s.split(":")[0] for s in result["selected"] ]
@@ -290,6 +333,8 @@ class Supervisor():
         # fig1, ax = plt.subplots()
         fig1, ax = plt.subplots(figsize=(pargs.w, pargs.h))
         handles  = []
+        max_x    = 0
+        max_y    = 0
         
         for j,job in enumerate(jobs):
             label     = job.mname
@@ -304,12 +349,18 @@ class Supervisor():
             if job.addr in select: linestyle = '-'
             else:                  color = 'gray'
         
-            line   = cdf(ax, label=label, color=color, linestyle=linestyle, data=data)
+            line, max_xi, max_yi = cdf(ax, label=label, color=color, linestyle=linestyle, data=data)
             handle = plt.Line2D([0], [0], color=color, linestyle=linestyle, label=label)
             handles.append(handle)
+
+            max_x = max(max_x, max_xi)
+            max_y = max(max_y, max_yi)
         
         fig1.suptitle(f"{title}", fontsize=pargs.tfont, fontweight='bold')
         ax.set_title(f"PROBE OWD LATENCY", fontsize=pargs.nfont + 2)
+
+        ax.set_xlim(0, max_x + 50)
+        ax.set_ylim(0, 100)
 
         ax.set_ylabel("CDF", fontsize=pargs.nfont)
         ax.set_xlabel("OWD(us)", fontsize=pargs.nfont)
@@ -326,143 +377,182 @@ class Supervisor():
         for _ in range((2*len(jobs)) - (len(handles))):
             handles.append(plt.Line2D([0], [0], marker='s', color='w', alpha=0, label=f" "))
         
-        ax.legend(handles=handles, loc='lower right', fancybox=True, fontsize=pargs.nfont + 1, ncol=2)
+        ax.legend(handles=handles, loc='best', fancybox=True, fontsize=pargs.nfont + 1, ncol=2)
         fig1.savefig(f"{dir}/{file}.png", format="png")
+        return fig1
 
-    def stages(self, tree:str, run:RunDict, dir:str):
-        root    = self.A.map(run["tree"]["root"])
+    def stages(self, tree:str, id:str, run:RunDict, dir:str, lock):
         name    = run["name"] 
-        key     = run['strategy']['key']
-        id      = f"{name}-{key}-{root}"
-
-        G = nx.DiGraph()
-        G.add_node(self.A.map(run['tree']['root']))
+        figs    = []
 
         C = Console()
-        T = Table(title=f"{tree.upper()} STAGES", show_header=True, box=box.ROUNDED)
 
-        for d in [ "Iteration", "Root", "Data"]: 
-            T.add_column(d)
+        if "RAND" not in name and "LEMON" not in name:
+            G = nx.DiGraph()
+            G.add_node(self.A.map(run['tree']['root']))
+
+            T = Table(title=f"{tree.upper()} STAGES", show_header=True, box=box.ROUNDED)
+            for d in [ "Iteration", "Root", "Data"]: 
+                T.add_column(d)
+
+            R = Table(title=f"{tree.upper()} STAGES", show_header=True, box=box.ROUNDED)
+            for d in [ "ID", "PASS"]: 
+                R.add_column(d)
         
-        if name != "RAND" and "LEMON" not in name:
             for i,stage in enumerate(run["stages"]):
                 parent = self.A.map(stage["root"])
                 jobs   = self.search(stage, stage["items"], patt="child")
 
-                table  = self.table(stage, jobs)
-                table.title = f"STAGE[{i + 1}]: {id}"
+                # table  = self.table(stage, jobs)
+                # table.title = f"STAGE[{i + 1}]: {id}"
+                # C.print(table)
+                # T.add_row(*[ f"STAGE_{i + 1}: {stage['id']}", str(parent), table ])
 
-                C.print(table)
-                T.add_row(*[ f"STAGE_{i + 1}: {stage['id']}", str(parent), table ])
+                ok, _ = self.analyze(jobs)
+                if not ok: string = self.color("FALSE", "red")
+                else:      string = self.color("TRUE", "green")
+
+                R.add_row(*[ f"STAGE_{i + 1}: {stage['id']}", string ])
             
-                self.cdf(title=f"{tree} - STAGE[{i + 1}]", dir=f"{dir}/stages", file=f"{id}_STAGE_{i + 1}_CDF", result=stage, i=i, jobs=jobs)
-                self.tsp(title=f"{tree} - STAGE[{i + 1}]", dir=f"{dir}/stages", file=f"{id}_STAGE_{i + 1}_TSP", result=stage, i=i, jobs=jobs)
+                fig_a = self.cdf(title=f"{tree} - STAGE[{i + 1}]", dir=f"{dir}/stages", file=f"{id}_STAGE_{i + 1}_CDF", result=stage, i=i, jobs=jobs)
+                fig_b = self.tsp(title=f"{tree} - STAGE[{i + 1}]", dir=f"{dir}/stages", file=f"{id}_STAGE_{i + 1}_TSP", result=stage, i=i, jobs=jobs, typ="MEDIAN")
+                fig_c = self.tsp(title=f"{tree} - STAGE[{i + 1}]", dir=f"{dir}/stages", file=f"{id}_STAGE_{i + 1}_VAR", result=stage, i=i, jobs=jobs, typ="STDDEV")
+                fig_d = stages(G, run, self.A, stage, i, dir=f"{dir}/trees/stages", file=f"{id}_STAGE_{i + 1}_GRAPH")
 
-                stages(G, run, self.A, stage, i, dir=f"{dir}/trees/stages", file=f"{id}_STAGE_{i + 1}_GRAPH")
+                for f in [ fig_a, fig_b, fig_c, fig_d ]:
+                    figs.append(f)
 
-                if self.view: self.show()
-                plt.close('all')
+                for f in figs:
+                    plt.close(f)
+
+            with lock:
+                C.print(R)
         
-        # C.print(T)
-
-    def evals(self, tree:str, run:RunDict, dir:str):
-        root    = self.A.map(run["tree"]["root"])
-        name    = run["name"] 
-        key     = run['strategy']['key']
-        id      = f"{name}-{key}-{root}"
-        G       = self.A.graph(run)
+    def evals(self, tree:str, id:str, run:RunDict, dir:str, lock):
+        figs    = []
 
         C = Console()
+        G = self.A.graph(run)
+
         T = Table(title=f"{tree.upper()} EVALS", show_header=True, box=box.ROUNDED)
         for d in [ "Iteration", "Root", "Data"]: 
             T.add_column(d)
+
+        R = Table(title=f"{tree.upper()} EVALS", show_header=True, box=box.ROUNDED)
+        for d in [ "ID", "PASS"]: 
+            R.add_column(d)
         
         for i, perf in enumerate(run["perf"]):
             parent = self.A.map(perf["root"])
             jobs   = self.search(perf, perf["items"], patt="mcast")
 
-            table  = self.table(perf, jobs)
-            table.title = f"EVAL[{i + 1}]: {id}"
+            # table  = self.table(perf, jobs)
+            # table.title = f"EVAL[{i + 1}]: {id}"
+            # C.print(table)
+            # T.add_row(*[ f"EVAL_{i + 1}: {perf['id']}", str(parent), table ])
 
-            C.print(table)
-            T.add_row(*[ f"EVAL_{i + 1}: {perf['id']}", str(parent), table ])
+            ok, _ = self.analyze(jobs)
+            if not ok: string = self.color("FALSE", "red")
+            else:      string = self.color("TRUE", "green")
+
+            R.add_row(*[ f"EVAL_{i + 1}: {perf['id']}", string ])
         
-            self.cdf(title=f"{tree} Evaluation[{i + 1}]", dir=f"{dir}/eval", file=f"{id}_EVAL_{i + 1}_CDF", result=perf, i=i, jobs=jobs)
-            self.tsp(title=f"{tree} Evaluation[{i + 1}]", dir=f"{dir}/eval", file=f"{id}_EVAL_{i + 1}_TSP", result=perf, i=i, jobs=jobs)
+            fig_a = self.cdf(title=f"{tree} Evaluation[{i + 1}]", dir=f"{dir}/eval", file=f"{id}_EVAL_{i + 1}_CDF", result=perf, i=i, jobs=jobs)
+            fig_b = self.tsp(title=f"{tree} Evaluation[{i + 1}]", dir=f"{dir}/eval", file=f"{id}_EVAL_{i + 1}_TSP", result=perf, i=i, jobs=jobs, typ="MEDIAN")
+            fig_c = self.tsp(title=f"{tree} Evaluation[{i + 1}]", dir=f"{dir}/eval", file=f"{id}_EVAL_{i + 1}_VAR", result=perf, i=i, jobs=jobs, typ="STDDEV")
+            fig_d = performance(G, run, i, self.A, dir=f"{dir}/trees/eval", file=f"{id}_EVAL_{i + 1}_GRAPH")
 
-            performance(G, run, i, self.A, dir=f"{dir}/trees/eval", file=f"{id}_EVAL_{i + 1}_GRAPH")
-        
-        # C.print(T)
-        if self.view: self.show()
-        plt.close('all')
+            for f in [ fig_a, fig_b, fig_c, fig_d ]:
+                figs.append(f)
 
-    def comparisons(self, trees:List, runs:List, dirs:List):
-        cnt   = 0
-        lgth  = len(trees)
-        total = ( (lgth * (lgth - 1) ) / 2 )
+            for f in figs:
+                plt.close(f)
 
-        for i in range(lgth):
-            for j in range(i + 1, lgth):
-                print(f"COMPARISON {cnt + 1}/{total}")
-                root_i    = self.A.map(runs[i]["tree"]["root"])
-                name_i    = runs[i]["name"] 
-                key_i     = runs[i]['strategy']['key']
+        with lock:
+            C.print(R)
 
-                root_j    = self.A.map(runs[j]["tree"]["root"])
-                name_j    = runs[j]["name"] 
-                key_j     = runs[j]['strategy']['key']
+    def compare(self, i:int, runs:List, dirs:List, lock):
+        root_i    = self.A.map(runs[i]["tree"]["root"])
+        tree_i    = self.A.graph(runs[i])
+        name_i    = runs[i]["name"] 
+        key_i     = runs[i]['strategy']['key']
+        id_i      = f"{name_i}-{key_i}-{root_i}"
+        dir_i     = dirs[i] + f"/trees/cmp"
 
-                id_i = f"{name_i}-{key_i}-{root_i}"
-                id_j = f"{name_j}-{key_j}-{root_j}"
+        total = len(runs)
 
-                dir_i = dirs[i] + f"/trees/cmp"
-                dir_j = dirs[j] + f"/trees/cmp"
+        C = Console()
+        R = Table(title=f"COMPARISON[{i + 1}/{total}]", show_header=True, box=box.ROUNDED)
 
-                file_i = f"{id_i}x{id_j}_CMP_GRAPH"
-                file_j = f"{id_j}x{id_i}_CMP_GRAPH"
+        for d in [ "TREE_I", "TREE_J", "COMPLETE"]: 
+            R.add_column(d)
 
-                comparison(trees[i], trees[j], runs[i], runs[j], self.A, dir_i, file_i)
-                shutil.copy(f"{dir_i}/{file_i}.png", f"{dir_j}/{file_j}.png")
+        for j in range(len(runs)):
+            if j == i: 
+                continue
 
-                cnt += 1
+            root_j    = self.A.map(runs[j]["tree"]["root"])
+            tree_j    = self.A.graph(runs[j])
+            name_j    = runs[j]["name"] 
+            key_j     = runs[j]['strategy']['key']
+            id_j      = f"{name_j}-{key_j}-{root_j}"
 
-                if self.view: self.show()
-                plt.close('all')
+            R.add_row(*[ id_i, id_j, self.color("TRUE", "green") ])
 
+            dir  = dir_i
+            file = f"{id_i}x{id_j}_CMP_GRAPH"
+            fig  = comparison(tree_i, tree_j, runs[i], runs[j], self.A, dir, file)
+
+            plt.close(fig)
+
+        with lock:
+            C.print(R)
 
     def process(self):
         self.setup()
+        matplotlib.use('agg')
 
-        if self.view:   matplotlib.use('GTK3Agg')
-        else:           matplotlib.use('agg')
-
-        # pargs = PlotArgs(w=28, h=16, f=16, nf=18, tf=24, s=2100)
-
-        trees = []
+        runs  = []
         dirs  = []
+        procs = []
+        lock = mp.Lock()
 
-        for i, run in enumerate(self.A.runs):
-            root    = self.A.map(run["tree"]["root"])
+        # pargs  = PlotArgs(w=28, h=16, f=16, nf=18, tf=24, s=2100)
+
+        def worker(runs:List, dirs:List, i:int, L):
+            run     = runs[i]
+            dir     = dirs[i]
             name    = run["name"] 
             key     = run['strategy']['key']
+            root    = self.A.map(run["tree"]["root"])
             tree    = f"{name}-{key}"
+            id      = f"{name}-{key}-{root}"
+            self.stages(tree=tree, id=id, run=run, dir=f"{dir}", lock=L)
+            self.evals(tree=tree, id=id,  run=run, dir=f"{dir}", lock=L)
+            self.compare(i=i, runs=runs, dirs=dirs, lock=L)
+
+        for i,run in enumerate(self.A.runs):
+            name    = run["name"] 
+            key     = run['strategy']['key']
+            root    = self.A.map(run["tree"]["root"])
             id      = f"{name}-{key}-{root}"
             rdir    = os.path.join(self.dir, "plot", id)
 
             os.mkdir(rdir)
-            os.mkdir(f"{rdir}/trees")
-            os.mkdir(f"{rdir}/trees/stages")
-            os.mkdir(f"{rdir}/trees/eval")
-            os.mkdir(f"{rdir}/trees/cmp")
-            os.mkdir(f"{rdir}/stages")
-            os.mkdir(f"{rdir}/eval")
+            for d in [ "trees", "trees/stages", "trees/eval", "trees/cmp", "stages", "eval"]:
+                os.mkdir(f"{rdir}/{d}")
 
-            self.stages(tree=tree, run=run, dir=f"{rdir}")
-            self.evals(tree=tree,  run=run, dir=f"{rdir}")
-
-            t = self.A.graph(run)
-            trees.append(t)
+            runs.append(run)
             dirs.append(rdir)
 
-        self.comparisons(trees=trees, runs=self.A.runs, dirs=dirs)
+        for i, run in enumerate(runs):
+            p = mp.Process(target=worker, args=(runs, dirs, i, lock))
+            procs.append(p)
 
+            if self.multi: 
+                p.start()
+
+        for p in procs:
+            if not self.multi: 
+                p.start()
+            p.join()

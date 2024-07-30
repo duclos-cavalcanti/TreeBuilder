@@ -7,7 +7,6 @@ from manager import RunDict
 
 from .analysis      import Analyzer
 from .supervisor    import Supervisor
-from .plot          import Plotter
 from .utils         import *
 
 def load(dir:str):
@@ -90,7 +89,7 @@ def process(args):
         dir = finddir(dir=dir, patt=f"treefinder-{args.infra}-{args.prefix}")
         runs   = read(os.path.join(dir, "manager", "logs"))
         schema, map = load(dir)
-        S = Supervisor(runs, schema, map, dir, mode=args.mode, view=args.view)
+        S = Supervisor(runs, schema, map, dir, mode=args.mode, multi=(not args.single))
         S.process()
 
     else: 

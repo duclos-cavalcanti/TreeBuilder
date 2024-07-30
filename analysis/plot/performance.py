@@ -125,11 +125,4 @@ def performance(G, run:RunDict, iter:int, A:Analyzer, dir:str, file:str):
         suffix  = f"x{epsilon}x{max_i}"
     
     plt.savefig(f"{dir}/{file}.png", format="png")
-    # plt.close('all')
-    # plt.clf()
-    # del fig 
-    # ax1.clear()
-    # ax2.clear()
-    # del ax1 
-    # del ax2 
-
+    return fig

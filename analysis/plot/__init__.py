@@ -1,4 +1,3 @@
-from .core          import Plotter
 from .args          import PlotArgs, pargs
 from .plot          import *
 from .stages        import *

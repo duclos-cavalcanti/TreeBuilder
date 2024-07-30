@@ -112,6 +112,7 @@ def stages(G, run:RunDict, A:Analyzer, result:ResultDict, i, dir:str, file:str):
 
     # plt.tight_layout()
     plt.savefig(f"{dir}/{file}.png", format="png")
+    return fig
         # plt.close('all')
         # plt.clf()
         # del fig 

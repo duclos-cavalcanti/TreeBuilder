@@ -17,16 +17,13 @@ def cdf(ax:plt.Axes, label:str, color:str, linestyle:str, data:List):
                     linestyle=linestyle, 
                     linewidth=3.0)
 
-    ax.set_xlim(0, max(x) + 50)
-    ax.set_ylim(0, 100)
-
-    return line
+    return line, max(x), max(y)
 
 def tsp(ax:plt.Axes, label:str, color:str, linestyle:str, step:int, data:List):
     x   = []
     y   = []
 
-    xi  = 0
+    xi  = 1
     buf = []
 
     for i,element in enumerate(data):
@@ -48,8 +45,32 @@ def tsp(ax:plt.Axes, label:str, color:str, linestyle:str, step:int, data:List):
                    linestyle=linestyle,
                    linewidth=3.0)
 
-    ax.set_xlim(0, max(x))
-    ax.set_ylim(0, max(y) * 1.5)
-    ax.set_xticks(np.arange(0, max(x), 1))
+    return line, max(x), max(y)
 
-    return line
+def tsp_var(ax:plt.Axes, label:str, color:str, linestyle:str, step:int, data:List):
+    x   = []
+    y   = []
+
+    xi  = 1
+    buf = []
+
+    for i,element in enumerate(data):
+        buf  += [element]
+        count = len(buf)
+
+        if (count >= step) or i == (len(data)-1):
+                value = np.std(buf)
+                buf   = []
+
+                y  += [value]
+                x  += [xi]
+                xi += 1
+
+    line = ax.plot(x, 
+                   y, 
+                   label=label, 
+                   color=color,
+                   linestyle=linestyle,
+                   linewidth=3.0)
+
+    return line, max(x), max(y)
