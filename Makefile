@@ -62,9 +62,6 @@ process:
 	python3 -m analysis -a process -i docker -v yes -p ${PREFIX}
 	@#python3 -m analysis -a process -i docker -m udp
 
-super:
-	@python3 -m analysis -a process -i gcp -m super -p ${GPREFIX}
-
 destroy:
 	@python3 -m deploy -a destroy -i docker
 
@@ -76,10 +73,13 @@ gcp:
 	@python3 -m deploy -a deploy -i gcp
 
 gpull:
-	python3 -m analysis -a pull -i gcp -p ${GPREFIX}
+	@python3 -m analysis -a pull -i gcp -p ${GPREFIX}
 
 gprocess:
-	python3 -m analysis -a process -i gcp -v yes -p ${GPREFIX}
+	@python3 -m analysis -a process -i gcp -m default -p ${GPREFIX}
+
+super:
+	@python3 -m analysis -a process -i gcp -m super -p ${GPREFIX}
 
 gcopy:
 	python3 -m analysis -a generate -i gcp -p ${GPREFIX}
