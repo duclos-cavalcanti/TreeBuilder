@@ -107,6 +107,14 @@ def parse():
         dest="choices",
     )
 
+    arg_def.add_argument(
+        "-w", "--warmup",
+        type=int,
+        default=2,
+        required=False,
+        dest="warmup",
+    )
+
     args = arg_def.parse_args()
     return args
 

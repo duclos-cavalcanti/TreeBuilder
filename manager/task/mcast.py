@@ -10,8 +10,12 @@ class Mcast(Task):
     def build(self, run:Run) -> Command:
         id  = self.generate()
         arr = run.tree.arr()
+
         tb  = TreeBuilder(arr=arr, depth=run.tree.d, fanout=run.tree.fanout) 
-        ret = tb.mcast(rate=run.data["parameters"]["rate"], duration=run.data["parameters"]["evaluation"], id=id)
+        ret = tb.mcast(rate=run.data["parameters"]["rate"], 
+                       duration=run.data["parameters"]["evaluation"], 
+                        warmup=run.data["parameters"]["warmup"],
+                       id=id)
 
         c = Command()
         c.flag      = Flag.MCAST

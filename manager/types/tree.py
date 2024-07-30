@@ -24,25 +24,28 @@ class TreeBuilder():
     def _parent(_, node, data):
         if len(node.children) > 0:
             c  =  f"./bin/parent -a "
-            c  +=  f" ".join(f"{n.id.split(':')[0]}:{data.port}" for n in node.children)
+            c  += f" ".join(f"{n.id.split(':')[0]}:{data.port}" for n in node.children)
+            c  += f" -w {data.warmup}"
             c  += f" -r {data.rate} -d {data.duration}"
         else:
             c   =  f"./bin/child -i {node.id.split(':')[0]} -p {data.port}"
             c   += f" -r {data.rate} -d {data.duration}"
+            c   += f" -w {data.warmup}"
             c   += f" -n {node.id.split(':')[0]}_{data.id}"
 
         data.buf.append(c)
 
-    def parent(self, rate, duration, id, port:int=8080):
+    def parent(self, rate, duration, id, warmup, port:int=8080):
         class Data:
-            def __init__(self, rate, duration, port):
+            def __init__(self):
                 self.rate       = rate
                 self.duration   = duration
-                self.port       = port
                 self.id         = id
+                self.warmup     = warmup
+                self.port       = port
                 self.buf        = []
 
-        data = Data(rate, duration, port)
+        data = Data()
         self.tree.traverse(self._parent, data)
         return data
 
@@ -52,26 +55,29 @@ class TreeBuilder():
             c   =   f"./bin/mcast -a "
             c   +=  f" ".join(f"{n.id.split(':')[0]}:{data.port}" for n in node.children)
             c   +=  f" -r {data.rate} -d {data.duration}"
+            c   +=  f" -w {data.warmup}"
             c   +=  f" -i {node.id.split(':')[0]} -p {data.port}"
             if node.parent is None: c += " -R"
         else:
             c   =   f"./bin/mcast "
             c   +=  f" -r {data.rate} -d {data.duration}"
+            c   +=  f" -w {data.warmup}"
             c   +=  f" -i {node.id.split(':')[0]} -p {data.port}"
             c   +=  f" -n {node.id.split(':')[0]}_{data.id}"
 
         data.buf.append(c)
 
-    def mcast(self, rate, duration, id, port:int=7070):
+    def mcast(self, rate, duration, id, warmup, port:int=7070):
         class Data:
-            def __init__(self, rate, duration, port):
+            def __init__(self):
                 self.rate       = rate
                 self.duration   = duration
-                self.port       = port
                 self.id         = id
+                self.warmup     = warmup
+                self.port       = port
                 self.buf        = []
 
-        data = Data(rate, duration, port)
+        data = Data()
         self.tree.traverse(self._mcast, data)
         return data
 

@@ -10,8 +10,13 @@ class Parent(Task):
         id      = self.generate()
         addr    = run.tree.next()
         arr     = [addr] + run.pool.slice()
+
         tb      = TreeBuilder(arr=arr, depth=1, fanout=len(arr[1:])) 
-        ret     = tb.parent(rate=run.data["parameters"]["rate"], duration=run.data["parameters"]["duration"], id=id, port=port)
+        ret     = tb.parent(rate=run.data["parameters"]["rate"], 
+                            duration=run.data["parameters"]["duration"], 
+                            id=id,
+                            warmup=run.data["parameters"]["warmup"],
+                            port=port)
 
         c = Command()
         c.flag      = Flag.PARENT

@@ -14,10 +14,11 @@ class Lemon(Task):
         c.fanout    = 0
         c.rate      = 100
         c.duration  = 120
+        c.stress    = run.data["parameters"]["stress"]
         return c
 
     def handle(self, command:Command) -> Tuple[Job, List[Command]]:
-        self.job.stress = False
+        self.job.stress = command.stress
         return self.job, []
 
     def process(self) -> Job:

@@ -18,6 +18,7 @@ class Task(ABC):
             self.job.select   = command.select
             self.job.rate     = command.rate
             self.job.duration = command.duration
+            self.job.warmup   = command.warmup
             self.job.instr    = command.instr[0]
 
         self.deps           = []

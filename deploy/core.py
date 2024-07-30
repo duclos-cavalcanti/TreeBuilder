@@ -26,7 +26,7 @@ def compress(dst:str):
     command = f"{command} {dst}/project.tar.gz ."
     execute(command)
 
-def run(name:str, key:str, args, epsilon:float=1e-4, max_i:int=1000):
+def run(name:str, key:str, args, epsilon:float=1e-4, max_i:int=1000, stress:bool=False):
     r:RunDict = RunDict({
             "name": name,
             "strategy": StrategyDict({
@@ -40,9 +40,11 @@ def run(name:str, key:str, args, epsilon:float=1e-4, max_i:int=1000):
                 "rate": args.rate, 
                 "duration": args.duration,
                 "evaluation": args.evaluation,
+                "warmup": args.warmup,
                 "epsilon": epsilon, 
                 "max_i": max_i,
-                "converge": False
+                "converge": False,
+                "stress": stress,
             }),
             "tree": TreeDict({
                 "name": "", 
@@ -77,7 +79,7 @@ def run(name:str, key:str, args, epsilon:float=1e-4, max_i:int=1000):
 
 def runs(args):
     runs = []
-    names = [ "BEST" ] # [ "BEST", "WORST" ]
+    names = [ "BEST" ]
     keys  = [ "p90", "p50", "heuristic" ]
     if args.mode == "default":
         for name in names:
@@ -85,14 +87,14 @@ def runs(args):
                 r = run(name, key, args)
                 runs.append(r)
 
-        runs.append(run(name="WORST",  key="p90", args=args))
-        runs.append(run(name="WORST",  key="p50", args=args))
+        runs.append(run(name="WORST",  key="p90",  args=args))
         runs.append(run(name="RAND",   key="NONE", args=args))
 
         hyperparameters = [ (1e-4, 1000) ]
         for tup in hyperparameters:
             epsilon, max_i = tup
             runs.append(run(name="LEMON", key="NONE", args=args, epsilon=epsilon, max_i=max_i))
+            runs.append(run(name="LEMON-STRESS", key="NONE", args=args, epsilon=epsilon, max_i=max_i, stress=True))
 
     if args.mode == "lemondrop":
         hyperparameters = [ (1e-4, 1000), (5.5e-5, 10000), (1e-5, 10000) ]

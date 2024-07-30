@@ -41,12 +41,14 @@ message Command {
     int32 layer = 4;
     int32 select = 5;
     int32 rate = 6;
-    int32 duration = 7;      // in seconds
+    int32 duration = 7; // in seconds
     int32 timeout = 8;  // in seconds
-    int32 depth = 9;
-    int32 fanout = 10;
-    repeated string instr = 11;
-    repeated string data = 12;
+    int32 warmup = 9;  // in seconds
+    bool  stress = 10;
+    int32 depth = 11;
+    int32 fanout = 12;
+    repeated string instr = 13;
+    repeated string data = 14;
 }
 
 message Job {
@@ -57,14 +59,15 @@ message Job {
     int32  select = 5;
     int32  rate = 6;
     int32  duration = 7;
-    bool   stress = 8;
-    string instr = 9;
-    int32  pid = 10;
-    int32  ret = 11;
-    bool   end = 12;
-    repeated int32  integers = 13;
-    repeated float  floats = 14;
-    repeated string data = 15;
+    int32  warmup = 8;
+    bool   stress = 9;
+    string instr = 10;
+    int32  pid = 11;
+    int32  ret = 12;
+    bool   end = 13;
+    repeated int32  integers = 14;
+    repeated float  floats = 15;
+    repeated string data = 16;
 }
 
 message Error {

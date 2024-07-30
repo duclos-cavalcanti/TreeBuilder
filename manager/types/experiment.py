@@ -43,7 +43,12 @@ class Experiment():
         choices      = schema["runs"][0]["parameters"]["choices"]
         pool         = Pool(self.workers, 0, self.seed.get())
 
-        for _ in range(choices):
+        if choices > 1:
+            for _ in range(choices):
+                root    = pool.select()
+                workers = pool.get()
+                pairs.append((root, workers))
+        else:
             root    = pool.select()
             workers = pool.get()
             pairs.append((root, workers))
@@ -53,7 +58,7 @@ class Experiment():
             for i,pair in enumerate(pairs):
                 root, workers = pair
                 if name == "LEMON":
-                    run["name"] = f"LEMON-{i+1}"
+                    run["name"] = f"{name}-{i+1}"
                     self.runs.append(Run(run, "NONE", self.workers, self.seed.get())  )
 
                 elif name == "RAND":  

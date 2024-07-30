@@ -31,9 +31,11 @@ class ParametersDict(TypedDict):
     rate: int 
     duration: int 
     evaluation: int 
+    warmup: int
     epsilon: float 
     max_i: int
     converge: bool
+    stress: bool
 
 class TreeDict(TypedDict):
     name: str 
