@@ -15,7 +15,7 @@ class Mcast(Task):
 
         c = Command()
         c.flag      = Flag.MCAST
-        c.id        = self.generate()
+        c.id        = id
         c.addr      = arr[0]
         c.layer     = run.tree.d
         c.depth     = run.tree.d

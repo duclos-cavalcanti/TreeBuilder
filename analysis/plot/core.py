@@ -1,6 +1,8 @@
 import os 
 import shutil
 import matplotlib
+import matplotlib.pyplot as plt
+import networkx as nx
 
 from manager        import RunDict
 
@@ -19,20 +21,26 @@ class Plotter():
     def setup(self):
         if os.path.isdir(self.dir): 
             shutil.rmtree(self.dir)
-
         os.mkdir(f"{self.dir}")
-        for d in [ "stages", "perf", "comp"]: 
-            os.mkdir(f"{self.dir}/{d}")
 
-    def view(self, command="feh -r"):
+    def view(self):
         try:
-            os.system(f"cd {self.dir} && {command}")
+            plt.show()
 
         except KeyboardInterrupt:
-            print("Exiting...")
+            print("\nExiting...")
+            exit(0)
 
     def stages(self, run:RunDict):
-        stages(run, self.A, self.dir)
+        root    = self.A.map(run["tree"]["root"])
+        name    = run["name"] 
+        key     = run['strategy']['key']
+        id      = f"{name}-{key}-{root}"
+
+        G = nx.DiGraph()
+        G.add_node(self.A.map(run['tree']['root']))
+        for i, stage in enumerate(run["stages"]):
+            stages(G, run, self.A, stage, i, f"{self.dir}/stages/", file=f"{id}_STAGE_{i + 1}_GRAPH")
 
     def performance(self, run:RunDict):
         name     = run['name']
@@ -40,7 +48,7 @@ class Plotter():
         tree     = self.A.graph(run)
         for i, _ in enumerate(run["perf"]):
             print(f"PLOTTING TREE[{name}:{key}] PERF[{i + 1}]")
-            performance(tree, run, i, self.A, self.dir)
+            performance(tree, run, i, self.A, self.dir, file="")
 
     def comparisons(self):
         cnt   = 0
@@ -66,6 +74,12 @@ class Plotter():
             key  = run["strategy"]["key"]
             root = self.A.map(run["tree"]["root"])
 
+            rdir    = f"{name}_{key}_{root}"
+            rdir    = os.path.join(self.dir, "jobs", rdir)
+
+            for d in [ "stages", "perf", "comp"]: 
+                os.mkdir(f"{rdir}/{d}")
+
             print(f"PLOTTING TREE[{name}:{key}:{root}]")
 
             # plot build stages
@@ -78,5 +92,4 @@ class Plotter():
         self.comparisons()
 
         if view: 
-            print(f"VIEWING IMAGES")
             self.view()

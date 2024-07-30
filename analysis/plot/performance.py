@@ -10,7 +10,7 @@ from ..utils    import rnd
 from .draw      import draw_subtitle, draw_graph
 from .args      import pargs
 
-def performance(G, run:RunDict, iter:int, A:Analyzer, dir:str):
+def performance(G, run:RunDict, iter:int, A:Analyzer, dir:str, file:str):
     # meta
     name     = run['name']
     key      = run['strategy']['key']
@@ -124,12 +124,12 @@ def performance(G, run:RunDict, iter:int, A:Analyzer, dir:str):
         max_i   = run["parameters"]["max_i"]
         suffix  = f"x{epsilon}x{max_i}"
     
-    plt.savefig(f"{dir}/perf/TREE-{name}{suffix}-{key}-{root}-PERF-{iter + 1}.png", format="png")
-    plt.close('all')
-    plt.clf()
-    del fig 
-    ax1.clear()
-    ax2.clear()
-    del ax1 
-    del ax2 
+    plt.savefig(f"{dir}/{file}.png", format="png")
+    # plt.close('all')
+    # plt.clf()
+    # del fig 
+    # ax1.clear()
+    # ax2.clear()
+    # del ax1 
+    # del ax2 
 

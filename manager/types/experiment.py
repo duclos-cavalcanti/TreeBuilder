@@ -56,7 +56,7 @@ class Experiment():
                     run["name"] = f"LEMON-{i+1}"
                     self.runs.append(Run(run, "NONE", self.workers, self.seed.get())  )
 
-                if name == "RAND":  
+                elif name == "RAND":  
                     self.runs.append(Run(run, root,   workers,      int(time.time())) )
 
                 else:               

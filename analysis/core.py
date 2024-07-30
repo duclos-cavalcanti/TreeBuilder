@@ -85,20 +85,12 @@ def pull(args):
         raise NotImplementedError()
 
 def process(args):
-    if args.mode == "default":
+    if args.mode == "default" or args.mode == "super":
         dir = isdir("analysis/data")
         dir = finddir(dir=dir, patt=f"treefinder-{args.infra}-{args.prefix}")
         runs   = read(os.path.join(dir, "manager", "logs"))
         schema, map = load(dir)
-        P = Plotter(runs, schema,  map, dir)
-        P.process(view=args.view)
-
-    elif args.mode == "super":
-        dir = isdir("analysis/data")
-        dir = finddir(dir=dir, patt=f"treefinder-{args.infra}-{args.prefix}")
-        runs   = read(os.path.join(dir, "manager", "logs"))
-        schema, map = load(dir)
-        S = Supervisor(runs, schema, map, dir)
+        S = Supervisor(runs, schema, map, dir, mode=args.mode, view=args.view)
         S.process()
 
     else: 

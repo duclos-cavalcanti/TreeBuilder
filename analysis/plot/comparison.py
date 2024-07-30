@@ -11,7 +11,7 @@ from manager    import RunDict, ResultDict, KEYS, EXPRESSIONS
 from .draw      import draw_subtitle, draw_graph
 from .args      import pargs
 
-def comparison(G1, G2, data1:RunDict, data2:RunDict, A:Analyzer, dir:str):
+def comparison(G1, G2, data1:RunDict, data2:RunDict, A:Analyzer, dir:str, file:str):
     # meta
     name_1          = G1.name.upper()
     name_2          = G2.name.upper()
@@ -184,13 +184,13 @@ def comparison(G1, G2, data1:RunDict, data2:RunDict, A:Analyzer, dir:str):
 
     fig.legend(handles=handles,  loc='center', fontsize=pargs.font)
     plt.tight_layout()
-    plt.savefig(f"{dir}/comp/TREE-{name_1}-{name_2}-{root_1}x{root_2}-{key_1}-{key_2}-CMP.png")
-    plt.close('all')
-    plt.clf()
-    del fig 
-    ax_t.clear()
-    ax1.clear()
-    ax2.clear()
-    del ax_t
-    del ax1 
-    del ax2 
+    plt.savefig(f"{dir}/{file}.png")
+    # plt.close('all')
+    # plt.clf()
+    # del fig 
+    # ax_t.clear()
+    # ax1.clear()
+    # ax2.clear()
+    # del ax_t
+    # del ax1 
+    # del ax2 

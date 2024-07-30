@@ -12,6 +12,10 @@ class Analyzer():
     def map(self, addr:str):
         return self.M[addr.split(":")[0]]
 
+    def name(self, addr:str):
+        idx = self.schema["addrs"].index(addr.split(":")[0])
+        return self.schema["names"][idx]
+
     def descr(self, run:RunDict):
         ret  = ""
         name = run["name"]

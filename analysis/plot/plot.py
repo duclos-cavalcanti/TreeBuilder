@@ -3,9 +3,6 @@ import matplotlib.pyplot as plt
 
 from typing     import List
 
-# from manager    import ResultDict
-# from .utils     import MARKERS, COLORS, LINESTYLES
-
 def cdf(ax:plt.Axes, label:str, color:str, linestyle:str, data:List):
     # percentiles to show
     y = [ round(i, 2) for i in list(np.arange(1, 100, 1)) ]
@@ -17,7 +14,8 @@ def cdf(ax:plt.Axes, label:str, color:str, linestyle:str, data:List):
                     y, 
                     label=label, 
                     color=color,
-                    linestyle=linestyle)
+                    linestyle=linestyle, 
+                    linewidth=3.0)
 
     ax.set_xlim(0, max(x) + 50)
     ax.set_ylim(0, 100)
@@ -47,9 +45,11 @@ def tsp(ax:plt.Axes, label:str, color:str, linestyle:str, step:int, data:List):
                    y, 
                    label=label, 
                    color=color,
-                   linestyle=linestyle)
+                   linestyle=linestyle,
+                   linewidth=3.0)
 
     ax.set_xlim(0, max(x))
-    ax.set_ylim(0, max(y) + 50)
+    ax.set_ylim(0, max(y) * 1.5)
+    ax.set_xticks(np.arange(0, max(x), 1))
 
     return line
