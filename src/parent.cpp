@@ -15,7 +15,7 @@
 
 typedef struct Config {
     std::string name;
-    int rate, duration;
+    int rate, duration, warmup;
     bool verbose;
     std::vector<struct sockaddr_in> addrs;
 
@@ -35,6 +35,7 @@ typedef struct Config {
     Config(): name(""), 
               rate(0), 
               duration(0), 
+              warmup(0), 
               verbose(false)
               {};
 } Config_t;
@@ -54,7 +55,7 @@ void usage(int e) {
 int parse(int argc, char **argv) {
     int opt = 0, opti = 0;
     int ret = 0;
-    while ( (opt = getopt (argc, argv, "ha:r:d:v") ) != -1 ) {
+    while ( (opt = getopt (argc, argv, "ha:r:d:w:v") ) != -1 ) {
         switch (opt) {
         case 'h':
             usage(EXIT_SUCCESS);
@@ -82,6 +83,10 @@ int parse(int argc, char **argv) {
             config.duration = atoi(optarg);
             break;
 
+        case 'w':
+            config.warmup = atoi(optarg);
+            break;
+
         default:
             usage(EXIT_FAILURE);
             break;
@@ -95,7 +100,7 @@ int parse(int argc, char **argv) {
 int parent(void) {
     int sockfd;
     int cnt = 0, n, total = config.addrs.size();
-    auto packets = (int64_t)config.rate * config.duration;
+    auto packets = (int64_t)config.rate * (config.duration + config.warmup);
 
     if ( (sockfd = socket(AF_INET, SOCK_DGRAM, 0)) < 0 ) {
         fprintf(stderr, "Failed to create socket\n");

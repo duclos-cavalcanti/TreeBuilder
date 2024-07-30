@@ -17,12 +17,15 @@ int output(std::vector<int64_t>& data, unsigned long cnt);
 
 typedef struct Config {
     std::string name, ip;
-    int port, rate, duration;
+    int port, rate, duration, warmup;
     bool root, verbose;
     std::vector<struct sockaddr_in> addrs;
 
     bool valid(void) {
         if (this->duration == 0)
+            return false;
+
+        if (this->rate == 0)
             return false;
 
         if ( !this->root && ((this->port == 0) || this->ip == "" ) )
@@ -36,6 +39,7 @@ typedef struct Config {
               port(0), 
               rate(0), 
               duration(0), 
+              warmup(0), 
               root(false), 
               verbose(false)
               {};
@@ -57,7 +61,7 @@ void usage(int e) {
 int parse(int argc, char **argv) {
     int opt = 0, opti = 0;
     int ret = 0;
-    while ( (opt = getopt (argc, argv, "hn:i:p:a:r:d:vR") ) != -1 ) {
+    while ( (opt = getopt (argc, argv, "hn:i:p:a:r:d:w:vR") ) != -1 ) {
         switch (opt) {
         case 'h':
             usage(EXIT_SUCCESS);
@@ -93,6 +97,10 @@ int parse(int argc, char **argv) {
             config.duration = atoi(optarg);
             break;
 
+        case 'w':
+            config.warmup = atoi(optarg);
+            break;
+
         case 'R':
             config.root = true;
             break;
@@ -115,7 +123,7 @@ int parse(int argc, char **argv) {
 int root(void) {
     int sockfd;
     int cnt = 0, n, total = config.addrs.size();
-    auto packets = (int64_t)config.rate * config.duration;
+    auto packets = (int64_t)config.rate * (config.duration + config.warmup);
 
     if ( (sockfd = socket(AF_INET, SOCK_DGRAM, 0)) < 0 ) {
         fprintf(stderr, "Failed to create socket\n");
@@ -159,7 +167,7 @@ int proxy(void) {
     int sockfd;
     unsigned long cnt = 0;
     int n, total = config.addrs.size();
-    auto packets = (int64_t)config.rate * config.duration;
+    auto packets = (int64_t)config.rate * (config.duration + config.warmup);
     static char buf[1000] = { 0 };
     struct sockaddr_in sockaddr = socketaddr(config.ip, config.port);
     struct sockaddr_in senderaddr = { 0 };
@@ -230,7 +238,7 @@ int proxy(void) {
 int leaf(void) {
     int sockfd, n;
     unsigned long cnt = 0;
-    auto packets = (int64_t)config.rate * config.duration;
+    auto packets = (int64_t)config.rate * (config.duration + config.warmup);
     static char buf[1000] = { 0 };
     struct sockaddr_in sockaddr = socketaddr(config.ip, config.port);
     struct sockaddr_in senderaddr = { 0 };
@@ -297,8 +305,10 @@ int leaf(void) {
     return output(latencies, cnt);
 }
 
-int output(std::vector<int64_t>& data, unsigned long cnt) {
+int output(std::vector<int64_t>& raw, unsigned long cnt) {
     int ret = 0;
+    int start = (config.rate * config.warmup);
+    std::vector<int64_t> data(raw.begin() + start, raw.end());
     std::string errout = "-1\n-1\n-1\n-1\n-1\n-1";
     int64_t ts  = timestamp();
     std::string name = ( config.name == "" ? "results" : config.name ) + "_mcast_" + std::to_string(ts);

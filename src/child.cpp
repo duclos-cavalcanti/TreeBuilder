@@ -21,12 +21,15 @@ int output(std::vector<int64_t>& data, unsigned long cnt);
 
 typedef struct Config {
     std::string name, ip;
-    int port, rate, duration;
+    int port, rate, duration, warmup;
     float killfactor;
     bool verbose;
 
     bool valid(void) {
         if (this->duration == 0)
+            return false;
+
+        if (this->rate == 0)
             return false;
 
         if (this->port == 0)
@@ -43,6 +46,7 @@ typedef struct Config {
               port(0),
               rate(0), 
               duration(0), 
+              warmup(0), 
               killfactor(0.0),
               verbose(false)
               {};
@@ -52,7 +56,7 @@ Config_t config;
 
 void usage(int e) {
     std::string str = "Usage: ./child "
-                      "[-r rate] [-d duration] "
+                      "[-r rate] [-d duration] [-w warmup]"
                       "[-i ip] [-p port] [-n name]"
                       "[-h] [-v]";
 
@@ -63,7 +67,7 @@ void usage(int e) {
 int parse(int argc, char **argv) {
     int opt = 0;
     int ret = 0;
-    while ( (opt = getopt (argc, argv, "hi:p:t:d:r:n:k:v") ) != -1 ) {
+    while ( (opt = getopt (argc, argv, "hi:p:t:d:w:r:n:k:v") ) != -1 ) {
         switch (opt) {
         case 'h':
             usage(EXIT_SUCCESS);
@@ -97,6 +101,10 @@ int parse(int argc, char **argv) {
             config.duration = atoi(optarg);
             break;
 
+        case 'w':
+            config.warmup = atoi(optarg);
+            break;
+
         default:
             usage(EXIT_FAILURE);
             break;
@@ -120,7 +128,7 @@ int child(void) {
     std::vector<int64_t> latencies;
     float killfactor = ( config.killfactor == 0.0 ? 1.5 : config.killfactor );
 
-    auto deadline_ts = deadline((killfactor) * config.duration);
+    auto deadline_ts = deadline((killfactor) * (config.duration + config.warmup));
     auto t = timeout(1);
 
     if ( (sockfd = socket(AF_INET, SOCK_DGRAM, 0)) < 0 ) {
@@ -178,9 +186,11 @@ int child(void) {
 }
 
 
-int output(std::vector<int64_t>& data, unsigned long cnt) {
-    int     ret = 0;
-    int64_t ts  = timestamp();
+int output(std::vector<int64_t>& raw, unsigned long cnt) {
+    int     ret   = 0;
+    int64_t ts    = timestamp();
+    int     start = (config.rate * config.warmup);
+    std::vector<int64_t> data(raw.begin() + start, raw.end());
     std::string errout = "-1\n-1\n-1\n-1\n-1\n-1";
     std::string name = ( config.name == "" ? "results" : config.name ) + "_child_" + std::to_string(ts);
 
