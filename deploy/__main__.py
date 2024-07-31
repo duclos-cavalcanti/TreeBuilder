@@ -108,6 +108,14 @@ def parse():
     )
 
     arg_def.add_argument(
+        "-b", "--build",
+        type=int,
+        default=0,
+        required=False,
+        dest="rebuild",
+    )
+
+    arg_def.add_argument(
         "-w", "--warmup",
         type=int,
         default=2,

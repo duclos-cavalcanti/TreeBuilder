@@ -62,6 +62,9 @@ class Manager():
             result  = self.report(task, run, interval=interval)
             yield result, (time.time() - start)
 
+    def rebuild(self, run:Run, idx:int) -> ResultDict:
+        pass
+
     def parent(self, run:Run) -> ResultDict:
         self.L.state(f"STATE[PARENT]")
         addr = run.tree.next()

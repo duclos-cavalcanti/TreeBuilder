@@ -27,6 +27,7 @@ class StrategyDict(TypedDict):
 class ParametersDict(TypedDict):
     num: int
     choices: int
+    rebuild: int
     hyperparameter: int 
     rate: int 
     duration: int 
