@@ -28,7 +28,6 @@ def read_csv(f:str, header:bool=True):
         for row in reader: data.append(row)
     return data
 
-
 def isdir(dir:str):
     path = os.path.join(os.getcwd(), f"{dir}")
     if os.path.isdir(path): return path

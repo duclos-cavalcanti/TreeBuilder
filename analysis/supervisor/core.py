@@ -263,13 +263,13 @@ class Supervisor():
 
         return table
 
-    def tsp(self, title:str, dir:str, file:str, result:ResultDict, i:int, jobs:List[Job], typ:str):
+    def tsp(self, title:str, dir:str, file:str, result:ResultDict, i:int, jobs:List[Job], typ:str, traf):
         select = [ s.split(":")[0] for s in result["selected"] ]
         parent = self.A.map(result["root"])
         rate   = result["rate"]
         dur    = result["duration"]
 
-        fig1, ax = plt.subplots(figsize=(28, 16))
+        fig1, ax = plt.subplots(figsize=(pargs.w - 8, pargs.h))
         handles  = []
         max_x    = 0
         max_y    = 0
@@ -287,10 +287,7 @@ class Supervisor():
             if job.addr in select: linestyle = '-'
             else:                  color = 'gray'
         
-            if typ.upper() == "MEDIAN":
-                line, max_xi, max_yi   = tsp(ax, label=label, color=color, linestyle=linestyle, step=rate, data=data)
-            else:
-                line, max_xi, max_yi   = tsp_var(ax, label=label, color=color, linestyle=linestyle, step=rate, data=data)
+            line, max_xi, max_yi   = tsp(ax, label=label, color=color, linestyle=linestyle, step=rate, data=data, traf=traf)
 
             max_x = max(max_x, max_xi)
             max_y = max(max_y, max_yi)
@@ -331,7 +328,7 @@ class Supervisor():
         dur    = result["duration"]
 
         # fig1, ax = plt.subplots()
-        fig1, ax = plt.subplots(figsize=(pargs.w, pargs.h))
+        fig1, ax = plt.subplots(figsize=(pargs.w - 8, pargs.h))
         handles  = []
         max_x    = 0
         max_y    = 0
@@ -415,14 +412,14 @@ class Supervisor():
                 R.add_row(*[ f"STAGE_{i + 1}: {stage['id']}", string ])
             
                 fig_a = self.cdf(title=f"{tree} - STAGE[{i + 1}]", dir=f"{dir}/stages", file=f"{id}_STAGE_{i + 1}_CDF", result=stage, i=i, jobs=jobs)
-                fig_b = self.tsp(title=f"{tree} - STAGE[{i + 1}]", dir=f"{dir}/stages", file=f"{id}_STAGE_{i + 1}_TSP", result=stage, i=i, jobs=jobs, typ="MEDIAN")
-                fig_c = self.tsp(title=f"{tree} - STAGE[{i + 1}]", dir=f"{dir}/stages", file=f"{id}_STAGE_{i + 1}_VAR", result=stage, i=i, jobs=jobs, typ="STDDEV")
-                fig_d = stages(G, run, self.A, stage, i, dir=f"{dir}/trees/stages", file=f"{id}_STAGE_{i + 1}_GRAPH")
+                fig_b = self.tsp(title=f"{tree} - STAGE[{i + 1}]", dir=f"{dir}/stages", file=f"{id}_STAGE_{i + 1}_MEDIAN_TSP", result=stage, i=i, jobs=jobs, typ="MEDIAN", traf=TRAFOS["p50"])
+                fig_c = self.tsp(title=f"{tree} - STAGE[{i + 1}]", dir=f"{dir}/stages", file=f"{id}_STAGE_{i + 1}_STDDEV_TSP", result=stage, i=i, jobs=jobs, typ="STDDEV", traf=TRAFOS["stddev"])
+                fig_d = self.tsp(title=f"{tree} - STAGE[{i + 1}]", dir=f"{dir}/stages", file=f"{id}_STAGE_{i + 1}_MAD_TSP", result=stage, i=i, jobs=jobs, typ="MAD", traf=TRAFOS["mad"])
+                # fig_e = self.tsp(title=f"{tree} - STAGE[{i + 1}]", dir=f"{dir}/stages", file=f"{id}_STAGE_{i + 1}_POS_STDDEV_TSP", result=stage, i=i, jobs=jobs, typ="IQR", traf=TRAFOS["pos_stddev"])
+                # fig_e = self.tsp(title=f"{tree} - STAGE[{i + 1}]", dir=f"{dir}/stages", file=f"{id}_STAGE_{i + 1}_IQR_TSP", result=stage, i=i, jobs=jobs, typ="IQR", traf=TRAFOS["iqr"])
+                fig_f = stages(G, run, self.A, stage, i, dir=f"{dir}/trees/stages", file=f"{id}_STAGE_{i + 1}_GRAPH")
 
-                for f in [ fig_a, fig_b, fig_c, fig_d ]:
-                    figs.append(f)
-
-                for f in figs:
+                for f in [ fig_a, fig_b, fig_c, fig_d, fig_f ]:
                     plt.close(f)
 
             with lock:
@@ -458,14 +455,14 @@ class Supervisor():
             R.add_row(*[ f"EVAL_{i + 1}: {perf['id']}", string ])
         
             fig_a = self.cdf(title=f"{tree} Evaluation[{i + 1}]", dir=f"{dir}/eval", file=f"{id}_EVAL_{i + 1}_CDF", result=perf, i=i, jobs=jobs)
-            fig_b = self.tsp(title=f"{tree} Evaluation[{i + 1}]", dir=f"{dir}/eval", file=f"{id}_EVAL_{i + 1}_TSP", result=perf, i=i, jobs=jobs, typ="MEDIAN")
-            fig_c = self.tsp(title=f"{tree} Evaluation[{i + 1}]", dir=f"{dir}/eval", file=f"{id}_EVAL_{i + 1}_VAR", result=perf, i=i, jobs=jobs, typ="STDDEV")
-            fig_d = performance(G, run, i, self.A, dir=f"{dir}/trees/eval", file=f"{id}_EVAL_{i + 1}_GRAPH")
+            fig_b = self.tsp(title=f"{tree} Evaluation[{i + 1}]", dir=f"{dir}/eval", file=f"{id}_EVAL_{i + 1}_MEDIAN_TSP", result=perf, i=i, jobs=jobs, typ="MEDIAN", traf=TRAFOS["p50"])
+            fig_c = self.tsp(title=f"{tree} Evaluation[{i + 1}]", dir=f"{dir}/eval", file=f"{id}_EVAL_{i + 1}_STDDEV_TSP", result=perf, i=i, jobs=jobs, typ="STDDEV", traf=TRAFOS["stddev"])
+            fig_d = self.tsp(title=f"{tree} Evaluation[{i + 1}]", dir=f"{dir}/eval", file=f"{id}_EVAL_{i + 1}_MAD_TSP", result=perf, i=i, jobs=jobs,    typ="MAD",    traf=TRAFOS["mad"])
+            # fig_e = self.tsp(title=f"{tree} Evaluation[{i + 1}]", dir=f"{dir}/eval", file=f"{id}_EVAL_{i + 1}_POS_STDDEV_TSP", result=perf, i=i, jobs=jobs,    typ="IQR", traf=TRAFOS["pos_stddev"])
+            # fig_e = self.tsp(title=f"{tree} Evaluation[{i + 1}]", dir=f"{dir}/eval", file=f"{id}_EVAL_{i + 1}_IQR_TSP", result=perf, i=i, jobs=jobs,    typ="IQR", traf=TRAFOS["iqr"])
+            fig_f = performance(G, run, i, self.A, dir=f"{dir}/trees/eval", file=f"{id}_EVAL_{i + 1}_GRAPH")
 
-            for f in [ fig_a, fig_b, fig_c, fig_d ]:
-                figs.append(f)
-
-            for f in figs:
+            for f in [ fig_a, fig_b, fig_c, fig_d, fig_f ]:
                 plt.close(f)
 
         with lock:
