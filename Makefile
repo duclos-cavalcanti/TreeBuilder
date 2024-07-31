@@ -44,14 +44,17 @@ lemon:
 	@python3 -m deploy -a deploy -i docker
 
 image:
+	@python3 -m deploy -a build -i gcp
+
+docker:
 	@python3 -m deploy -a build -i docker
 
 lemondrop:
 	@python3 -m deploy -a plan -i docker -m lemondrop -s 20 -d 3 -f 2 -p 9092 -n 1
 	@python3 -m deploy -a deploy -i docker
 
-docker:
-	@python3 -m deploy -a plan -i docker -s 20 -p 9092 -r 5000 -t 10 -e 30 -d 3 -f 2 -n 3 -c 2
+local:
+	@python3 -m deploy -a plan -i docker -s 20 -p 9092 -r 5000 -t 10 -w 2 -e 30 -d 3 -f 2 -n 3 -c 2
 	@python3 -m deploy -a deploy -i docker
 
 pull:
@@ -59,7 +62,7 @@ pull:
 	python3 -m analysis -a pull -i docker -p ${PREFIX}
 
 process:
-	python3 -m analysis -a process -i docker -v yes -p ${PREFIX}
+	python3 -m analysis -a process -i docker -s yes -p ${PREFIX}
 	@#python3 -m analysis -a process -i docker -m udp
 
 destroy:
@@ -69,7 +72,7 @@ gimage:
 	@python3 -m deploy -a build -i gcp
 
 gcp:
-	@python3 -m deploy -a plan -i gcp -s 25 -p 9092 -r 5000 -t 20 -d 3 -f 2 -n 3
+	@python3 -m deploy -a plan -i gcp -s 25 -p 9092 -r 5000 -t 10 -w 2 -e 30 -d 3 -f 2 -n 3 -c 2
 	@python3 -m deploy -a deploy -i gcp
 
 gpull:
