@@ -6,6 +6,9 @@ data.json
 # docs/slidev/dist
 # docs/slidev/dist/*
 
+.ipynb_checkpoints/
+.ipynb_checkpoints/*
+
 analysis/data
 analysis/data/
 analysis/data/*
