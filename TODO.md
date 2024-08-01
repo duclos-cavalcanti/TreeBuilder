@@ -19,7 +19,10 @@
 - [ ] parallel layers for parent x child jobs
 
 ### Bridging into LemonDrop
-- [ ] make our medians closer
+- [ ] make our medians closer!
+- [ ] Heuristic Expression: 
+    - take into account median? 
+    - take into account positive standard deviation only?
 - [ ] leaf rebuild 
 - [ ] sensory mechanism to perceive worsening performance in tree 
     - latency profile
