@@ -1,6 +1,6 @@
 import argparse
 
-from .core import pull, process
+from .core import pull
 
 def parse():
     arg_def = argparse.ArgumentParser(
@@ -46,9 +46,6 @@ def parse():
 
 def main():
     args = parse()
-
-    if args.single: args.single = True
-    else:           args.single = False
 
     if not args.prefix and args.infra != "docker": 
         raise RuntimeError("Need prefix to pull data from GCP/Cloud")
