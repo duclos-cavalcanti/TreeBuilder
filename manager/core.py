@@ -6,6 +6,7 @@ from .lemondrop     import LemonDrop
 import os
 import json
 import time
+import copy
 
 def read(schema):
     default = os.path.join(os.getcwd(), "schemas", "default.json")
@@ -82,7 +83,7 @@ def manager(args):
             
             # evaluate tree
             perfs = len(run.data["perf"])
-            for i in range(len(run.data["perf"])):
+            for i in range(perfs):
                 result, elapsed = M.evaluate(run)
                 run.data["perf"][i]            = result
                 run.data["timers"]["perf"][i]  = elapsed
@@ -93,6 +94,66 @@ def manager(args):
             # record run
             run.data["timers"]["total"] = (time.time() - start)
             L.event({"RUN": run.data})
+
+            # rebuild
+            for k in range(run.data["parameters"]["rebuild"]):
+                L.record(f"REBUILDING TREE[{run.tree.name}]")
+                run.data["name"] = f"{name}-REBUILD-{k+1}"
+                run.tree.name    = run.data["name"]
+
+                start  = time.time()
+                parent = None
+                max    = 0
+                addr   = ""
+                for perf in run.data["perf"]:
+                    rmax  = perf['items'][0]['p90']
+                    raddr = perf['selected'][0]
+
+                    if rmax > max: 
+                        max  = rmax
+                        addr = raddr
+
+                for lnode in run.tree.leaves():
+                    if lnode.id == addr:
+                        parent = lnode.parent
+                        break
+
+                if parent is None:
+                    raise RuntimeError(f"IDENTIFYING BAD LEAF FAILED!")
+
+                root      = parent.id
+                children  = [ c.id for c in parent.children ]
+
+                stage     = time.time()
+                result    = M.rebuild(run, root, children)
+                addrs     = [ d    for d in result["selected"] ]
+                elapsed   = time.time() - stage
+
+                run.data["stages"].clear()
+                run.data["timers"]["stages"].clear()
+                run.data["stages"].append(result)
+                run.data["timers"]["stages"].append(elapsed)
+                L.record(f"TREE[{run.tree.name}] SELECTION[ROOT: {result['root']} => {run.tree.n}/{run.tree.nmax}]: {expr}")
+                L.record(f"STAGE TOOK {elapsed} seconds")
+
+                for i,a in enumerate(addrs):
+                    L.record(f"TREE[{run.tree.name}] REPLACING {children[i]} => {a}")
+                    parent.children[i].id = a
+                    if a not in children: run.pool.remove(a)
+                    else:                 children.pop(children.index(a))
+
+                for c in children: 
+                    run.pool.add(c)
+
+                for i in range(perfs):
+                    result, elapsed = M.evaluate(run)
+                    run.data["perf"][i]            = result
+                    run.data["timers"]["perf"][i]  = elapsed
+                    L.record(f"TREE[{run.tree.name}] PERFORMANCE[{result['selected'][0]}] I={i + 1}/{perfs}: {result['items'][0]['p90']} {expr}")
+                    L.record(f"EVALUATION TOOK {elapsed} seconds")
+
+                run.data["timers"]["total"] = (time.time() - start)
+                L.event({"RUN": run.data})
 
     except Exception as e:
         L.error("INTERRUPTED!")

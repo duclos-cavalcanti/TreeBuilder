@@ -7,10 +7,9 @@ import heapq
 from typing     import List, Tuple
 
 class Mcast(Task):
-    def build(self, run:Run) -> Command:
+    def build(self, run:Run, addrs:List[str]=[]) -> Command:
         id  = self.generate()
-        arr = run.tree.arr()
-
+        arr = addrs
         tb  = TreeBuilder(arr=arr, depth=run.tree.d, fanout=run.tree.fanout) 
         ret = tb.mcast(rate=run.data["parameters"]["rate"], 
                        duration=run.data["parameters"]["evaluation"], 

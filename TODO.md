@@ -1,10 +1,10 @@
 # TO-DO
 
-- [X] warmup ,lemondrop no warmup, extra flag to binaries
+- [X] warmup: lemondrop no warmup, extra flag to binaries
 - [X] lemondrop multiple roots attempt => see if root repeats itself
 - [X] lemondrop with and without stress
 - [X] worst tree for every best? R: No, only p90
-- [ ] rebuild leaf mechanism
+- [X] rebuild leaf mechanism
 - [X] 30 second evaluation
 
 ## Heuristic
@@ -23,10 +23,10 @@
 - [ ] Heuristic Expression: 
     - take into account median? 
     - take into account positive standard deviation only?
-- [ ] leaf rebuild 
+- [X] rebuild leaf mechanism
 - [ ] sensory mechanism to perceive worsening performance in tree 
-    - latency profile
+    - latency profile?
 - [ ] root selection mechanism: 
-    - cloudy forecast: loopback is a metric of some sort
+    - cloudy forecast: loop-back is a metric of some sort
     - select based off of subset of pool before tree construction.
     - select based off of remaining pool and first proxy layer

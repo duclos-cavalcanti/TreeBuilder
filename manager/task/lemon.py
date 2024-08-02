@@ -5,7 +5,7 @@ from .task          import Task
 from typing     import List, Tuple
 
 class Lemon(Task):
-    def build(self, run:Run) -> Command:
+    def build(self, run:Run, addrs:List[str]=[]) -> Command:
         c = Command()
         c.flag      = Flag.LEMON
         c.id        = self.generate()

@@ -6,11 +6,9 @@ from .task          import Task
 from typing     import List, Tuple
 
 class Parent(Task):
-    def build(self, run:Run, port:int=8080) -> Command:
+    def build(self, run:Run, addrs:List[str]=[], port:int=8080) -> Command:
         id      = self.generate()
-        addr    = run.tree.next()
-        arr     = [addr] + run.pool.slice()
-
+        arr     = addrs
         tb      = TreeBuilder(arr=arr, depth=1, fanout=len(arr[1:])) 
         ret     = tb.parent(rate=run.data["parameters"]["rate"], 
                             duration=run.data["parameters"]["duration"], 

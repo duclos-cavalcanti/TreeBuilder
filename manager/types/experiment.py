@@ -55,13 +55,12 @@ class Experiment():
 
         for run in schema["runs"]:
             name = run["name"]
-            for i,pair in enumerate(pairs):
-                root, workers = pair
-                if name == "LEMON":
+            for i, (root, workers) in enumerate(pairs):
+                if "LEMON" in name:
                     run["name"] = f"{name}-{i+1}"
                     self.runs.append(Run(run, "NONE", self.workers, self.seed.get())  )
 
-                elif name == "RAND":  
+                elif "RAND" in name:  
                     self.runs.append(Run(run, root,   workers,      int(time.time())) )
 
                 else:               

@@ -24,12 +24,12 @@ class Task(ABC):
         self.deps           = []
         self.L              = Logger()
 
-    def generate(self, length:int=10):
+    def generate(self, length:int=20):
         ret = ''.join(random.choice(string.ascii_letters) for _ in range(length))
         return ret
 
     @abstractmethod
-    def build(self, run:Run) -> Command:
+    def build(self, run:Run, addrs:List=[]) -> Command:
         pass
 
     @abstractmethod

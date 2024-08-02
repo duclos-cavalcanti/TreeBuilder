@@ -70,7 +70,7 @@ class TestTreeClass:
         fout  = 2 
         depth = 2
         tb  = TreeBuilder(arr=arr, depth=depth, fanout=fout)
-        ret = tb.mcast(rate=10, duration=10, port=8080)
+        ret = tb.mcast(rate=10, duration=10, id="example", warmup=2, port=8080)
 
         string = ""
         for i,c in enumerate(ret.buf):
@@ -108,7 +108,7 @@ class TestTreeClass:
         fout  = 4 
         depth = 1
         tb  = TreeBuilder(arr=arr, depth=depth, fanout=fout)
-        ret = tb.parent(id="ID", rate=10, duration=10, port=8080)
+        ret = tb.parent(id="ID", rate=10, duration=10, warmup=2, port=8080)
 
         string = ""
         for i,c in enumerate(ret.buf):
@@ -120,6 +120,26 @@ class TestTreeClass:
                 string += f"{c},\n"
 
         L.log(f"{string}")
+
+    def test_e(self):
+        fout   = 2 
+        depth  = 3
+        target = "c_12"
+
+        t = self.build(fout=fout, depth=depth)
+        for lnode in t.leaves():
+            id = lnode.id
+            if id == target:
+                L.log(f"FOUND LEAF NODE: {id}")
+
+                parent = lnode.parent
+                L.log(f"PARENT NODE: {parent.id}")
+
+                for i in range(len(parent.children)): 
+                    if id == parent.children[i].id:
+                        parent.children[i].id = "FOOBAR"
+
+        L.log(f"NEW TREE: {self.tree}")
 
     def build(self, fout, depth, verbose=False):
         root  = "r_0"

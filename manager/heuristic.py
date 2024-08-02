@@ -33,9 +33,9 @@ class Heuristic():
         select  = self.data["select"]
         reverse = self.strategy["reverse"]
 
-        l = EXPRESSIONS[key]
-
+        l      = EXPRESSIONS[key]
         sorted = heapq.nsmallest(len(items), items, key=l)
+
         if reverse: self.data["selected"] = [ s["addr"] for s in [ w for w in reversed(sorted[(-1 * select):]) ] ]
         else:       self.data["selected"] = [ s["addr"] for s in sorted[:select] ]
 

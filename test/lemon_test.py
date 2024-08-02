@@ -64,7 +64,7 @@ class TestLemonDropClass:
         L.info(message=f"LOAD:\n{LD.to_string(LOAD)}")
         assert LOAD.all() == LD.LOAD.all()
 
-        mapping, P, converged, elapsed = LD.solve()
+        mapping, converged, elapsed = LD.solve()
 
         L.log(f"LEMONDROP TOOK {elapsed} SECONDS: [CONVERGED={converged}]")
         for i in range(K):

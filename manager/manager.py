@@ -2,7 +2,7 @@ from .message       import *
 from .types         import Logger, Run, ResultDict, ItemDict
 from .node          import Node
 from .lemondrop     import LemonDrop
-from .task          import Task, Parent, Mcast, Rand, Lemon
+from .task          import Task, Parent, Mcast, Lemon
 from .utils         import *
 
 from queue          import Queue
@@ -62,14 +62,26 @@ class Manager():
             result  = self.report(task, run, interval=interval)
             yield result, (time.time() - start)
 
-    def rebuild(self, run:Run, idx:int) -> ResultDict:
-        pass
+    def rebuild(self, run:Run, parent:str, children:List[str]) -> ResultDict:
+        self.L.state(f"STATE[REBUILD]")
+        addr = parent
+        arr  = [addr] + run.pool.slice() + children
+        task = Parent()
+        c    = task.build(run, arr)
+        m    = self.node.message(dst=addr, t=Type.COMMAND, mdata=Metadata(command=c))
+        r    = self.node.handshake(m, field="job")
+        job  = r.mdata.job
+        if job.ret != 0: raise RuntimeError(f"JOB FAILURE: {job}")
+        task.job.CopyFrom(job)
+        ret  = self.report(task, run)
+        return ret
 
     def parent(self, run:Run) -> ResultDict:
         self.L.state(f"STATE[PARENT]")
         addr = run.tree.next()
+        arr  = [addr] + run.pool.slice()
         task = Parent()
-        c    = task.build(run)
+        c    = task.build(run, arr)
         m    = self.node.message(dst=addr, t=Type.COMMAND, mdata=Metadata(command=c))
         r    = self.node.handshake(m, field="job")
         job  = r.mdata.job
@@ -81,8 +93,9 @@ class Manager():
     def mcast(self, run:Run) -> ResultDict:
         self.L.state(f"STATE[MCAST]")
         addr = run.tree.root.id
+        arr  = run.tree.arr()
         task = Mcast()
-        c    = task.build(run)
+        c    = task.build(run, arr)
         m    = self.node.message(dst=addr, t=Type.COMMAND, mdata=Metadata(command=c))
         r    = self.node.handshake(m, field="job")
         job  = r.mdata.job
@@ -94,8 +107,16 @@ class Manager():
     def rand(self, run) -> Generator[ResultDict, None, None]:
         self.L.state(f"STATE[RAND]")
         while(not run.tree.full()):
-            task = Rand()
-            data = task.evaluate(Job(), run)
+            data:ResultDict = {
+                "id": f"rand-{run.tree.root.id}",
+                "root": run.tree.next(),
+                "key": run.data["strategy"]["key"],
+                "select": 1, 
+                "rate": run.data["parameters"]["rate"],
+                "duration": run.data["parameters"]["duration"],
+                "items": [],
+                "selected": [ run.pool.select() for _ in range(run.tree.fanout) ]
+            }
             yield data
 
     def report(self, task:Task, run:Run, interval:int=1) -> ResultDict:

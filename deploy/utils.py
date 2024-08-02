@@ -9,14 +9,9 @@ def lexecute(command:str, wdir=None):
     err = bytes()
 
     try:
-        p = subprocess.Popen(command, 
-                            shell=True,
-                             stdout=subprocess.PIPE, 
-                             stderr=subprocess.PIPE, 
-                             cwd=wdir)
-                         
         print(f"{command}")
 
+        p = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, cwd=wdir)
         for line in p.stdout: 
             print(line.decode('utf-8'), end='')
 

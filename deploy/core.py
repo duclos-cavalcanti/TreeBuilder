@@ -1,30 +1,8 @@
-from .utils  import *
-from manager import Timer, TreeBuilder, RunDict, StrategyDict, ParametersDict, TreeDict, ResultDict, TimersDict
-
-import os
 import json
 
+from .utils   import lexecute
+from manager  import Timer, TreeBuilder, RunDict, StrategyDict, ParametersDict, TreeDict, ResultDict, TimersDict
 from datetime import datetime
-
-def compress(dst:str):
-    command = "tar --exclude=jasper \
-		       --exclude=project.tar.gz \
-		       --exclude=.git \
-		       --exclude=.gitkeep \
-		       --exclude=.gitignore \
-		       --exclude=.gitmodules \
-		       --exclude=examples \
-		       --exclude=lib \
-		       --exclude=build \
-		       --exclude=.cache \
-		       --exclude=terra \
-		       --exclude=infra \
-		       --exclude=analysis \
-		       --exclude-vcs-ignores \
-		       -zcvf"
-
-    command = f"{command} {dst}/project.tar.gz ."
-    execute(command)
 
 def run(name:str, key:str, args, epsilon:float=1e-4, max_i:int=1000, stress:bool=False):
     r:RunDict = RunDict({
@@ -79,7 +57,7 @@ def run(name:str, key:str, args, epsilon:float=1e-4, max_i:int=1000, stress:bool
     return r
 
 def runs(args):
-    runs = []
+    runs  = []
     names = [ "BEST" ]
     keys  = [ "p90", "p50", "heuristic" ]
 
@@ -92,12 +70,8 @@ def runs(args):
 
         runs.append(run(name="WORST",  key="p90",  args=args))
         runs.append(run(name="RAND",   key="NONE", args=args))
-
-        hyperparameters = [ (1e-4, 1000) ]
-        for tup in hyperparameters:
-            epsilon, max_i = tup
-            runs.append(run(name="LEMON", key="NONE", args=args, epsilon=epsilon, max_i=max_i, stress=False))
-            runs.append(run(name="LEMON-STRESS", key="NONE", args=args, epsilon=epsilon, max_i=max_i, stress=True))
+        runs.append(run(name="LEMON",  key="NONE", args=args, epsilon=1e-4, max_i=1000, stress=False))
+        runs.append(run(name="LEMON-STRESS", key="NONE", args=args, epsilon=1e-4, max_i=1000, stress=True))
 
     if args.mode == "lemondrop":
         hyperparameters = [ (1e-4, 1000), (5.5e-5, 10000), (1e-5, 10000) ]
@@ -113,12 +87,12 @@ def commands(args, addrs):
     match args.mode:
         case "mcast":
             tb  = TreeBuilder(arr=addrs, depth=args.depth, fanout=args.fanout)
-            ret = tb.mcast(rate=args.rate, duration=args.duration, id="example")
+            ret = tb.mcast(rate=args.rate, duration=args.duration, id="example", warmup=args.warmup)
             commands.extend(ret.buf)
 
         case "udp":
             tb  = TreeBuilder(arr=addrs, depth=1, fanout=len(addrs[1:]))
-            ret = tb.parent(rate=args.rate, duration=args.duration, id="example")
+            ret = tb.parent(rate=args.rate, duration=args.duration, id="example", warmup=args.warmup)
             commands.extend(ret.buf)
 
         case "lemon":
@@ -168,7 +142,23 @@ def build(args, wdir):
 
 def plan(args, wdir):
     config(args, f"{wdir}/extract/data.json")
-    compress(f"{wdir}/extract")
+    command = "tar --exclude=jasper \
+		           --exclude=project.tar.gz \
+		           --exclude=.git \
+		           --exclude=.gitkeep \
+		           --exclude=.gitignore \
+		           --exclude=.gitmodules \
+		           --exclude=examples \
+		           --exclude=lib \
+		           --exclude=build \
+		           --exclude=.cache \
+		           --exclude=terra \
+		           --exclude=infra \
+		           --exclude=analysis \
+		           --exclude-vcs-ignores \
+		           -zcvf"
+
+    lexecute(f"{command} {wdir}/extract/project.tar.gz .")
     lexecute(f"terraform init", wdir=wdir)
     lexecute(f"terraform plan -out=tf.plan -var mode={args.mode}", wdir=wdir)
 

@@ -20,21 +20,6 @@ class TreeBuilder():
         ret = self.tree.slice()
         return ret
 
-    @staticmethod
-    def _parent(_, node, data):
-        if len(node.children) > 0:
-            c  =  f"./bin/parent -a "
-            c  += f" ".join(f"{n.id.split(':')[0]}:{data.port}" for n in node.children)
-            c  += f" -w {data.warmup}"
-            c  += f" -r {data.rate} -d {data.duration}"
-        else:
-            c   =  f"./bin/child -i {node.id.split(':')[0]} -p {data.port}"
-            c   += f" -r {data.rate} -d {data.duration}"
-            c   += f" -w {data.warmup}"
-            c   += f" -n {node.id.split(':')[0]}_{data.id}"
-
-        data.buf.append(c)
-
     def parent(self, rate, duration, id, warmup, port:int=8080):
         class Data:
             def __init__(self):
@@ -45,27 +30,23 @@ class TreeBuilder():
                 self.port       = port
                 self.buf        = []
 
+        def callback(_, node, data):
+            if len(node.children) > 0:
+                c  =  f"./bin/parent -a "
+                c  += f" ".join(f"{n.id.split(':')[0]}:{data.port}" for n in node.children)
+                c  += f" -w {data.warmup}"
+                c  += f" -r {data.rate} -d {data.duration}"
+            else:
+                c   =  f"./bin/child -i {node.id.split(':')[0]} -p {data.port}"
+                c   += f" -r {data.rate} -d {data.duration}"
+                c   += f" -w {data.warmup}"
+                c   += f" -n {node.id.split(':')[0]}_{data.id}"
+
+            data.buf.append(c)
+
         data = Data()
-        self.tree.traverse(self._parent, data)
+        self.tree.traverse(callback, data)
         return data
-
-    @staticmethod
-    def _mcast(_, node, data):
-        if len(node.children) > 0:
-            c   =   f"./bin/mcast -a "
-            c   +=  f" ".join(f"{n.id.split(':')[0]}:{data.port}" for n in node.children)
-            c   +=  f" -r {data.rate} -d {data.duration}"
-            c   +=  f" -w {data.warmup}"
-            c   +=  f" -i {node.id.split(':')[0]} -p {data.port}"
-            if node.parent is None: c += " -R"
-        else:
-            c   =   f"./bin/mcast "
-            c   +=  f" -r {data.rate} -d {data.duration}"
-            c   +=  f" -w {data.warmup}"
-            c   +=  f" -i {node.id.split(':')[0]} -p {data.port}"
-            c   +=  f" -n {node.id.split(':')[0]}_{data.id}"
-
-        data.buf.append(c)
 
     def mcast(self, rate, duration, id, warmup, port:int=7070):
         class Data:
@@ -77,8 +58,26 @@ class TreeBuilder():
                 self.port       = port
                 self.buf        = []
 
+        def callback(_, node, data):
+            if len(node.children) > 0:
+                c   =   f"./bin/mcast -a "
+                c   +=  f" ".join(f"{n.id.split(':')[0]}:{data.port}" for n in node.children)
+                c   +=  f" -r {data.rate} -d {data.duration}"
+                c   +=  f" -w {data.warmup}"
+                c   +=  f" -i {node.id.split(':')[0]} -p {data.port}"
+                if node.parent is None: c += " -R"
+            else:
+                c   =   f"./bin/mcast "
+                c   +=  f" -r {data.rate} -d {data.duration}"
+                c   +=  f" -w {data.warmup}"
+                c   +=  f" -i {node.id.split(':')[0]} -p {data.port}"
+                c   +=  f" -n {node.id.split(':')[0]}_{data.id}"
+
+            data.buf.append(c)
+
         data = Data()
-        self.tree.traverse(self._mcast, data)
+        self.tree.traverse(callback, data)
+
         return data
 
 class TreeNode():

@@ -38,12 +38,16 @@ class Pool():
 
     def slice(self, param:int=-1):
         if param < 0: param = self.K
+        total = len(self.pool)
 
-        if len(self.pool) <= param: 
-            return self.pool
-        else:
-            pseudo = [ p for p in self.pool ]
-            return [ self.select(pool=pseudo) for _ in range(param) ]
+        if total > 0:
+            if total <= param:
+                return [ p for p in self.pool ]
+            else:
+                pseudo = [ p for p in self.pool ]
+                return [ self.select(pool=pseudo) for _ in range(param) ]
+        else: 
+            raise RuntimeError(f"CANNOT SLICE EMPTY POOL")
 
     def n_remove(self, elements:List):
         for el in elements: 
@@ -54,7 +58,15 @@ class Pool():
             if p == el: 
                 self.pool.pop(i)
                 return
+
         raise RuntimeError(f"{el} NOT IN POOL")
+
+    def add(self, el:str):
+        self.pool.append(el)
+
+    def n_add(self, elements:List):
+        for el in elements:
+            self.add(el)
 
     def __str__(self):
         ret = f"POOL: {[e for e in self.pool]}"

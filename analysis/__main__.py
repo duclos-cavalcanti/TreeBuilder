@@ -5,7 +5,7 @@ from .core import pull, process
 def parse():
     arg_def = argparse.ArgumentParser(
         description='Script to automate data analysis.',
-        epilog='Example: main.py --action/-a pull -p <prefix> [-v yes]'
+        epilog='Example: main.py --action/-a pull -p <prefix>'
     )
 
     arg_def.add_argument(
@@ -21,7 +21,7 @@ def parse():
         type=str,
         required=False,
         default="default",
-        choices=["default", "super"],
+        choices=["default"],
         dest="mode",
     )
 
@@ -41,14 +41,6 @@ def parse():
         dest="infra",
     )
 
-    arg_def.add_argument(
-        "-s", "--single",
-        type=str,
-        required=False,
-        default="",
-        dest="single",
-    )
-
     args = arg_def.parse_args()
     return args
 
@@ -63,7 +55,6 @@ def main():
 
     match args.action:
         case "pull":     pull(args)
-        case "process":  process(args)
         case _:         raise NotImplementedError()
 
     return

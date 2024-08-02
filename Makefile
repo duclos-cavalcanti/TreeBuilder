@@ -18,8 +18,10 @@ ifeq (, $(shell which terraform))
 $(error terraform not found)
 endif
 
-PREFIX  := 2024-07-21-15-07-42
+PREFIX  := 2024-08-01-15-38-39
 GPREFIX := 2024-07-21-13-08-04
+
+# treefinder-docker-2024-08-01-15-38-39
 
 .PHONY: proto build udp mcast docker pull process clean rm docs test 
 all: build
@@ -43,18 +45,15 @@ lemon:
 	@python3 -m deploy -a plan -i docker -m lemon -s 3 -t 15
 	@python3 -m deploy -a deploy -i docker
 
-image:
-	@python3 -m deploy -a build -i gcp
-
-docker:
-	@python3 -m deploy -a build -i docker
-
 lemondrop:
 	@python3 -m deploy -a plan -i docker -m lemondrop -s 20 -d 3 -f 2 -p 9092 -n 1
 	@python3 -m deploy -a deploy -i docker
 
+docker:
+	@python3 -m deploy -a build -i docker
+
 local:
-	@python3 -m deploy -a plan -i docker -s 20 -p 9092 -r 5000 -t 10 -w 2 -e 30 -d 3 -f 2 -n 3 -c 2
+	@python3 -m deploy -a plan -i docker -s 14 -p 9092 -r 5000 -t 5 -w 2 -e 30 -d 2 -f 2 -n 1 -c 2 -b 1
 	@python3 -m deploy -a deploy -i docker
 
 pull:
@@ -62,17 +61,16 @@ pull:
 	python3 -m analysis -a pull -i docker -p ${PREFIX}
 
 process:
-	python3 -m analysis -a process -i docker -s yes -p ${PREFIX}
-	@#python3 -m analysis -a process -i docker -m udp
+	@python3 -m analysis -a process -i docker -s yes -p ${PREFIX}
 
 destroy:
 	@python3 -m deploy -a destroy -i docker
 
-gimage:
+image:
 	@python3 -m deploy -a build -i gcp
 
 gcp:
-	@python3 -m deploy -a plan -i gcp -s 25 -p 9092 -r 5000 -t 10 -w 2 -e 30 -d 3 -f 2 -n 3 -c 2
+	@python3 -m deploy -a plan -i gcp -s 25 -p 9092 -r 5000 -t 10 -w 2 -e 30 -d 3 -f 2 -n 3 -c 2 -b 1
 	@python3 -m deploy -a deploy -i gcp
 
 gpull:
@@ -83,9 +81,6 @@ gprocess:
 
 super:
 	@python3 -m analysis -a process -i gcp -m super -p ${GPREFIX}
-
-gcopy:
-	python3 -m analysis -a generate -i gcp -p ${GPREFIX}
 
 gdestroy:
 	@python3 -m deploy -a destroy -i gcp
@@ -103,4 +98,4 @@ docs:
 	$(MAKE) -C docs slides
 
 test:
-	@python3 -m pytest -v test/ -k LemonDrop -s
+	@python3 -m pytest -v test/ -k Tree -s

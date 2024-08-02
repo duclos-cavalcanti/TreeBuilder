@@ -1,46 +1,31 @@
 import subprocess
 import os
 import shutil
-import json
+import tarfile
 
-from manager import RunDict
+def extract(dir:str):
+    print(f"Extracting: {dir}")
+    for f in os.listdir(dir):
+        if f.endswith(".tar.gz"):
+            name = f.split(".tar.gz")[0]
+            path = os.path.join(dir, name)
+            os.mkdir(path)
+            with tarfile.open(os.path.join(dir, f)) as tar:
+                tar.extractall(path=path)
+                print(f"DECOMPRESSED: {f}")
 
-from .analysis      import Analyzer
-from .supervisor    import Supervisor
-from .utils         import *
+def isdir(dir:str):
+    path = os.path.join(os.getcwd(), f"{dir}")
+    if os.path.isdir(path): return path
+    raise RuntimeError(f"Not a directory: {path}")
 
-def load(dir:str):
-    f = "default.json"
-    file = os.path.join(dir, f)
-    map  = {}
-
-    with open(file, 'r') as f: 
-        schema = json.load(f)
-
-    map[schema["addrs"][0]] = "M_0"
-    for i,addr in enumerate(schema["addrs"][1:]):
-        map[addr] = f"W_{i}"
-
-    return schema, map
-
-def read(dir:str):
-    file = os.path.join(dir, "events.log")
-    events = []
-    with open(file, 'r') as f:
-        for line in f:
-            try:
-                event = json.loads(line.strip())
-                events.append(event)
-
-            except json.JSONDecodeError as e:
-                print(f"Error parsing line: {line.strip()} - {e}")
-
-    runs:List[RunDict]   = []
-    for e in events:
-        if "RUN" in e:
-            runs.append(RunDict(e["RUN"]))
-
-    return runs
+def finddir(dir:str, patt:str):
+    for d in os.listdir(dir):
+        subdir = os.path.join(dir, d)
+        if os.path.isdir(subdir):
+            if patt in d:
+                return subdir
+    raise RuntimeError(f"No directory found matching {patt}")
 
 def gpull(prefix:str):
     command = "gcloud storage ls gs://exp-results-nyu-systems-multicast/"
@@ -81,16 +66,4 @@ def pull(args):
         return
 
     else:
-        raise NotImplementedError()
-
-def process(args):
-    if args.mode == "default" or args.mode == "super":
-        dir = isdir("analysis/data")
-        dir = finddir(dir=dir, patt=f"treefinder-{args.infra}-{args.prefix}")
-        runs   = read(os.path.join(dir, "manager", "logs"))
-        schema, map = load(dir)
-        S = Supervisor(runs, schema, map, dir, mode=args.mode, multi=(not args.single))
-        S.process()
-
-    else: 
         raise NotImplementedError()
