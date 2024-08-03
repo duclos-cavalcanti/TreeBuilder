@@ -13,8 +13,8 @@ class Experiment():
     def __init__(self, dir:str):
         self.dir    = dir
         self.schema = self.load(dir) 
-        self.runs   = self.read(dir=os.path.join(dir, "manager", "logs"))
-        self.jobs   = self.find()
+        self.runs   = self.events(dir=os.path.join(dir, "manager", "logs"))
+        self.jobs   = self.read()
 
     def map(self, addr:str):
         return self.schema["map"][addr.split(":")[0]]
@@ -102,7 +102,7 @@ class Experiment():
     
         return schema
 
-    def read(self, dir:str):
+    def events(self, dir:str):
         file   = os.path.join(dir, "events.log")
         events = []
         with open(file, 'r') as f:
@@ -121,149 +121,90 @@ class Experiment():
     
         return runs
 
-    def search(self, result:ResultDict, patt:str="child"):
-        id      = self.fix_id(result["id"])
-        items   = result["items"]
-        addrs   = []
-        names   = []
-        data    = []
-
-        for i in items:
-            raddr = i["addr"].split(":")[0]
-            names.append(self.schema["names"][self.schema["addrs"].index(raddr)])
-            addrs.append(raddr)
-
-        for i,name in enumerate(names):
-            files  = glob.glob(os.path.join(self.dir, f"{name}", "logs", "*.csv"))
-            fnames = [ f.split("/")[-1] for f in files ]
-    
-            assert any([ addrs[i] in n for n in fnames ]), f"ADDR: {addrs[i]} NOT FOUND IN FILES FROM {name.upper()}"
-            assert any([ patt     in n for n in fnames ]), f"NO {patt.upper()} JOBS IN FILES FROM {name.upper()}"
-    
-            idx = -1
-            for i,f in enumerate(files):
-                name = f.split("/")[-1]
-                if patt in name and id in name:
-                    idx = i 
-                    break
-    
-            assert idx >= 0, f"NO FILE FOUND MATCHING: {patt}"
-
-            rows = []
-            with open(files[idx], 'r') as csvfile:
-                reader = csv.reader(csvfile)
-                next(reader)
-                for row in reader: 
-                    rows.append(row)
-
-            data.append([ float(row[1]) for row in rows ])
-
-        return result["id"], data 
-
-    def find(self):
-        manager = mp.Manager()
-        ret     = manager.dict()
+    def read(self):
+        M       = mp.Manager()
+        ret     = M.dict()
         lock    = mp.Lock()
         procs   = []
-    
+
+        def search(result:ResultDict, patt:str="child"):
+            id      = result["id"]
+            items   = result["items"]
+            addrs   = []
+            names   = []
+            data    = []
+
+            for i in items:
+                raddr = i["addr"].split(":")[0]
+                names.append(self.schema["names"][self.schema["addrs"].index(raddr)])
+                addrs.append(raddr)
+
+            for i,name in enumerate(names):
+                files  = glob.glob(os.path.join(self.dir, f"{name}", "logs", "*.csv"))
+                fnames = [ f.split("/")[-1] for f in files ]
+        
+                assert any([ addrs[i] in n for n in fnames ]), f"ADDR: {addrs[i]} NOT FOUND IN FILES FROM {name.upper()}"
+                assert any([ patt     in n for n in fnames ]), f"NO {patt.upper()} JOBS IN FILES FROM {name.upper()}"
+        
+                idx = -1
+                for i,f in enumerate(files):
+                    name = f.split("/")[-1]
+                    if patt in name and id in name:
+                        idx = i 
+                        break
+        
+                assert idx >= 0, f"NO FILE FOUND MATCHING: {patt}"
+
+                rows = []
+                with open(files[idx], 'r') as csvfile:
+                    reader = csv.reader(csvfile)
+                    next(reader)
+                    for row in reader: 
+                        rows.append(row)
+
+                data.append([ float(row[1]) for row in rows ])
+
+            return result["id"], data 
+
+
         def worker(d:dict, run:RunDict, lock):
             name, key, tree, id = self.run(run)
-            if "BEST" in name or "WORST" in name:
-                for stage in run["stages"]:
-                    k, data = self.search(stage, "child")
-                    with lock:
-                        d[k] = data
-                        print(f"PARSED RESULT[{stage['id']}] from RUN[{id}]")
+            for stage in run["stages"]:
+                k, data = search(stage, "child")
+                with lock:
+                    d[k] = data
+                    print(f"PARSED RESULT[{stage['id']}] from RUN[{id}]")
 
             for perf in run["perf"]:
-                k, data = self.search(perf, "mcast")
+                k, data = search(perf, "mcast")
                 with lock:
                     d[k] = data
                     print(f"PARSED RESULT[{perf['id']}] from RUN[{id}]")
+
+        def manager(i, d:dict, runs:List[RunDict], lock):
+            with lock:
+                print(f"PROC[{i}]")
+
+            cnt = 0
+            for run in runs:
+                name, key, tree, id = self.run(run)
+                worker(d, run, lock)
+                cnt += 1
+
+            with lock: 
+                print(f"PROC[{i}]: COMPLETED {cnt} RUNS")
+
+        def split(arr, n):
+            k, m = divmod(len(arr), n)
+            return [arr[i * k + min(i, m):(i + 1) * k + min(i + 1, m)] for i in range(n)]
     
-        for run in self.runs:
-            p = mp.Process(target=worker, args=(ret, run, lock))
+        for i,arr in enumerate(split(self.runs, 4)):
+            p = mp.Process(target=manager, args=(i, ret, arr, lock))
             procs.append(p)
             p.start()
-    
+
         for p in procs:
             p.join()
 
         return ret
 
-    def fix_id(self, id_:str):
-        id = id_
-        match id_:
-            # BEST P-90 ROOT: 10.1.25.10
-            case "EOCxiXhTfn": id = "IyuosKLoHy"
-            case "stqtHpzbDv": id = "DNSAxLstSG"
-            case "qPJIsuGmgW": id = "utroKCTgjr"
-    
-            # BEST P-90 ROOT: 10.1.25.25
-            case "NLdaaTNBbd": id = "yvdepcuiLp"
-            case "jPDBrvFTPQ": id = "BvTVwdkQEj"
-            case "zWtWGOQjWi": id = "OcjJeNxtMA"
-    
-            # BEST P-50 ROOT: 10.1.25.10
-            case "SCjhNtixpT": id = "bmxljJmKat"
-            case "yzqCuIOlnF": id = "QiVvplnIlB"
-            case "nQeaewDqjd": id = "LBHlvIsnqp"
-    
-            # BEST P-50 ROOT: 10.1.25.25
-            case "qBkRKCCbwd": id = "tlxcuKMJAN"
-            case "hGuLgncoLC": id = "RXvgMTiIyc"
-            case "XmIsvyZTMj": id = "pcmLRABrAY"
-    
-            # BEST HEURISTIC ROOT: 10.1.25.10
-            case "awttVGAnXB": id = "gwCcshFSWz"
-            case "cZpZhBCrbZ": id = "iJAoawYemH"
-            case "TBVgEBphOq": id = "dhhuRcxOru"
-    
-            # BEST HEURISTIC ROOT: 10.1.25.25
-            case "aAVoXDBuBt": id = "hVGXCEBFWN"
-            case "OkYIcYnJkI": id = "eumbOFwJBc"
-            case "OsLsqVNBkm": id = "buHPYUVmnF"
-    
-            # WORST P-90 ROOT: 10.1.25.10
-            case "JTJnHEisYX": id = "cjeXOuAaZj"
-            case "ZlNLZzPdvy": id = "IqMTLYXecW"
-            case "gYSEeAZqfN": id = "IvRoHFttxw"
-    
-            # WORST P-90 ROOT: 10.1.25.25
-            case "RyzJDytGQl": id = "ZtDOglFVwI"
-            case "oaHdufOIsw": id = "JpoCBaSdZr"
-            case "HCFwvJyntn": id = "MOgYEuqCrK"
-    
-            # WORST P-50 ROOT: 10.1.25.10
-            case "fkeXBzRHRl": id = "XzzyJWqzUw"
-            case "FolfwGuYyG": id = "qWuMriaEjw"
-            case "quBYuCsjyO": id = "AQfDeilhNU"
-    
-            # WORST P-50 ROOT: 10.1.25.25
-            case "saceFFNcLL": id = "qhacFWBjpk"
-            case "ioAWxUHKSC": id = "aPqKNOBlLH"
-            case "lWfwiBpClM": id = "YHOzXtJSYf"
-    
-            # RAND ROOT: 10.1.25.10
-            case "rlyqTuGkba": id = "OMDxSoDgEU"
-            case "WSzpRhfmxJ": id = "EQsBjuOzhJ"
-            case "vtstRBxwQA": id = "kGuPrHfaNz"
-    
-            # RAND ROOT: 10.1.25.25
-            case "cGAVBklEtn": id = "DTLbjpcxss"
-            case "LreykaIhVx": id = "nUJOAHAAhz"
-            case "sskKCRriLZ": id = "DekRLqkiIO"
-    
-            # LEMON ROOT: 10.1.25.3 eps=1e-4 n=1000
-            case "OQIfbcoAPT": id = "aDTkZNfBTv"
-            case "BjcDoGPpSX": id = "vvyybotxks"
-            case "aAvYhhlfgs": id = "LHeRBmcWAx"
-    
-            # LEMON ROOT: 10.1.25.6 eps=5.5e-05 n=10000
-            case "BEduhFpxGS": id = "PFXdEIseGB"
-            case "ZSaujGamsT": id = "vGFAuLWrva"
-            case "igsQlUMxcf": id = "WzCPLchnIZ"
-    
-            case _: pass
-        return id
-    
