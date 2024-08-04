@@ -64,22 +64,49 @@ class TestLemonDropClass:
 
         # mapping, converged, elapsed = LD.solve()
 
-        mapping = []
-        epsilon = 1e-5
-        max_i   = 100000
+        max_arr = [ 
+           1000,
+           10000,
+           10000,
+           10000,
+           10000,
+           10000,
+           10000,
+           10000,
+           10000,
+           10000
+        ]
 
-        P, converged, elapsed = LD.FAQ(OWD, LOAD, epsilon, max_i)
+        e_arr = [
+            1.0e-4,
+            7.7e-5,
+            6.0e-5,
+            4.6e-5,
+            3.6e-5,
+            2.8e-5,
+            2.2e-5,
+            1.7e-5,
+            1.3e-5,
+            1.0e-5
+        ]
 
-        for i in range(LD.K):
-            idx = np.argmax(P[i])
-            value = LD.VMS[idx]
-            mapping.append((idx, value))
+        for epsilon, max_i in zip(e_arr, max_arr):
+            mapping = []
+            # epsilon = 0.45e-4
+            # max_i   = 100000
 
-        L.log(f"LEMONDROP TOOK {elapsed} SECONDS: [CONVERGED={converged}]")
-        for i in range(K):
-            idx, addr = mapping[i]
-            L.log(f"NODE_{i} => VM[{idx}]: {addr}")
+            P, converged, elapsed = LD.FAQ(OWD, LOAD, epsilon, max_i)
 
-        assert np.all(np.sum(P, axis=0) == 1)
-        assert np.all(np.sum(P, axis=1) == 1)
-        assert np.all((P == 0) | (P == 1))
+            for i in range(LD.K):
+                idx = np.argmax(P[i])
+                value = LD.VMS[idx]
+                mapping.append((idx, value))
+
+            L.log(f"LEMONDROP TOOK {elapsed} SECONDS: [EPS={epsilon} MAX={max_i} CONVERGED={converged}]")
+            for i in range(K):
+                idx, addr = mapping[i]
+                # L.log(f"NODE_{i} => VM[{idx}]: {addr}")
+
+            assert np.all(np.sum(P, axis=0) == 1)
+            assert np.all(np.sum(P, axis=1) == 1)
+            assert np.all((P == 0) | (P == 1))
