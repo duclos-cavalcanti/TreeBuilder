@@ -2,29 +2,19 @@
 layout: two-cols-header
 ---
 
-# Testbench and Heuristic
+# Tree-Finder: Testbench and Heuristic
 
 
-::left::
 1. Allocate __N__ VMs.
-2. Run Jasper on Vanilla Setup
-    1. Terminate
-    1. Store Results
-3. Apply Proposed Heuristic
-4. Evaluate Performance
-
-<img 
-    alt="Heuristic"
-    width=300px
-    src="/images/MethodHeuristic.png"
-/>
-
-::right::
+2. Apply Proposed Heuristic 
+3. Apply Lemon-Drop
+4. Evaluate Multicast Performances: 
+    - Vanilla x Heuristic x LemonDrop
 
 <div
     alt="Pool"
     style="transform: scale(0.8)"
-    class="absolute top-13% left-50% right-0 bottom-0"
+    class="absolute top-13% left-40% right-0 bottom-0"
 >
 
 ```mermaid
@@ -43,7 +33,19 @@ block-beta
         W5["W<sub>5</sub>"]
         W6["W<sub>6</sub>"]
         W7["W<sub>7</sub>"]
+        W8["W<sub>8</sub>"]
+        W9["W<sub>9</sub>"]
+        W10["W<sub>10</sub>"]
+        W11["W<sub>11</sub>"]
+
+        style W2 fill:#FF0000,color:#fff
+
+        style W8 fill:#000000,color:#fff
+        style W9 fill:#000000,color:#fff
+        style W10 fill:#000000,color:#fff
+        style W11 fill:#000000,color:#fff
     end
+
     M-->P
     P-->workers
 
@@ -55,12 +57,12 @@ block-beta
 <div
     alt="Manager"
     style="transform: scale(0.8)"
-    class="absolute bottom-10% right-10%"
+    class="absolute bottom-10% right-5%"
 >
 
 ```mermaid
 graph TB
-    subgraph Tree
+    subgraph Tree [Tree D=2, F=2]
         direction TB
         W0["W<sub>2</sub>"] 
         W1["W<sub>1</sub>"]
@@ -78,9 +80,18 @@ graph TB
 
         W2 -.- W5
         W2 -.- W6
+
+        style W0 fill:#FF0000,color:#fff
     end
 ```
 
 </div>
+
+<img 
+    alt="Heuristic"
+    style="transform: scale(0.5)"
+    src="/images/MethodHeuristicNew.png"
+    class="absolute top-25% right-10%"
+/>
 
 <TUMLogo variant="white" />

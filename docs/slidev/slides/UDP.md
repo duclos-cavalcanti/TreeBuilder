@@ -2,13 +2,12 @@
 layout: two-cols-header
 ---
 
-# Parent x Child UDP
+# Parent x Child Job
 
 - Parent sends messages to multiple children
 - Child: 
     - Waits for stream start 
-    - Stores latency difference
-    - prints to `stdout` 90% percentile latency
+    - Stores latency difference per Message
 
 <div 
     alt="WorkerSM"
@@ -42,11 +41,6 @@ typedef struct MsgUDP {
     uint32_t id;
     uint64_t ts;
 } MsgUDP_t;
-
-double get_percentile(const std::vector<int64_t>& data, 
-                      double percentile) {
-    // stuff 
-}
 
 ```
 
