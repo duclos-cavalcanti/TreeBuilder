@@ -8,6 +8,7 @@ from manager import RunDict, ResultDict
 
 import multiprocessing as mp
 import networkx as nx
+import pandas as pd
 
 class Experiment():
     def __init__(self, dir:str):
@@ -155,14 +156,8 @@ class Experiment():
         
                 assert idx >= 0, f"NO FILE FOUND MATCHING: {patt}"
 
-                rows = []
-                with open(files[idx], 'r') as csvfile:
-                    reader = csv.reader(csvfile)
-                    next(reader)
-                    for row in reader: 
-                        rows.append(row)
-
-                data.append([ float(row[1]) for row in rows ])
+                df = pd.read_csv(files[idx])
+                data.append(df.iloc[:, 1].astype(float).tolist())
 
             return result["id"], data 
 

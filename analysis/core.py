@@ -6,7 +6,7 @@ import networkx as nx
 
 from matplotlib.table   import table
 from typing             import List
-from manager            import ResultDict, RunDict, KEYS
+from manager            import ResultDict, RunDict
 
 from . import utils
 from . import plot
@@ -18,6 +18,19 @@ ARGS2      = None
 COLORS     = plot.COLORS
 LINESTYLES = plot.LINESTYLES
 MARKERS    = plot.MARKERS
+
+def find(key:str, name:str, root:str=""):
+    for i, run in enumerate(EXPERIMENT.runs): 
+        _name, _key, _tree, _id = EXPERIMENT.run(run)
+        _root = EXPERIMENT.map(run["tree"]["root"])
+
+        if root == "": _bool = True
+        else:          _bool = (root == _root)
+
+        if name == _name and key == _key and _bool:
+            return run, i
+
+    raise RuntimeError(f"RUN[KEY={key} && NAME={name} && ROOT={root}] DOES NOT EXIST")
 
 def legendResult(result:ResultDict, data:List[List]):
     select = [ s.split(":")[0] for s in result["selected"] ]
@@ -59,7 +72,7 @@ def legendResult(result:ResultDict, data:List[List]):
 
     return handles, labels
 
-def tspResult(fig:plt.Figure, ax:plt.Axes, args, title:str, result:ResultDict, data:List[List], key:str):
+def tspResult(fig:plt.Figure, ax:plt.Axes, args, title:str, result:ResultDict, data:List[List], key:str, interval:int=5):
     select = [ s.split(":")[0] for s in result["selected"] ]
     parent = EXPERIMENT.map(result["root"])
     rate   = result["rate"]
@@ -97,11 +110,11 @@ def tspResult(fig:plt.Figure, ax:plt.Axes, args, title:str, result:ResultDict, d
     fig.suptitle(f"{title}", fontsize=args.tfont, fontweight='bold')
     
     if args.title:
-        ax.set_title(f"TIME SERIES {key.upper()} OWD LATENCY", fontsize=args.nfont + 2)
+        ax.set_title(f"TIME SERIES {key.upper()} OWD (uS)", fontsize=args.nfont + 2, fontweight='bold')
 
     ax.set_xlim(0, max_x + 1)
     ax.set_ylim(0, max_y * 1.5)
-    ax.set_xticks(np.arange(1, max_x + 1, 2))
+    ax.set_xticks(np.arange(1, max_x + 1, interval))
 
     if args.ylabel:
         ax.set_ylabel("OWD(us)", fontsize=args.nfont)
@@ -125,6 +138,49 @@ def tspResult(fig:plt.Figure, ax:plt.Axes, args, title:str, result:ResultDict, d
         ax.legend(handles=handles, loc='best', fancybox=True, fontsize=args.nfont + 1, ncol=2)
 
     return
+
+def cdfResultArr(fig:plt.Figure, ax:plt.Axes, args, title:str, i:int, result:ResultDict, data:List[List]):
+    max_x    = 0
+    max_y    = 0
+
+    handles = []
+        
+    for j,item in enumerate(result["items"]):
+        addr   = item["addr"].split(":")[0]
+        label  = EXPERIMENT.map(item["addr"])
+        d      = data[j]
+        cnt    = i
+
+        if i >= (len(LINESTYLES) - 1): cnt = 0
+
+        color     = COLORS[ cnt+1 % len(COLORS) ]
+        linestyle = '-'
+        
+        line, max_xi, max_yi = plot.cdf(ax, label=label, color=color, linestyle=linestyle, data=d)
+        handle = plt.Line2D([0], [0], color=color, linestyle=linestyle, label=label)
+        handles.append(handle)
+
+        max_x = max(max_x, max_xi)
+        max_y = max(max_y, max_yi)
+        
+    fig.suptitle(f"{title}", fontsize=args.tfont, fontweight='bold')
+    
+    if args.title:
+        ax.set_title(f"CDF OWD LATENCY (uS)", fontsize=args.nfont + 2, fontweight='bold')
+
+    ax.set_xlim(0, max_x + 50)
+    ax.set_ylim(0, 100)
+    
+    if args.ylabel:
+        ax.set_ylabel("CDF", fontsize=args.nfont)
+    
+    if args.xlabel:
+        ax.set_xlabel("OWD(us)", fontsize=args.nfont)
+
+    ax.tick_params(axis='x', labelsize=args.nfont - 1)
+    ax.tick_params(axis='y', labelsize=args.nfont - 1)
+        
+    return max_x, max_y, handles
 
 def cdfResult(fig:plt.Figure, ax:plt.Axes, args, title:str, result:ResultDict, data:List[List]):
     select = [ s.split(":")[0] for s in result["selected"] ]
@@ -165,7 +221,7 @@ def cdfResult(fig:plt.Figure, ax:plt.Axes, args, title:str, result:ResultDict, d
     fig.suptitle(f"{title}", fontsize=args.tfont, fontweight='bold')
     
     if args.title:
-        ax.set_title(f"PROBE OWD LATENCY", fontsize=args.nfont + 2)
+        ax.set_title(f"CDF OWD LATENCY (uS)", fontsize=args.nfont + 2, fontweight='bold')
 
     ax.set_xlim(0, max_x + 50)
     ax.set_ylim(0, 100)
@@ -191,24 +247,26 @@ def cdfResult(fig:plt.Figure, ax:plt.Axes, args, title:str, result:ResultDict, d
     if args.legend:
         ax.legend(handles=handles, loc='best', fancybox=True, fontsize=args.nfont + 1, ncol=2)
 
-    return
+    return max_x, max_y
 
-def tableResult(fig:plt.Figure, ax:plt.Axes, args, title:str, run:RunDict, result:ResultDict, data:List[List]):
+def tableResult(fig:plt.Figure, ax:plt.Axes, args, title:str, run:RunDict, result:ResultDict, data:List[List], cols:List=[]):
     key         = run['strategy']['key']
     rate        = run['parameters']['rate']
     duration    = run['parameters']['duration']
     total       = run['parameters']['rate'] * run['parameters']['duration']
     
     sel         = [ EXPERIMENT.map(s) for s in result["selected"]]
-    clabels     = ["SCORE", "99(%)", "90(%)", "50(%)", "STDDEV", "RX(%)"]
+    clabels     = ["99(%)", "90(%)", "50(%)", "MEAN", "STDDEV", "RX(%)"]
     rlabels     = [ EXPERIMENT.map(d["addr"]) for d in result["items"] ]
     rowcolors   = ['white'] * len(result["items"])
     colcolors   = ['white'] * len(clabels)
     cellcolors  = [ ['white' for _ in range(len(clabels))] for _ in range(len(rlabels)) ]
     cells       = []
 
+    fig.suptitle(f"{title}", fontsize=args.tfont, fontweight='bold')
+
     if args.title:
-        fig.suptitle(f"{title}", fontsize=args.tfont, fontweight='bold')
+        ax.set_title(f"{title}", fontsize=args.nfont + 2, fontweight='bold')
         
     ax.axis("off")
 
@@ -242,24 +300,29 @@ def tableResult(fig:plt.Figure, ax:plt.Axes, args, title:str, run:RunDict, resul
             cnt = i 
             if cnt == len(result["items"]) - 1: cnt = 0
             color = COLORS[ cnt+1 % len(COLORS) ]
-            if key in KEYS: 
-                cellcolors[i][0] = color
-                cellcolors[i][KEYS.index(key) + 2] = color
-
-            elif key == "heuristic":
-                cellcolors[i][0]  = color
-                cellcolors[i][2]  = color
-                cellcolors[i][-2] = color
-
-            elif key == "NONE":
-                cellcolors[i][0]  = color
-                cellcolors[i][2]  = color
+            if cols:
+                for c in cols:
+                    cellcolors[i][c] =  color
+            else:
+                if key == "p90" or key == "NONE":
+                    cellcolors[i][1] = color
+                elif key == "p50":
+                    cellcolors[i][2] = color
+                elif key == "heuristic":
+                    cellcolors[i][1] =  color
+                    cellcolors[i][-2] = color
+        else:
+            color = "#cccccc"
+            if cols:
+                for c in cols:
+                    cellcolors[i][c] =  color
 
         perc = 100 * (float(recv/total))
-        cells.append([ utils.rnd(float(score)),
-                       utils.rnd(p99), 
+        # cells.append([ utils.rnd(float(score)),
+        cells.append( [utils.rnd(p99), 
                        utils.rnd(p90), 
                        utils.rnd(p50), 
+                       utils.rnd(mean), 
                        utils.rnd(stddev),
                        utils.rnd(perc)])
 
@@ -278,6 +341,18 @@ def tableResult(fig:plt.Figure, ax:plt.Axes, args, title:str, run:RunDict, resul
 
     tb.auto_set_font_size(False)
     tb.set_fontsize(args.tbfont + 5) 
+
+def graphTree(fig, ax, args, title, run, i):
+    G           = EXPERIMENT.graph(run)
+    color       = COLORS[ (i+1) % len(COLORS) ]
+    cmap        = ([color] * len(G.nodes()))
+
+    if args.title:
+        ax.set_title(f"{title}", fontsize=args.nfont + 2, fontweight='bold')
+
+    plot.graph(G, ax, args, cmap)
+    return fig
+
     
 def graphStage(G, i, args, run:RunDict, result:ResultDict, data:List[List]):
     cloud  = EXPERIMENT.schema['infra'].upper()
@@ -324,7 +399,7 @@ def graphStage(G, i, args, run:RunDict, result:ResultDict, data:List[List]):
         
     # table
     sel         = [ EXPERIMENT.map(s) for s in result["selected"] ]
-    clabels     = ["SCORE", "90(%)-OWD", "50(%)-OWD", "STDDEV", "RX(%)"]
+    clabels     = ["SCORE", "90(%)-OWD", "50(%)-OWD", "MEAN", "STDDEV", "RX(%)"]
     rlabels     = [ EXPERIMENT.map(d["addr"]) for d in result["items"] ]
     rowcolors   = ['white'] * len(result["items"])
     colcolors   = ['white'] * len(clabels)
@@ -350,13 +425,16 @@ def graphStage(G, i, args, run:RunDict, result:ResultDict, data:List[List]):
 
         if addr in sel: 
             color    = COLORS[ j + 1 % len(COLORS) ]
-            if key in KEYS:
+            if key == "p90":
                 cellcolors[j][0] = color
-                cellcolors[j][KEYS.index(key) + 1] = color
+                cellcolors[j][1] = color
+            elif key == "p50":
+                cellcolors[j][0] = color
+                cellcolors[j][2] = color
             elif key == "heuristic":
                 cellcolors[j][0] =  color
                 cellcolors[j][1] =  color
-                cellcolors[j][-3] = color
+                cellcolors[j][-2] = color
             elif key == "NONE":
                 cellcolors[j][0] = color
                 cellcolors[j][1] = color
@@ -365,6 +443,7 @@ def graphStage(G, i, args, run:RunDict, result:ResultDict, data:List[List]):
         data.append([ utils.rnd(float(score)),
                       utils.rnd(d["p90"]), 
                       utils.rnd(d["p50"]), 
+                      utils.rnd(d["mean"]), 
                       utils.rnd(d['stddev']),
                       utils.rnd(perc)])
 
@@ -446,7 +525,7 @@ def graphResult(run:RunDict, iter:int, args):
     # ax2 = fig.add_subplot(gs[1])
 
     # table
-    clabels     = ["SCORE", "90(%)-OWD", "50(%)-OWD", "STDDEV", "RX(%)"]
+    clabels     = ["SCORE", "90(%)-OWD", "50(%)-OWD", "MEAN", "STDDEV", "RX(%)"]
     rlabels     = [ EXPERIMENT.map(d["addr"]) for d in result["items"] ]
     rowcolors   = ['white'] * len(result["items"])
     colcolors   = ['white'] * len(clabels)
@@ -471,13 +550,16 @@ def graphResult(run:RunDict, iter:int, args):
             raise RuntimeError(f"UNEXPECTED KEY: {key}")
         
         if addr in sel:
-            if key in KEYS:
+            if key == "p90":
                 cellcolors[i][0] = color
-                cellcolors[i][KEYS.index(key) + 1] = color
+                cellcolors[i][1] = color
+            elif key == "p50":
+                cellcolors[i][0] = color
+                cellcolors[i][2] = color
             elif key == "heuristic":
                 cellcolors[i][0] =  color
                 cellcolors[i][1] =  color
-                cellcolors[i][-3] = color
+                cellcolors[i][-2] = color
             elif key == "NONE":
                 cellcolors[i][0] = color
                 cellcolors[i][1] = color
@@ -486,6 +568,7 @@ def graphResult(run:RunDict, iter:int, args):
         data.append([ utils.rnd(float(score)),
                       utils.rnd(d["p90"]), 
                       utils.rnd(d["p50"]), 
+                      utils.rnd(d["mean"]), 
                       utils.rnd(d['stddev']),
                       utils.rnd(perc)])
 
@@ -557,13 +640,13 @@ def graphComparison(G1, G2, data1:RunDict, data2:RunDict, args):
     root2    = EXPERIMENT.map(data2['tree']['root'])
     N        = data1['tree']['n']
 
-    # blue = "blue"
-    # red  = "red" 
-    # gray = "gray" 
+    red   = COLORS[ 1 % len(COLORS) ]
+    blue  = COLORS[ 2 % len(COLORS) ]
+    gray  = "gray" 
     
-    red    = '#FF9999'
-    blue   = '#99CCFF'
-    gray   = '#CCCCCC' # #efe897
+    # red    = '#FF9999'
+    # blue   = '#99CCFF'
+    # gray   = '#CCCCCC' # #efe897
 
     
     cmap1 = ([blue] * len(G1.nodes()))
@@ -617,8 +700,8 @@ def graphComparison(G1, G2, data1:RunDict, data2:RunDict, args):
                         utils.rnd(d2['stddev']),
                         utils.rnd(perc2)])
 
-        if addr1 == sel1: cellcolors1[i][KEYS.index("p90")] = blue
-        if addr2 == sel2: cellcolors2[i][KEYS.index("p90")] = red
+        if addr1 == sel1: cellcolors1[i][0] = blue
+        if addr2 == sel2: cellcolors2[i][0] = red
 
     gap = 0.05
     tw = (1 - gap) / 2
@@ -725,7 +808,7 @@ def plotComparisons(i:int, rdir:str):
 
 def plotStages(run: RunDict, rdir:str):
     name, key, tree, id = EXPERIMENT.run(run) 
-    dir     = f"{rdir}/stages" 
+    dir     = f"{rdir}" 
     handles = [] 
     labels = []
 
@@ -785,7 +868,11 @@ def plotStages(run: RunDict, rdir:str):
             ARGS2.title = True 
             
         tableResult(fig=F, ax=G[i][0], args=ARGS2, title=f"{tree} RESULTS - STAGE[{i + 1}]", run=run, result=stage, data=data)
+
+        ARGS2.legend  = True
         cdfResult(fig=F, ax=G[i][1], args=ARGS2, title=f"{tree} - STAGE[{i + 1}]", result=stage, data=data)
+        ARGS2.legend  = False
+
         tspResult(fig=F, ax=G[i][2], args=ARGS2, title=f"{tree} - STAGE[{i + 1}]", result=stage, data=data, key="p50")
         tspResult(fig=F, ax=G[i][3], args=ARGS2, title=f"{tree} - STAGE[{i + 1}]", result=stage, data=data, key="stddev")
         
@@ -868,7 +955,11 @@ def plotEval(run: RunDict, rdir:str):
             ARGS2.title = True 
             
         tableResult(fig=F, ax=G[i][0], args=ARGS2, title=f"{tree} RESULTS - STAGE[{i + 1}]", run=run, result=stage, data=data)
+
+        ARGS2.legend  = True
         cdfResult(fig=F, ax=G[i][1], args=ARGS2, title=f"{tree} - STAGE[{i + 1}]", result=stage, data=data)
+        ARGS2.legend  = False
+
         tspResult(fig=F, ax=G[i][2], args=ARGS2, title=f"{tree} - STAGE[{i + 1}]", result=stage, data=data, key="p50")
         tspResult(fig=F, ax=G[i][3], args=ARGS2, title=f"{tree} - STAGE[{i + 1}]", result=stage, data=data, key="stddev")
         
@@ -890,8 +981,133 @@ def plotEval(run: RunDict, rdir:str):
     F.savefig(f"{dir}/{file}", format="png")
     plt.close(F)
     print(f"PLOTTED: {file}")
+
+def plotCDFomparison(run:RunDict, runs:List[RunDict], rdir:str, file:str):
+    F, G = plt.subplots(nrows=len(runs) + 1, 
+                        ncols=4, 
+                        figsize=(28, 18))
+
+    _, _, _, ID = EXPERIMENT.run(run)  
+    arr = [ run ] + runs
+    max_x = 0
+    max_y = 0
+
+    for i, run in enumerate(arr): 
+        name, key, tree, id = EXPERIMENT.run(run)
+        iter                = EXPERIMENT.worst(run["perf"])
+        stage               = run["perf"][iter]
+        data                = EXPERIMENT.jobs[stage["id"]]
+
+        handles, max_x, max_y = cdfResultArr(fig=F,  ax=G[i][1], args=ARGS2, title=f"{tree} - EVAL[{iter}]", i=i, result=stage[:2], data=data[:2])
+
+def plotEvalComparison(run:RunDict, runs:List[RunDict], rdir:str, title:str, file:str):
+    F, G = plt.subplots(nrows=len(runs) + 1, 
+                        ncols=5, 
+                        figsize=(32, 18))
+
+    _, _, _, ID = EXPERIMENT.run(run)  
+    arr = [ run ] + runs
+    max_x = 0
+    max_y = 0
+
+    for i, run in enumerate(arr): 
+        name, key, tree, id = EXPERIMENT.run(run)
+        root                = EXPERIMENT.map(run["tree"]["root"])
+        iter                = EXPERIMENT.worst(run["perf"])
+        stage               = run["perf"][iter]
+        data                = EXPERIMENT.jobs[stage["id"]]
+
+        if "LEMON" in name or "RAND" in name:
+            id = f"{name}x{root}"
+
+        ARGS2.legend = False
+        ARGS2.title  = True
+
+        tableResult(fig=F, ax=G[i][0], args=ARGS2, title=f"{id} RESULTS", run=run, result=stage, data=data, cols=[1, -2])
+        if i > 0:
+            ARGS2.title  = False
+
+        max_x_i, max_y_i = cdfResult(fig=F,   ax=G[i][1], args=ARGS2, title=f"{tree} - EVAL[{iter}]", result=stage, data=data)
+        max_x = max(max_x, max_x_i)
+        max_y = max(max_y, max_y_i)
+        for k in range(len(arr)):
+            ax = G[k][1]
+            ax.set_xlim(0, max_x + 50)
+            ax.set_ylim(0, max_y)
+            ax.set_xticks(np.arange(0, max_x, 100))
+
+        tspResult(fig=F,   ax=G[i][2], args=ARGS2, title=f"{tree} - EVAL[{iter}]", result=stage, data=data, key="p90")
+        tspResult(fig=F,   ax=G[i][3], args=ARGS2, title=f"{tree} - EVAL[{iter}]", result=stage, data=data, key="p50")
+        tspResult(fig=F,   ax=G[i][4], args=ARGS2, title=f"{tree} - EVAL[{iter}]", result=stage, data=data, key="stddev")
+        # graphTree(fig=F,   ax=G[i][4], args=ARGS2, title=f"{tree} - TREE", run=run, i=0)
+
+        if "LEMON" in run["name"]: 
+            handles = [ 
+                       plt.Line2D([0], [0], marker='s', color='w', markerfacecolor='black', markersize=10, label=f"eps={run['parameters']['epsilon']} , max_i={run['parameters']['max_i']}"), 
+                       plt.Line2D([0], [0], marker='s', color='w', markerfacecolor='black', markersize=10, label=f"converged={run['parameters']['converge']}"), 
+                       plt.Line2D([0], [0], marker='s', color='w', markerfacecolor='black', markersize=10, label=f"time={utils.rnd(run['timers']['convergence'], 4)} sec"), 
+                       ]
+            G[i][1].legend(handles=handles,  loc='lower center', fontsize=ARGS2.font)
+
+
+    dir     = f"{rdir}" 
+    F.suptitle(f"{title}", fontsize=ARGS.tfont + 10, fontweight='bold')
+    # ax_t.set_title(f"ROOTS: {root1} x {root2}", fontsize=args.tfont - 2, fontweight='bold',  y = 0.9)
+
+    # F.suptitle(f"", fontsize=0, fontweight='bold')
+    F.savefig(f"{dir}/{file}", format="png")
+    plt.close(F)
+    print(f"PLOTTED: {file}")
+
+def plotStageComparison(run:RunDict, stages:List[ResultDict], rdir:str, title:str, file:str):
+    F, G = plt.subplots(nrows=len(stages), 
+                        ncols=5, 
+                        figsize=(32, 18))
+
+    name, key, tree, id = EXPERIMENT.run(run) 
+    dir     = f"{rdir}" 
+    handles = [] 
+    labels = []
+
+    for i,stage in enumerate(stages):
+        data    = EXPERIMENT.jobs[stage["id"]]
+
+        ARGS2.legend = False
+        ARGS2.title  = False
+
+        tableResult(fig=F, ax=G[i][0], args=ARGS2, title=f"{tree} RESULTS - STAGE[{i + 1}]", run=run, result=stage, data=data)
+        
+        if i == 0:
+            ARGS2.title = True 
+
+        ARGS2.legend  = True
+        tmp = ARGS2.nfont
+        ARGS2.nfont = tmp - 5
+        cdfResult(fig=F, ax=G[i][1], args=ARGS2, title=f"{tree} - STAGE[{i + 1}]", result=stage, data=data)
+        ARGS2.nfont = tmp
+        ARGS2.legend  = False
+
+        tspResult(fig=F, ax=G[i][2], args=ARGS2, title=f"{tree} - EVAL[{iter}]", result=stage, data=data, key="p90", interval=2)
+        tspResult(fig=F, ax=G[i][3], args=ARGS2, title=f"{tree} - STAGE[{i + 1}]", result=stage, data=data, key="p50", interval=2)
+        tspResult(fig=F, ax=G[i][4], args=ARGS2, title=f"{tree} - STAGE[{i + 1}]", result=stage, data=data, key="stddev", interval=2)
+        
+        handles, labels = legendResult(stage, data)
+
+    F.suptitle(f"{title}", fontsize=ARGS.tfont + 10, fontweight='bold')
+    # F.legend(handles=handles, 
+    #          labels=labels, 
+    #          loc='upper center', 
+    #          bbox_to_anchor=(0.5, 1 + 0.1),
+    #          ncol=2, 
+    #          fancybox=True, 
+    #          shadow=True)
     
-def plotRun(run:RunDict, i:int, dir:str): 
+    F.savefig(f"{dir}/{file}", format="png")
+    # plt.show()
+    plt.close(F)
+    print(f"PLOTTED: {file}")
+    
+def plotRun(run:RunDict, i:int, dir:str, compare:bool=True): 
     name, key, tree, id = EXPERIMENT.run(run)
     rdir = os.path.join(dir, id)
 
@@ -900,19 +1116,20 @@ def plotRun(run:RunDict, i:int, dir:str):
         os.mkdir(f"{rdir}/{d}")
             
     if "RAND" not in name and "LEMON" not in name:
-        plotStages(run, rdir) 
+        plotStages(run, f"{rdir}/stages") 
             
     plotEval(run, rdir) 
-    plotComparisons(i, rdir)
+
+    if compare:
+        plotComparisons(i, rdir)
 
 def plotAll(dir:str): 
-    for i, run in enumerate(EXPERIMENT.runs[:1]):
+    ARGS.show  = False 
+    ARGS2.show = False
+
+    for i, run in enumerate(EXPERIMENT.runs):
         plotRun(run, i, dir)
 
-def plotTarget(tname:str, tkey:str, dir:str): 
-    for i, run in enumerate(EXPERIMENT.runs):
-        name, key, tree, id = EXPERIMENT.run(run)
-        if name == tname and key == tkey:
-            plotRun(run, i, dir)
-            return
-    raise RuntimeError(f"RUN[KEY={tkey} && NAME={tname}] DOES NOT EXIST")
+def plotTarget(key:str, name:str, dir:str, root:str=""): 
+    run, i = find(key=key, name=name, root=root)
+    plotRun(run, i, dir, compare=False)

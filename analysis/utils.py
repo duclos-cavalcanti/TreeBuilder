@@ -17,3 +17,4 @@ def rnd(val:float, precision:int=2):
     ret = round(ret, precision)
     ret = f"{ret}"
     return  ret 
+

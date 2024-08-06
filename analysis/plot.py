@@ -30,9 +30,10 @@ def tsp(ax:plt.Axes, label:str, color:str, linestyle:str, step:int, data:List, k
     d       = {
         "p90":          lambda buf, x:     np.percentile(buf, 90),
         "p50":          lambda buf, x:     np.percentile(buf, 50),
-        "mad":          lambda buf, x:     np.median(np.absolute(buf - np.median(x))),
+        "mad":          lambda buf, x:     np.mean(np.absolute(buf - np.median(x))),
         "iqr":          lambda buf, x:     np.quantile(buf, 0.75) - np.quantile(buf, 0.25),
-        "stddev":       lambda buf, x:     np.median(np.absolute(buf - np.mean(x))),
+        "stddev":       lambda buf, x:     np.std(buf),
+        "sign-stddev":  lambda buf, x:     np.mean( np.array(buf) - np.mean(x) ),
     }
 
 
@@ -71,5 +72,7 @@ def graph(G, ax:plt.Axes, args, cmap=None, emap=None):
             node_size=args.size, 
             with_labels=True, 
             ax=ax, 
-            font_size=args.nfont)
+            font_size=args.nfont, 
+            font_color=args.gfcolor)
+
     return pos
