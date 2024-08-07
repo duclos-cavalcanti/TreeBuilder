@@ -41,14 +41,14 @@ class Experiment():
 
         pairs        = []
         choices      = schema["runs"][0]["parameters"]["choices"]
-        pool         = Pool(self.workers, 0, self.seed.get())
-
         if choices > 1:
             for _ in range(choices):
+                pool    = Pool(self.workers, 0, self.seed.get())
                 root    = pool.select()
                 workers = pool.get()
                 pairs.append((root, workers))
         else:
+            pool    = Pool(self.workers, 0, self.seed.get())
             root    = pool.select()
             workers = pool.get()
             pairs.append((root, workers))

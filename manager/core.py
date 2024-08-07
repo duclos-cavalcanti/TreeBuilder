@@ -123,27 +123,26 @@ def manager(args):
 
                 root      = parent.id
                 children  = [ c.id for c in parent.children ]
-
                 stage     = time.time()
                 result    = M.rebuild(run, root, children)
                 addrs     = [ d    for d in result["selected"] ]
                 elapsed   = time.time() - stage
 
+                run.pool.n_add(children)
                 run.data["stages"].clear()
                 run.data["timers"]["stages"].clear()
                 run.data["stages"].append(result)
                 run.data["timers"]["stages"].append(elapsed)
+
                 L.record(f"TREE[{run.tree.name}] SELECTION[ROOT: {result['root']} => {run.tree.n}/{run.tree.nmax}]: {expr}")
                 L.record(f"STAGE TOOK {elapsed} seconds")
 
-                for i,a in enumerate(addrs):
-                    L.record(f"TREE[{run.tree.name}] REPLACING {children[i]} => {a}")
-                    parent.children[i].id = a
-                    if a not in children: run.pool.remove(a)
-                    else:                 children.pop(children.index(a))
+                for child, addr in zip(parent.children, addrs):
+                    L.record(f"TREE[{run.tree.name}] REPLACING {child.id} => {addr}")
+                    child.id = addr
 
-                for c in children: 
-                    run.pool.add(c)
+                run.pool.n_remove(addrs)
+                run.data["tree"] = run.tree.get()
 
                 for i in range(perfs):
                     result, elapsed = M.evaluate(run)

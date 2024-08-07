@@ -27,7 +27,7 @@ class Worker():
         stress = None
         if job.stress:
             self.L.log(message=f"ADDING STRESS TO JOB[{job.id}:{job.addr}]")
-            command = f"stress-ng --cpu $(nproc) --cpu-load 80"
+            command = f"stress-ng --cpu $(nproc) --cpu-load 80 -t {job.duration + job.warmup}"
             stress = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
         try:
@@ -53,8 +53,10 @@ class Worker():
             job.ClearField('data')
             job.data.extend(data)
             job.end = True
-            if stress:
+
+            if job.stress and stress:
                 stress.kill()
+                self.L.log(message=f"REMOVED STRESS FROM JOB[{job.id}:{job.addr}]")
 
         end = time.time()
         self.L.log(message=f"FINISHED JOB[{job.id}:{job.addr}] TOOK {end - start} SECONDS")
