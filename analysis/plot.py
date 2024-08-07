@@ -72,7 +72,7 @@ def graph(G, ax:plt.Axes, args, cmap=None, emap=None):
             node_size=args.size, 
             with_labels=True, 
             ax=ax, 
-            font_size=args.nfont, 
+            font_size=args.nfont - 2, 
             font_color=args.gfcolor)
 
     return pos

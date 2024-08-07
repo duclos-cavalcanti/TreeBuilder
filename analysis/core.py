@@ -2,11 +2,12 @@ import os
 
 import numpy as np
 import matplotlib.pyplot as plt
+import matplotlib.gridspec as gridspec
 import networkx as nx
 
 from matplotlib.table   import table
 from typing             import List
-from manager            import ResultDict, RunDict
+from manager            import ResultDict, RunDict, ItemDict
 
 from . import utils
 from . import plot
@@ -114,7 +115,23 @@ def tspResult(fig:plt.Figure, ax:plt.Axes, args, title:str, result:ResultDict, d
 
     ax.set_xlim(0, max_x + 1)
     ax.set_ylim(0, max_y * 1.5)
+
+
+    # ax.set_xticks([])
+    # ax.set_yticks([])
+
+    if max_y > 15000:
+        interval_y = 5000
+    elif max_y > 10000:
+        interval_y = 2000
+    elif max_y > 1000:
+        interval_y = 200
+    else:
+        interval_y = 100
+
+
     ax.set_xticks(np.arange(1, max_x + 1, interval))
+    ax.set_yticks(np.arange(0, max_y *1.5, interval_y))
 
     if args.ylabel:
         ax.set_ylabel("OWD(us)", fontsize=args.nfont)
@@ -139,30 +156,21 @@ def tspResult(fig:plt.Figure, ax:plt.Axes, args, title:str, result:ResultDict, d
 
     return
 
-def cdfResultArr(fig:plt.Figure, ax:plt.Axes, args, title:str, i:int, result:ResultDict, data:List[List]):
+def cdfRun(fig:plt.Figure, ax:plt.Axes, args, title:str, i:int, run, item:ItemDict, data:List):
+    name, key, tree, id = EXPERIMENT.run(run)
     max_x    = 0
     max_y    = 0
-
-    handles = []
+    handles  = []
         
-    for j,item in enumerate(result["items"]):
-        addr   = item["addr"].split(":")[0]
-        label  = EXPERIMENT.map(item["addr"])
-        d      = data[j]
-        cnt    = i
-
-        if i >= (len(LINESTYLES) - 1): cnt = 0
-
-        color     = COLORS[ cnt+1 % len(COLORS) ]
-        linestyle = '-'
-        
-        line, max_xi, max_yi = plot.cdf(ax, label=label, color=color, linestyle=linestyle, data=d)
-        handle = plt.Line2D([0], [0], color=color, linestyle=linestyle, label=label)
-        handles.append(handle)
-
-        max_x = max(max_x, max_xi)
-        max_y = max(max_y, max_yi)
-        
+    addr        = item["addr"].split(":")[0]
+    addr        = EXPERIMENT.map(item["addr"])
+    label       = f"{id}"
+    color       = COLORS[ i+1 % len(COLORS) ]
+    linestyle   = '-'
+    
+    line, max_x, max_y = plot.cdf(ax, label=label, color=color, linestyle=linestyle, data=data)
+    handle = plt.Line2D([0], [0], color=color, linestyle=linestyle, label=label)
+    
     fig.suptitle(f"{title}", fontsize=args.tfont, fontweight='bold')
     
     if args.title:
@@ -180,7 +188,7 @@ def cdfResultArr(fig:plt.Figure, ax:plt.Axes, args, title:str, i:int, result:Res
     ax.tick_params(axis='x', labelsize=args.nfont - 1)
     ax.tick_params(axis='y', labelsize=args.nfont - 1)
         
-    return max_x, max_y, handles
+    return max_x, max_y, handle
 
 def cdfResult(fig:plt.Figure, ax:plt.Axes, args, title:str, result:ResultDict, data:List[List]):
     select = [ s.split(":")[0] for s in result["selected"] ]
@@ -225,6 +233,7 @@ def cdfResult(fig:plt.Figure, ax:plt.Axes, args, title:str, result:ResultDict, d
 
     ax.set_xlim(0, max_x + 50)
     ax.set_ylim(0, 100)
+    ax.set_yticks(np.arange(0, 100, 10))
     
     if args.ylabel:
         ax.set_ylabel("CDF", fontsize=args.nfont)
@@ -249,14 +258,20 @@ def cdfResult(fig:plt.Figure, ax:plt.Axes, args, title:str, result:ResultDict, d
 
     return max_x, max_y
 
-def tableResult(fig:plt.Figure, ax:plt.Axes, args, title:str, run:RunDict, result:ResultDict, data:List[List], cols:List=[]):
+def tableResult(fig:plt.Figure, ax:plt.Axes, args, title:str, run:RunDict, result:ResultDict, data:List[List], cols:List=[], override=""):
     key         = run['strategy']['key']
     rate        = run['parameters']['rate']
     duration    = run['parameters']['duration']
-    total       = run['parameters']['rate'] * run['parameters']['duration']
-    
+    eval        = run['parameters']['evaluation']
+
     sel         = [ EXPERIMENT.map(s) for s in result["selected"]]
-    clabels     = ["99(%)", "90(%)", "50(%)", "MEAN", "STDDEV", "RX(%)"]
+
+    if len(sel) > 1:
+        total       = run['parameters']['rate'] * run['parameters']['duration']
+    else:
+        total       = run['parameters']['rate'] * run['parameters']['evaluation']
+    
+    clabels     = ["99(%)", "90(%)", "50(%)", "MEAN", "STD", "RX(%)"]
     rlabels     = [ EXPERIMENT.map(d["addr"]) for d in result["items"] ]
     rowcolors   = ['white'] * len(result["items"])
     colcolors   = ['white'] * len(clabels)
@@ -299,7 +314,10 @@ def tableResult(fig:plt.Figure, ax:plt.Axes, args, title:str, run:RunDict, resul
         if addr in sel: 
             cnt = i 
             if cnt == len(result["items"]) - 1: cnt = 0
-            color = COLORS[ cnt+1 % len(COLORS) ]
+            if not override:
+                color = COLORS[ cnt+1 % len(COLORS) ]
+            else: 
+                color = override
             if cols:
                 for c in cols:
                     cellcolors[i][c] =  color
@@ -342,15 +360,11 @@ def tableResult(fig:plt.Figure, ax:plt.Axes, args, title:str, run:RunDict, resul
     tb.auto_set_font_size(False)
     tb.set_fontsize(args.tbfont + 5) 
 
-def graphTree(fig, ax, args, title, run, i):
-    G           = EXPERIMENT.graph(run)
-    color       = COLORS[ (i+1) % len(COLORS) ]
-    cmap        = ([color] * len(G.nodes()))
-
+def graphTree(fig, ax, args, title, G, colormap):
     if args.title:
         ax.set_title(f"{title}", fontsize=args.nfont + 2, fontweight='bold')
 
-    plot.graph(G, ax, args, cmap)
+    plot.graph(G, ax, args, colormap)
     return fig
 
     
@@ -982,33 +996,122 @@ def plotEval(run: RunDict, rdir:str):
     plt.close(F)
     print(f"PLOTTED: {file}")
 
-def plotCDFomparison(run:RunDict, runs:List[RunDict], rdir:str, file:str):
-    F, G = plt.subplots(nrows=len(runs) + 1, 
-                        ncols=4, 
-                        figsize=(28, 18))
+def plotGridComparison(runs:List[RunDict], rdir:str, title:str, file:str):
+    F = plt.figure(figsize=(32, 18))
+    gs = gridspec.GridSpec(1, 3, figure=F)
 
-    _, _, _, ID = EXPERIMENT.run(run)  
-    arr = [ run ] + runs
+    ax1 = F.add_subplot(gs[0, 0])
+    ax2 = F.add_subplot(gs[0, 1])
+    ax3 = F.add_subplot(gs[0, 2])
+
+    sub_gs = gridspec.GridSpecFromSubplotSpec(2, 1, subplot_spec=gs[0, 0])
+    sub_ax1 = F.add_subplot(sub_gs[0, 0])  # Top subplot
+    sub_ax2 = F.add_subplot(sub_gs[1, 0])  # Bottom subplot
+
+    gsub_gs = gridspec.GridSpecFromSubplotSpec(2, 1, subplot_spec=gs[0, 1])
+    gsub_ax1 = F.add_subplot(gsub_gs[0, 0])  # Top subplot
+    gsub_ax2 = F.add_subplot(gsub_gs[1, 0])  # Bottom subplot
+
+    ax2.axis("off")
+    gsub_ax1.axis("off")
+    gsub_ax2.axis("off")
+
+    ax1.axis("off")
+    sub_ax1.axis("off")
+    sub_ax2.axis("off")
+
+    S = [ sub_ax1, sub_ax2]
+    G = [ gsub_ax1, gsub_ax2]
+
     max_x = 0
     max_y = 0
 
-    for i, run in enumerate(arr): 
+    cloud    = EXPERIMENT.schema['infra'].upper()
+    rate     = runs[0]['parameters']['rate']
+    duration = runs[0]['parameters']['duration']
+    eval     = runs[0]['parameters']['evaluation']
+    depth    = runs[0]['tree']['depth']
+    fanout   = runs[0]['tree']['fanout']
+    N        = runs[0]['tree']['n']
+    K        = runs[0]['parameters']['hyperparameter']
+
+    # P        = len(runs[0]['pool'])
+    P        = len(EXPERIMENT.schema['names'][2:])
+
+    handles = []
+    for i, run in enumerate(runs): 
         name, key, tree, id = EXPERIMENT.run(run)
         iter                = EXPERIMENT.worst(run["perf"])
         stage               = run["perf"][iter]
         data                = EXPERIMENT.jobs[stage["id"]]
+        override            = COLORS[ i+1 % len(COLORS) ]
 
-        handles, max_x, max_y = cdfResultArr(fig=F,  ax=G[i][1], args=ARGS2, title=f"{tree} - EVAL[{iter}]", i=i, result=stage[:2], data=data[:2])
+        tableResult(fig=F, ax=S[i], args=ARGS2, title=f"{id} RESULTS", run=run, result=stage, data=data, cols=[1, -2], override=override)
+        max_x_i, max_y_i, handle = cdfRun(fig=F,  ax=ax3, args=ARGS2, title=f"{tree} - EVAL[{iter}]", i=i, run=run, item=stage["items"][0], data=data[0])
+        handles.append(handle)
+        max_x = max(max_x, max_x_i)
+        max_y = max(max_y, max_y_i)
+        ax3.set_xlim(0, max_x + 50)
+        ax3.set_ylim(0, 100)
+        ax3.set_yticks(np.arange(0, 100, 10))
+        ax3.set_xticks(np.arange(0, max_x, 100))
+
+    ax3.legend(handles=handles,  loc='lower center', fontsize=ARGS2.font)
+
+    tuples = []
+    for i, run in enumerate(runs): 
+        t    = EXPERIMENT.graph(run)
+        cmap = ([COLORS[ i+1 % len(COLORS) ]] * len(t.nodes()))
+        tuples.append((run, t, cmap))
+
+    for j in range(len(tuples) - 1):
+        for k in range(j + 1, len(tuples)):
+            run1, G1, cmap1 = tuples[j]
+            run2, G2, cmap2 = tuples[k]
+
+            _, _, _, id1 = EXPERIMENT.run(run1)
+            _, _, _, id2 = EXPERIMENT.run(run2)
+
+            for i, (n1, n2) in enumerate(zip(G1.nodes(), G2.nodes())):
+                if n1 == n2:
+                    cmap1[i] = "#cccccc"
+                    cmap2[i] = "#cccccc"
+
+    for i, tup in enumerate(tuples): 
+        run, t, cmap = tup
+        name, key, tree, id = EXPERIMENT.run(run)
+        graphTree(fig=F, ax=G[i], args=ARGS2, title=f"{id} TREE", G=t, colormap=cmap)
+
+    title    = f"{title}"
+    subtitle = f"N={N}, D={depth}, F={fanout}, K={K}, POOL={P}"
+    F.suptitle(f"{title}", fontsize=ARGS.tfont + 10, fontweight='bold')
+    F.text(0.5, 0.93, f"{subtitle}", ha='center', fontsize=ARGS.tfont + 5)
+    # F.text(0.5, 0.91, f"{extra}", ha='center', fontsize=ARGS.tfont + 5)
+
+    F.savefig(f"{rdir}/{file}", format="png")
+    plt.close(F)
+    print(f"PLOTTED: {file}")
 
 def plotEvalComparison(run:RunDict, runs:List[RunDict], rdir:str, title:str, file:str):
     F, G = plt.subplots(nrows=len(runs) + 1, 
                         ncols=5, 
-                        figsize=(32, 18))
+                        figsize=(36, 18))
 
     _, _, _, ID = EXPERIMENT.run(run)  
     arr = [ run ] + runs
     max_x = 0
     max_y = 0
+
+    cloud    = EXPERIMENT.schema['infra'].upper()
+    rate     = run['parameters']['rate']
+    duration = run['parameters']['duration']
+    eval     = run['parameters']['evaluation']
+    depth    = run['tree']['depth']
+    fanout   = run['tree']['fanout']
+    N        = run['tree']['n']
+    K        = run['parameters']['hyperparameter']
+    # P        = len(runs[0]['pool'])
+    P        = len(EXPERIMENT.schema['names'][2:])
 
     for i, run in enumerate(arr): 
         name, key, tree, id = EXPERIMENT.run(run)
@@ -1034,6 +1137,7 @@ def plotEvalComparison(run:RunDict, runs:List[RunDict], rdir:str, title:str, fil
             ax = G[k][1]
             ax.set_xlim(0, max_x + 50)
             ax.set_ylim(0, max_y)
+            ax.set_yticks(np.arange(0, 100, 10))
             ax.set_xticks(np.arange(0, max_x, 100))
 
         tspResult(fig=F,   ax=G[i][2], args=ARGS2, title=f"{tree} - EVAL[{iter}]", result=stage, data=data, key="p90")
@@ -1050,61 +1154,139 @@ def plotEvalComparison(run:RunDict, runs:List[RunDict], rdir:str, title:str, fil
             G[i][1].legend(handles=handles,  loc='lower center', fontsize=ARGS2.font)
 
 
-    dir     = f"{rdir}" 
-    F.suptitle(f"{title}", fontsize=ARGS.tfont + 10, fontweight='bold')
-    # ax_t.set_title(f"ROOTS: {root1} x {root2}", fontsize=args.tfont - 2, fontweight='bold',  y = 0.9)
+    title    = f"{title}"
+    subtitle = f"N={N}, D={depth}, F={fanout}, K={K}, POOL={P}, Rate={rate} p/sec, Duration={eval} sec"
 
-    # F.suptitle(f"", fontsize=0, fontweight='bold')
-    F.savefig(f"{dir}/{file}", format="png")
+    # subtitle = f"N={N}, D={depth}, F={fanout}, K={K}, POOL={P}"
+    # extra    = f"Rate={rate} p/sec, Duration={eval} sec, {cloud}"
+
+    F.suptitle(f"{title}", fontsize=ARGS.tfont + 10, fontweight='bold')
+    F.text(0.5, 0.93, f"{subtitle}", ha='center', fontsize=ARGS.tfont + 5)
+    # F.text(0.5, 0.91, f"{extra}", ha='center', fontsize=ARGS.tfont + 5)
+
+    F.savefig(f"{rdir}/{file}", format="png")
     plt.close(F)
+
     print(f"PLOTTED: {file}")
 
-def plotStageComparison(run:RunDict, stages:List[ResultDict], rdir:str, title:str, file:str):
+def plotStageComparison(run:RunDict, stages:List[ResultDict], rdir:str, title:str, file:str, base:int=0):
     F, G = plt.subplots(nrows=len(stages), 
                         ncols=5, 
-                        figsize=(32, 18))
+                        figsize=(36, 18))
 
     name, key, tree, id = EXPERIMENT.run(run) 
     dir     = f"{rdir}" 
     handles = [] 
     labels = []
 
+    cloud    = EXPERIMENT.schema['infra'].upper()
+    rate     = run['parameters']['rate']
+    duration = run['parameters']['duration']
+    eval     = run['parameters']['evaluation']
+    depth    = run['tree']['depth']
+    fanout   = run['tree']['fanout']
+    N        = run['tree']['n']
+    K        = run['parameters']['hyperparameter']
+    # P        = len(runs[0]['pool'])
+    P        = len(EXPERIMENT.schema['names'][2:])
+
     for i,stage in enumerate(stages):
         data    = EXPERIMENT.jobs[stage["id"]]
 
         ARGS2.legend = False
-        ARGS2.title  = False
+        ARGS2.title  = True
 
-        tableResult(fig=F, ax=G[i][0], args=ARGS2, title=f"{tree} RESULTS - STAGE[{i + 1}]", run=run, result=stage, data=data)
+        tableResult(fig=F, ax=G[i][0], args=ARGS2, title=f"{id} STAGE {base + i + 1}", run=run, result=stage, data=data)
         
-        if i == 0:
-            ARGS2.title = True 
+        if i > 0:
+            ARGS2.title = False 
 
         ARGS2.legend  = True
         tmp = ARGS2.nfont
         ARGS2.nfont = tmp - 5
         cdfResult(fig=F, ax=G[i][1], args=ARGS2, title=f"{tree} - STAGE[{i + 1}]", result=stage, data=data)
+
         ARGS2.nfont = tmp
         ARGS2.legend  = False
 
-        tspResult(fig=F, ax=G[i][2], args=ARGS2, title=f"{tree} - EVAL[{iter}]", result=stage, data=data, key="p90", interval=2)
+        tspResult(fig=F, ax=G[i][2], args=ARGS2, title=f"{tree} - STAGE[{i+1}]", result=stage, data=data, key="p90", interval=2)
         tspResult(fig=F, ax=G[i][3], args=ARGS2, title=f"{tree} - STAGE[{i + 1}]", result=stage, data=data, key="p50", interval=2)
         tspResult(fig=F, ax=G[i][4], args=ARGS2, title=f"{tree} - STAGE[{i + 1}]", result=stage, data=data, key="stddev", interval=2)
         
         handles, labels = legendResult(stage, data)
 
+    title    = f"{title}"
+    subtitle = f"N={N}, D={depth}, F={fanout}, K={K}, POOL={P}, Rate={rate} p/sec, Duration={duration} sec"
+
+    # subtitle = f"N={N}, D={depth}, F={fanout}, K={K}, POOL={P}"
+    # extra    = f"Rate={rate} p/sec, Duration={duration} sec, {cloud}"
+
     F.suptitle(f"{title}", fontsize=ARGS.tfont + 10, fontweight='bold')
-    # F.legend(handles=handles, 
-    #          labels=labels, 
-    #          loc='upper center', 
-    #          bbox_to_anchor=(0.5, 1 + 0.1),
-    #          ncol=2, 
-    #          fancybox=True, 
-    #          shadow=True)
-    
+    F.text(0.5, 0.93, f"{subtitle}", ha='center', fontsize=ARGS.tfont + 5)
+    # F.text(0.5, 0.91, f"{extra}", ha='center', fontsize=ARGS.tfont + 5)
+
     F.savefig(f"{dir}/{file}", format="png")
-    # plt.show()
     plt.close(F)
+
+    print(f"PLOTTED: {file}")
+
+def plotEvalIterationsComparison(run:RunDict, rdir:str, title:str, file:str):
+    name, key, tree, id = EXPERIMENT.run(run) 
+    F, G = plt.subplots(nrows=len(run["perf"]), ncols=5, figsize=(36, 18))
+    if len(run["perf"]) == 1: G = [ G ]
+
+    cloud    = EXPERIMENT.schema['infra'].upper()
+    rate     = run['parameters']['rate']
+    duration = run['parameters']['duration']
+    eval     = run['parameters']['evaluation']
+    depth    = run['tree']['depth']
+    fanout   = run['tree']['fanout']
+    N        = run['tree']['n']
+    K        = run['parameters']['hyperparameter']
+    # P        = len(runs[0]['pool'])
+    P        = len(EXPERIMENT.schema['names'][2:])
+
+    max_x = 0
+    max_y = 0
+
+    for i, stage in enumerate(run["perf"]):
+        data    = EXPERIMENT.jobs[stage["id"]]
+
+        ARGS2.legend = False
+        ARGS2.title  = True
+        tableResult(fig=F, ax=G[i][0], args=ARGS2, title=f"{id} RESULTS {i + 1}", run=run, result=stage, data=data, cols=[1, -2])
+
+        if i > 0:
+            ARGS2.title  = False
+
+        max_x_i, max_y_i =  cdfResult(fig=F, ax=G[i][1], args=ARGS2, title=f"EVAL[{i + 1}]", result=stage, data=data)
+        max_x = max(max_x, max_x_i)
+        max_y = max(max_y, max_y_i)
+        for k in range(len(run["perf"])):
+            ax = G[k][1]
+            ax.set_xlim(0, max_x + 50)
+            ax.set_ylim(0, max_y)
+            ax.set_yticks(np.arange(0, 100, 10))
+            ax.set_xticks(np.arange(0, max_x, 100))
+
+        tspResult(fig=F, ax=G[i][2], args=ARGS2, title=f"EVAL[{i + 1}]", result=stage, data=data, key="p90")
+        tspResult(fig=F, ax=G[i][3], args=ARGS2, title=f"EVAL[{i + 1}]", result=stage, data=data, key="p50")
+        tspResult(fig=F, ax=G[i][4], args=ARGS2, title=f"EVAL[{i + 1}]", result=stage, data=data, key="stddev")
+
+
+    title    = f"{title}"
+    subtitle = f"N={N}, D={depth}, F={fanout}, K={K}, POOL={P}, Rate={rate} p/sec, Duration={eval} sec"
+
+    # subtitle = f"N={N}, D={depth}, F={fanout}, K={K}, POOL={P}"
+    # extra    = f"Rate={rate} p/sec, Duration={eval} sec, {cloud}"
+
+    F.suptitle(f"{title}", fontsize=ARGS.tfont + 10, fontweight='bold')
+    F.text(0.5, 0.93, f"{subtitle}", ha='center', fontsize=ARGS.tfont + 5)
+    # F.text(0.5, 0.91, f"{extra}", ha='center', fontsize=ARGS.tfont + 5)
+
+    F.savefig(f"{rdir}/{file}", format="png")
+    plt.close(F)
+
     print(f"PLOTTED: {file}")
     
 def plotRun(run:RunDict, i:int, dir:str, compare:bool=True): 
