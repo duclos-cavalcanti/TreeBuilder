@@ -1,0 +1,17 @@
+\babel@toc {USenglish}{}\relax 
+\babel@toc {german}{}\relax 
+\babel@toc {USenglish}{}\relax 
+\contentsline {chapter}{Contents}{5}{}%
+\contentsline {chapter}{\numberline {1}Introduction}{6}{}%
+\contentsline {chapter}{\numberline {2}Background}{7}{}%
+\contentsline {section}{\numberline {2.1}Financial Exchanges}{7}{}%
+\contentsline {section}{\numberline {2.2}Migrating Financial Exchanges to the Cloud}{8}{}%
+\contentsline {section}{\numberline {2.3}State of the Art}{9}{}%
+\contentsline {subsection}{\numberline {2.3.1}Jasper: Fair Multicast for Fin. Exchanges on the Cloud}{9}{}%
+\contentsline {chapter}{\numberline {3}Implementation/Results}{10}{}%
+\contentsline {section}{\numberline {3.1}Implementation}{10}{}%
+\contentsline {section}{\numberline {3.2}Results}{10}{}%
+\contentsline {chapter}{\numberline {4}Conclusions and Outlook}{11}{}%
+\contentsline {chapter}{\numberline {A}Artifacts}{12}{}%
+\contentsline {chapter}{\numberline {B}Abbreviations}{13}{}%
+\contentsline {chapter}{Bibliography}{14}{}%

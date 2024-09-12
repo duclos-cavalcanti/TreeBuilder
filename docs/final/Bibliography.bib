@@ -1,0 +1,123 @@
+@inproceedings{hyugens,
+author = {Geng, Yilong and Liu, Shiyu and Yin, Zi and Naik, Ashish and Prabhakar, Balaji and Rosunblum, Mendel and Vahdat, Amin},
+title = {Exploiting a natural network effect for scalable, fine-grained clock synchronization},
+year = {2018},
+isbn = {9781931971430},
+publisher = {USENIX Association},
+address = {USA},
+abstract = {Nanosecond-level clock synchronization can be an enabler of a new spectrum of timing- and delay-critical applications in data centers. However, the popular clock synchronization algorithm, NTP, can only achieve millisecond-level accuracy. Current solutions for achieving a synchronization accuracy of 10s-100s of nanoseconds require specially designed hardware throughout the network for combatting random network delays and component noise or to exploit clock synchronization inherent in Ethernet standards for the PHY.In this paper, we present HUYGENS, a software clock synchronization system that uses a synchronization network and leverages three key ideas. First, coded probes identify and reject impure probe data--data captured by probes which suffer queuing delays, random jitter, and NIC timestamp noise. Next, HUYGENS processes the purified data with Support Vector Machines, a widely-used and powerful classifier, to accurately estimate one-way propagation times and achieve clock synchronization to within 100 nanoseconds. Finally, HUYGENS exploits a natural network effect--the idea that a group of pairwise synchronized clocks must be transitively synchronized-- to detect and correct synchronization errors even further.Through evaluation of two hardware testbeds, we quantify the imprecision of existing clock synchronization across server-pairs, and the effect of temperature on clock speeds. We find the discrepancy between clock frequencies is typically 5-10ms/sec, but it can be as much as 30ms/sec. We show that HUYGENS achieves synchronization to within a few 10s of nanoseconds under varying loads, with a negligible overhead upon link bandwidth due to probes. Because HUYGENS is implemented in software running on standard hardware, it can be readily deployed in current data centers.},
+booktitle = {Proceedings of the 15th USENIX Conference on Networked Systems Design and Implementation},
+pages = {81–94},
+numpages = {14},
+location = {Renton, WA, USA},
+series = {NSDI'18}
+}
+
+@misc{jasper,
+      title={Jasper: Scalable and Fair Multicast for Financial Exchanges in the Cloud}, 
+      author={Muhammad Haseeb and Jinkun Geng and Ulysses Butler and Xiyu Hao and Daniel Duclos-Cavalcanti and Anirudh Sivaraman},
+      year={2024},
+      eprint={2402.09527},
+      archivePrefix={arXiv},
+      primaryClass={cs.NI}
+}
+
+@book{lemondrop,
+  title={Scheduling and Autoscaling Methods for Low Latency Applications},
+  author={Sachidananda, Vighnesh},
+  year={2022},
+  publisher={Stanford University}
+}
+
+@inproceedings{cloudex,
+    author = {Ghalayini, Ahmad and Geng, Jinkun and Sachidananda, Vighnesh and Sriram, Vinay and Geng, Yilong and Prabhakar, Balaji and Rosenblum, Mendel and Sivaraman, Anirudh},
+    title = {CloudEx: a fair-access financial exchange in the cloud},
+    year = {2021},
+    isbn = {9781450384384},
+    publisher = {Association for Computing Machinery},
+    address = {New York, NY, USA},
+    url = {https://doi.org/10.1145/3458336.3465278},
+    doi = {10.1145/3458336.3465278},
+    abstract = {Financial exchanges have begun a move from on-premise and custom-engineered datacenters to the public cloud, accelerated by a rush of new investors, the rise of remote work, cost savings from the cloud, and the desire for more resilient infrastructure. While the promise of the cloud is enticing, the cloud's varying network latencies can lead to market unfairness: orders can be processed out of sequence, and market data can be disseminated to market participants at incorrect times due to varying latencies between participants and the exchange. We present CloudEx, a fair-access cloud exchange, which leverages high-precision software clock synchronization to compensate for noisy network conditions in the public cloud. We also discuss refinements to the CloudEx design that were informed by lessons learned from deploying CloudEx in two academic courses and conclude by outlining future research directions.},
+    booktitle = {Proceedings of the Workshop on Hot Topics in Operating Systems},
+    pages = {96–103},
+    numpages = {8},
+    keywords = {clock synchronization, fair-access exchanges, financial exchanges, high-frequency trading, low-latency systems},
+    location = {Ann Arbor, Michigan},
+    series = {HotOS '21}
+}
+
+@inproceedings{cloudy,
+  title={Cloudy Forecast: How Predictable is Communication Latency in the Cloud?},
+  author={Hilyard, Owen and Cui, Bocheng and Webster, Marielle and Muralikrishna, Abishek Bangalore and Charapko, Aleksey},
+  booktitle={2024 33rd International Conference on Computer Communications and Networks (ICCCN)},
+  pages={1--9},
+  year={2024},
+  organization={IEEE}
+}
+
+@article{nezha,
+   title={Nezha: Deployable and High-Performance Consensus Using Synchronized Clocks},
+   volume={16},
+   ISSN={2150-8097},
+   url={http://dx.doi.org/10.14778/3574245.3574250},
+   DOI={10.14778/3574245.3574250},
+   number={4},
+   journal={Proceedings of the VLDB Endowment},
+   publisher={Association for Computing Machinery (ACM)},
+   author={Geng, Jinkun and Sivaraman, Anirudh and Prabhakar, Balaji and Rosenblum, Mendel},
+   year={2022},
+   month=dec, pages={629–642} 
+}
+
+@misc{octopus,
+      title={Octopus: A Fair Packet Delivery Service}, 
+      author={Junzhi Gong and Yuliang Li and Devdeep Ray and KK Yap and Nandita Dukkipati},
+      year={2024},
+      eprint={2401.08126},
+      archivePrefix={arXiv},
+      primaryClass={cs.NI},
+      url={https://arxiv.org/abs/2401.08126}, 
+}
+
+@misc{dbo,
+      title={DBO: Response Time Fairness for Cloud-Hosted Financial Exchanges}, 
+      author={Prateesh Goyal and Eashan Gupta and Ilias Marinos and Chenxingyu Zhao and Radhika Mittal and Ranveer Chandra},
+      year={2023},
+      eprint={2303.16139},
+      archivePrefix={arXiv},
+      primaryClass={cs.NI},
+      url={https://arxiv.org/abs/2303.16139}, 
+}
+
+@INPROCEEDINGS{matsuoka,
+  author={Chiba, Tatsuhiro and Endo, Toshio and Matsuoka, Satoshi},
+  booktitle={Seventh IEEE International Symposium on Cluster Computing and the Grid (CCGrid '07)}, 
+  title={High-Performance MPI Broadcast Algorithm for Grid Environments Utilizing Multi-lane NICs}, 
+  year={2007},
+  volume={},
+  number={},
+  pages={487-494},
+  keywords={Broadcasting;Bandwidth;Peer to peer computing;Clustering algorithms;Network topology;Wide area networks;Switches;Application software;Broadcast technology;Sockets},
+  doi={10.1109/CCGRID.2007.59}
+}
+
+@article{twotree,
+author = {Sanders, Peter and Speck, Jochen and Tr\"{a}ff, Jesper Larsson},
+title = {Two-tree algorithms for full bandwidth broadcast, reduction and scan},
+year = {2009},
+issue_date = {December, 2009},
+publisher = {Elsevier Science Publishers B. V.},
+address = {NLD},
+volume = {35},
+number = {12},
+issn = {0167-8191},
+url = {https://doi.org/10.1016/j.parco.2009.09.001},
+doi = {10.1016/j.parco.2009.09.001},
+abstract = {We present a new, simple algorithmic idea for the collective communication operations broadcast, reduction, and scan (prefix sums). The algorithms concurrently communicate over two binary trees which both span the entire network. By careful layout and communication scheduling, each tree communicates as efficiently as a single tree with exclusive use of the network. Our algorithms thus achieve up to twice the bandwidth of most previous algorithms. In particular, our approach beats all previous algorithms for reduction and scan. Experiments on clusters with Myrinet and InfiniBand interconnect show significant reductions in running time for all three operations sometimes even close to the best possible factor of two.},
+journal = {Parallel Comput.},
+month = {dec},
+pages = {581–594},
+numpages = {14},
+keywords = {Bipartite-edge coloring, Broadcast, Message-passing parallel programming, Parallel prefix (scan), Reduction}
+}

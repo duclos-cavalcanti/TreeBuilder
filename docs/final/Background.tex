@@ -1,0 +1,128 @@
+\chapter{Background}
+
+% In this chapter, all background necessary to understand the thesis are introduced. The level of detail is such that 
+% a colleague with similar background (no specialist!) is capable of understanding the contribution and impact of the thesis. 
+% A discussion of state-of-the-art solutions (e.g. literature research) is often helpful. 
+% Problems of the state-of-the-art are typically discussed and the contribution of the thesis is introduced in detail. 
+
+In this chapter we discuss the required background on which this work builds upon.
+We start by discussing a quick overview of financial exchanges, the challenges to their 
+migration to the cloud and finally the current state-of-the-art in the matter.
+
+\section{Financial Exchanges}
+Financial exchanges are modern redesign of a well known concept -- the marketplace.
+By establishing a common platform to exchange goods, market participants are allowed to 
+    undergo the continuous process of bidding, an offer to buy an asset at a specified price, and 
+    asking, the intention to sell an asset at a specified price, for a given product.
+This procedure is called price discovery and serves to establish any asset's eventual true price.
+A true and fair price benefits both buyers and sellers, since a seller wishes to obtain just compensation, as well as a buyer 
+    wishes to pay nothing beyond what is needed.
+
+Modern financial exchanges accomplish that through highly-engineered infrastructures composed of 
+    on-premise data centers, designed to provide a fair digital marketplace among participants co-located 
+    in the facility. 
+A financial exchange's main components are summarized in the following segments and can also be seen 
+    as a diagramm on Figure \ref{fig:exchange}
+
+% \begin{enumerate}[label=(\roman*)]
+%     \item a central exchange server (\textbf{CES})
+%     \item market participants (\textbf{MPs})
+%     \item gateways
+%     \item orders
+% \end{enumerate}
+
+\textbf{\textit{Orders}}. Trading orders can be either bids or asks. Bid orders
+    are intents to buy an asset for a specified price, while ask orders indicate 
+    an offer to sell an asset at a specified price. Additionally, another 
+    relevant form of data is what is called a limit order book (\textbf{LOB}).
+    A LOB is the amalgamation of all bids and asks concerning a specific asset and 
+    therefore summarize said asset's current market evaluation. Figure \ref{fig:lob} 
+    illustrates an example of this data structure as presented to MPs.
+
+\textbf{\textit{Central Exchange Server}}. At the core of an exchange lies a 
+    matching engine (\textbf{ME}) that receives and processes trading orders from 
+    market participants. Orders are sent to the CES, which in return may or may not match 
+    an incoming order with a suitable counterpart. Arriving orders, matched orders 
+    as well as periodic snapshots of the market (LOBs) are regular events that are 
+    broadcasted from the CES to the existing MPs.
+
+\textbf{\textit{Market Participants}}. Market participants are the co-located 
+    traders that are directly connected to an exchange's system, issuing orders and 
+    receiving data from the exchange.
+
+% \begin{figure}[h!]
+%   \begin{center}
+%     \includegraphics[width=0.4\textwidth]{./assets/architecture.png}
+%     \caption{An Exchange's Infrastructure}
+%     \label{fig:exchange}
+%   \end{center}
+% \end{figure}
+
+\textbf{\textit{Gateways}}. The gateways are structures placed between traders
+    and the CES. Their responsabilities consist of routing orders and market data, as 
+    well as protecting the CES from abuse, e.g., unauthenticated or invalid orders. Within
+    the on-premise clusters gateways are made to be equidistant to the CES as to 
+    ensure fairness regarding communication delays between the gateways and the 
+    central exchange.
+
+\begin{figure}[h!]
+  \begin{center}
+    \begin{minipage}{0.45\textwidth}
+      \centering
+      \includegraphics[height=0.20\textheight]{./assets/architecture.png}
+      \caption{On-premise Infrastructure}
+      \label{fig:exchange}
+    \end{minipage}
+    \hfill
+    \begin{minipage}{0.45\textwidth}
+      \centering
+      \includegraphics[height=0.20\textheight]{./assets/LOB.png}
+      \caption{Limit Order Book}
+      \label{fig:lob}
+    \end{minipage}
+  \end{center}
+\end{figure}
+
+\section{Migrating Financial Exchanges to the Cloud}
+Given the demanding network performance of financial exchanges, the use of 
+on-premise data centers is the prevailing standard.
+However, the cloud displays well-known advantages as a medium for communication. 
+These include flexibility, scalability, robustness and potential cost savings. 
+On the other hand, the public cloud also exhibits high latency variance \cite{cloudy}.
+Additionally, it does not provide low-level engineering control to cloud-tenants such as switch-based multicast. 
+As a result, cloud-based systems implement multicasting by directly unicasting a copy of a message 
+to each recipient \cite{nezha, cloudex, octopus, dbo}.
+
+
+A fundamental characteristic of a financial exchange is the ability to disseminate data
+    to market participants in a fair manner. 
+That is, all MPs receive updates to the market almost simultaneously, as to not allow 
+    unwanted arbitrage opportunities.
+Without native solutions to enable multicasting and the significant serial 
+    delay of direct unicasting, a clear problem is presented 
+    to achieve the possible migration of financial exchanges to the public cloud.
+
+\section{State of the Art}
+\subsection{Jasper: Fair Multicast for Fin. Exchanges on the Cloud}
+A siginificant project in this domain is Jasper \cite{jasper}, which offers 
+a modern implementation of a financial exchange on the public cloud. 
+This work realizes a multicast service that achieves low latency of less than 
+250 µs and a latency difference of less than 1 µs across 1,000 multicast receivers.
+To accomplish this, a series of techniques are employed.
+
+
+\textbf{\textit{Overlay Proxy Tree}}. This is the starting point for Jasper's design 
+    and borrow's the concept of trees to scale communication to a larger number of 
+    receivers, while improving latency in comparison to direct unicasting \cite{matsuoka, twotree}.
+    The structure of the tree with Depth (\textbf{D}) and fan-out (\textbf{F}) has been empirically established 
+    as seen in Equations [\ref{eq:fanout}, \ref{eq:depth}].
+    % Ideally, F has been fixed to 10, while the value of D is derived via [$log_{10}{(N)}$], where N is the number 
+    % of receivers.
+
+\begin{align}
+F &= 10 \label{eq:fanout} \\
+D &= \log_{10}{(N)} \label{eq:depth}
+\end{align}
+
+\textbf{\textit{Clock Synchronization}}. \cite{hyugens}
+
