@@ -126,6 +126,12 @@ class Tree():
         H.update(string.encode())
         return H.hexdigest()
 
+    def internal(self):
+        F = self.fanout
+        D = self.dmax
+        M = self.max()
+        return (M - (F**D))
+
     def max(self):
         F = self.fanout
         D = self.dmax

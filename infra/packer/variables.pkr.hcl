@@ -1,7 +1,7 @@
 commands = [
     "sudo apt-get update -yq && sudo apt-get install -yq software-properties-common",
     "sudo add-apt-repository universe && sudo add-apt-repository multiverse",
-    "sudo add-apt-repository -y ppa:colin-king/stress-ng",
+    "sudo add-apt-repository ppa:colin-king/stress-ng",
     "sudo apt-get update -yq",
     "sudo apt-get install -yq curl wget cmake build-essential python3 python3-pip git vim gdb",
     "sudo DEBIAN_FRONTEND=noninteractive apt-get install -yq python3-zmq python3-protobuf python3-yaml python3-ipython python3-ipdb",

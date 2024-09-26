@@ -1,0 +1,161 @@
+% PLEASE FILL IN THE PLACEHOLDERS <...>
+%
+% Diplomarbeit/Studienarbeit/IDP von <NAME>
+% Diploma thesis of <NAME>
+%
+% Title: <TITLE>
+%        <TITLE>
+%
+\documentclass[12pt,a4paper]{report}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% PACKAGES:
+
+% Define typearea
+% a) Use automatic:
+\usepackage[BCOR1cm]{typearea}
+% b) Or use fixed: 
+%\usepackage{geometry}
+%\geometry{left=1.5cm,textwidth=18.5cm,top=1.5cm,textheight=26.5cm}
+
+% Use German :
+\usepackage[german, USenglish]{babel}
+% Use list of tabels, etc. in table of contents:
+\usepackage{tocbibind}
+% German paragraph skip
+\usepackage{parskip}
+% Encoder:????
+%\usepackage[utf-8]{inputenc}
+\usepackage[utf8]{inputenc}
+% Use A4-paper efficiently:
+\usepackage{a4wide}
+% Index-generation
+\usepackage{makeidx}
+% Einbinden von URLs:
+\usepackage{url}
+% Include .eps-files (needed also for the LKN-logo):
+%\usepackage{epsf}
+\usepackage{epsfig}
+\usepackage{epstopdf}
+% Special \LaTex symbols (e.g. \BibTeX):
+\usepackage{doc}
+% Include Graphic-files:
+%\usepackage{graphics}
+% Include Graphic-files:
+\usepackage{graphicx}
+% Include doc++ generated tex-files:
+%\usepackage{docxx}
+% Include PDF links
+%\usepackage[pdftex, bookmarks=true]{hyperref}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% OTHER SETTINGS:
+
+% Pagestyle:
+\pagestyle{headings}
+
+% Avoid 'overhang':
+\sloppy
+
+% Choose language
+\newcommand{\setlang}[1]{\selectlanguage{#1}\nonfrenchspacing}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% TITLE:
+
+\begin{document}
+
+\thispagestyle{empty}
+\newpage
+
+\vspace{5cm}
+\begin{center}
+    \epsfxsize=4cm
+    \epsfbox{LKN_Logo_klein.eps}
+\end{center}
+
+\parbox{15cm}{\begin{center} {\sf\bf 
+                               \Large  Technische Universität München
+                                \smallskip
+
+                               \Large Lehrstuhl für Kommunikationsnetze
+                               \smallskip
+                              }
+
+                              {\sf \large Prof. Dr.-Ing. Wolfgang Kellerer} 
+              \end{center}}  %&
+
+\vspace{4cm}
+
+\begin{center}
+        {\bf\Huge Master‘s Thesis} % Studienarbeit, Interdisziplinäres Projekt
+\end{center}
+
+\begin{center}
+        \settowidth{\baselineskip}{0.4cm}
+        {\LARGE 
+        Title of the Thesis
+        }
+\end{center}
+
+\vfill         
+{\settowidth{\baselineskip}{0.2cm}
+\large\begin{tabular}[l]{ll}
+Author: & Last Name, First Name\\
+Address: & Somestreet 007\\
+         & 12345 City\\
+         & Country\\
+Matriculation Number: & XXXXXXX\\
+Supervisor: & Supervisor Name\\
+Begin: & 01. January 1900\\
+End: & 01. January 2000
+\end{tabular}}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% MAIN PART:
+% Independence and License statements
+\include{Statements}
+% German abstract:
+\include{Kurzfassung}
+% English abstract:
+\include{Abstract}
+% Table of contents:
+\tableofcontents  
+% Introduction (Einleitung):
+\include{Introduction}
+
+% Text Body (Hauptteil)
+% Could have multiple chaper-files, e.g.:
+\include{Background}
+\include{Evaluation}
+%  Conclusions (Zusammenfassung):
+\include{Conclusions}
+\include{Formatting}
+
+% Appendix (Anhänge), could have multiple chaper-files:
+\appendix
+\include{Appendix}
+
+% Abbreviations (Abkürzungsverzeichnis):
+\include{Abbreviations}
+
+
+% References (Literaturverzeichnis):
+% a) Style (with numbers: use unsrt):
+\bibliographystyle{alpha}
+% b) The File:
+\bibliography{Bibliography}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\end{document}

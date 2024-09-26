@@ -72,9 +72,9 @@ class TestLemonDropClass:
            10000,
            10000,
            10000,
-           10000,
-           10000,
-           10000
+           100000,
+           1000000,
+           1000000,
         ]
 
         e_arr = [
@@ -102,7 +102,7 @@ class TestLemonDropClass:
                 value = LD.VMS[idx]
                 mapping.append((idx, value))
 
-            L.log(f"LEMONDROP TOOK {elapsed} SECONDS: [EPS={epsilon} MAX={max_i} CONVERGED={converged}]")
+            L.log(f"LEMONDROP TOOK {elapsed} SECONDS: \t[EPS={epsilon} MAX={max_i} CONVERGED={converged}]")
             for i in range(K):
                 idx, addr = mapping[i]
                 # L.log(f"NODE_{i} => VM[{idx}]: {addr}")

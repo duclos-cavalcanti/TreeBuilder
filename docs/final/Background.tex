@@ -7,22 +7,25 @@
 
 In this chapter we discuss the required background on which this work builds upon.
 We start by discussing a quick overview of financial exchanges, the challenges to their 
-migration to the cloud and finally the current state-of-the-art in the matter.
+migration to the cloud, cloud computing and the current state-of-the-art in the matter.
 
 \section{Financial Exchanges}
-Financial exchanges are modern redesign of a well known concept -- the marketplace.
-By establishing a common platform to exchange goods, market participants are allowed to 
-    undergo the continuous process of bidding, an offer to buy an asset at a specified price, and 
-    asking, the intention to sell an asset at a specified price, for a given product.
-This procedure is called price discovery and serves to establish any asset's eventual true price.
+Financial exchanges are a natural evolution of the traditional marketplace concept. 
+By providing a centralized platform to exchange goods, they facilitate the continuous 
+interaction between buyers and sellers. 
+Market participants can engage in bidding, which involves offering to purchase an asset at a specified price, 
+and asking, which refers to the intention to sell an asset at a specified price. 
+This process, known as price discovery, plays a crucial role in determining the fair market value of any asset.
 A true and fair price benefits both buyers and sellers, since a seller wishes to obtain just compensation, as well as a buyer 
-    wishes to pay nothing beyond what is needed.
+wishes to pay nothing beyond what is needed.
 
-Modern financial exchanges accomplish that through highly-engineered infrastructures composed of 
-    on-premise data centers, designed to provide a fair digital marketplace among participants co-located 
-    in the facility. 
-A financial exchange's main components are summarized in the following segments and can also be seen 
-    as a diagramm on Figure \ref{fig:exchange}
+Modern financial exchanges achieve this by utilizing highly-engineered infrastructures, 
+consisting of on-premise data centers designed to ensure a fair and efficient digital marketplace. 
+These facilities are optimized for low-latency communication, enabling participants to 
+execute trades quickly and reliably, while ensuring that all market participants, co-located within the 
+data center, have equal access to market information and trading opportunities.
+The key components of a financial exchange are outlined in the following sections and 
+are also illustrated in the diagram in Figure \ref{fig:exchange}.
 
 % \begin{enumerate}[label=(\roman*)]
 %     \item a central exchange server (\textbf{CES})
@@ -31,20 +34,21 @@ A financial exchange's main components are summarized in the following segments 
 %     \item orders
 % \end{enumerate}
 
-\textbf{\textit{Orders}}. Trading orders can be either bids or asks. Bid orders
-    are intents to buy an asset for a specified price, while ask orders indicate 
-    an offer to sell an asset at a specified price. Additionally, another 
-    relevant form of data is what is called a limit order book (\textbf{LOB}).
-    A LOB is the amalgamation of all bids and asks concerning a specific asset and 
-    therefore summarize said asset's current market evaluation. Figure \ref{fig:lob} 
-    illustrates an example of this data structure as presented to MPs.
+\textbf{\textit{Orders}}.
+    Trading orders can be either bids or asks. 
+    As mentioned previously, bid orders represent intentions to buy an asset at a specified price, 
+    while ask orders indicate an offer to sell an asset at a specified price. 
+    Another important concept is the limit order book (\textbf{LOB}), which is an aggregation 
+    of all bids and asks for a specific asset, providing a comprehensive summary of 
+    the asset's current market valuation. 
+    Figure \ref{fig:lob} illustrates an example of this data structure as presented to market participants (\textbf{MPs}).
 
-\textbf{\textit{Central Exchange Server}}. At the core of an exchange lies a 
+\textbf{\textit{Central Exchange Server}}. At the core of the Central Exchange Server (\textbf{CES}) lies a 
     matching engine (\textbf{ME}) that receives and processes trading orders from 
     market participants. Orders are sent to the CES, which in return may or may not match 
     an incoming order with a suitable counterpart. Arriving orders, matched orders 
     as well as periodic snapshots of the market (LOBs) are regular events that are 
-    broadcasted from the CES to the existing MPs.
+    broadcasted from the CES to existing MPs.
 
 \textbf{\textit{Market Participants}}. Market participants are the co-located 
     traders that are directly connected to an exchange's system, issuing orders and 
@@ -61,16 +65,15 @@ A financial exchange's main components are summarized in the following segments 
 \textbf{\textit{Gateways}}. The gateways are structures placed between traders
     and the CES. Their responsabilities consist of routing orders and market data, as 
     well as protecting the CES from abuse, e.g., unauthenticated or invalid orders. Within
-    the on-premise clusters gateways are made to be equidistant to the CES as to 
-    ensure fairness regarding communication delays between the gateways and the 
-    central exchange.
+    the on-premise clusters, gateways are made to be equidistant to the CES as to 
+    ensure fairness regarding communication delays between themselves and the central exchange.
 
 \begin{figure}[h!]
   \begin{center}
     \begin{minipage}{0.45\textwidth}
       \centering
       \includegraphics[height=0.20\textheight]{./assets/architecture.png}
-      \caption{On-premise Infrastructure}
+      \caption{On-premise Datacenter}
       \label{fig:exchange}
     \end{minipage}
     \hfill
@@ -83,7 +86,7 @@ A financial exchange's main components are summarized in the following segments 
   \end{center}
 \end{figure}
 
-\section{Migrating Financial Exchanges to the Cloud}
+\subsection{Migration to the Cloud}
 Given the demanding network performance of financial exchanges, the use of 
 on-premise data centers is the prevailing standard.
 However, the cloud displays well-known advantages as a medium for communication. 
@@ -102,8 +105,7 @@ Without native solutions to enable multicasting and the significant serial
     delay of direct unicasting, a clear problem is presented 
     to achieve the possible migration of financial exchanges to the public cloud.
 
-\section{State of the Art}
-\subsection{Jasper: Fair Multicast for Fin. Exchanges on the Cloud}
+\subsection{Jasper: A Scalable Financial Exchange in the Cloud}
 A siginificant project in this domain is Jasper \cite{jasper}, which offers 
 a modern implementation of a financial exchange on the public cloud. 
 This work realizes a multicast service that achieves low latency of less than 
@@ -124,5 +126,126 @@ F &= 10 \label{eq:fanout} \\
 D &= \log_{10}{(N)} \label{eq:depth}
 \end{align}
 
-\textbf{\textit{Clock Synchronization}}. \cite{hyugens}
+\textbf{\textit{Clock Synchronization}}. Jasper utilizes high-precision software clock 
+ synchronization to compensate for noisy conditions in the cloud \cite{hyugens}. Additionally, 
+ a common clock across a cluster allows for precise global timestamps to coordinate actions 
+ across nodes.
 
+\textbf{\textit{Hold and Release}}. Even with a proxy tree there still are serial delays that impact 
+every hop in the system. Therefore, receivers located at the leaves of this tree will not receive 
+packets simultaneously. By leveraging global timestamps, a technique called hold and release is 
+applied where a chosen deadline is appended to every packet, instructing receivers when they are 
+allowed to consume the data. That way, a temporal barrier is used to enforce simultanous updates from the 
+market to all recipients. The deadline is set to a future point in time at which all receivers are highly likely 
+to have received the message. To calculate these deadlines, the sender or root of the tree continuosly gathers
+one-way-delay measurements between itself to all receivers in the tree.
+
+\section{Cloud Computing}
+Before personal computers became widespread, they were famously expensive 
+for the everyday consumer. It wasn’t until the 1980s and 1990s 
+that this changed. However, building large-scale applications 
+still required significant knowledge in configuring, 
+managing, and maintaining extensive computing resources.
+In 2006, Amazon introduced Elastic Compute Cloud (EC2), 
+a service that takes upon the responsability of providing and maintaining computational resources, 
+which could be then rented to users per unit-time \cite{amazonEC2}.
+EC2 offers units of compute, memory, and storage, 
+all connected through a networking infrastructure allowing communication between these units. 
+Through advancements in hardware virtualization, these resources could be allocated to 
+developers through Virtual Machines (\textbf{VMs}) rather than being tied to specific physical instances.
+This brought forth a paradigm well known today as cloud computing,
+allowing for a more flexible use of compute, as machines could be up- and down-scaled 
+more efficiently.
+Many large corporations such as Google, IBM and Microsoft have followed and 
+today the public cloud is an established medium for application deployment \cite{googleGCP, ibmCloud, Azure}.
+Moreover, it is a significant technological industry, generating global 
+spending that exceeds \$700 billion dollars per year \cite{cloudForecast}.
+
+Despite the cloud's inherent flexibility, allowing applications to dynamically scale, 
+works have shown that VMs with the same configuration often exhibit 
+significant performance differences \cite{vmwareNUMA, longtails}. 
+This variability is largely attributed to the cloud’s multi-tenant nature, 
+where VMs may share CPU, memory, and network resources with other VMs. 
+This resource contention can result in uneven performance, 
+especially when one or more VMs, commonly referred to as \textit{"noisy neighbors"}, consume 
+an excessive amount of shared resources.
+These underperforming VMs, labeled as \textit{"stragglers"} in the literature, 
+pose a challenge in maintaining predictable and efficient cloud-based computations. 
+Stragglers can significantly delay the overall completion of tasks, particularly in 
+environments where large-scale distributed computing takes place, reducing system throughput, 
+causing inefficiencies, and ultimately leading to higher operational costs.
+
+Research efforts have focused on mitigating the negative impact of 
+straggler VMs in a cluster \cite{wrangler, selectingVMS, fasterJI}. 
+These optimizations have been especially critical in the context of batch data 
+processing frameworks, where task completion time can heavily depend on the 
+performance of the slowest VM in the cluster.
+As cloud infrastructure continues to evolve, ongoing research aims to 
+further enhance the detection and handling of stragglers, ensuring that applications 
+deployed in the cloud remain resilient and performant, even when encountering unpredictable resource contention.
+
+
+% Early work sought to identify and manage stragglers within a cluster by 
+% dynamically reallocating resources or rerouting tasks to more reliable VMs [YAK14]. 
+% Other approaches aimed to predict the occurrence of stragglers and preemptively schedule tasks 
+% across multiple VMs to minimize delays [YHG+17, YHGK15]. 
+
+
+\subsection{LemonDrop}
+One notable advancement in the field of optimizing straggler VMs is LemonDrop, 
+designed to select and schedule virtual machines (VMs) based on an application's latency needs \cite{lemondrop}. 
+LemonDrop utilizes an accurate clock synchronization algorithm,  
+allowing it to detect fine-grained anomalies in one-way delays (OWD) between pairs of VMs \cite{hyugens}. 
+This approach allows LemonDrop to uncover subtle performance variations that could otherwise go unnoticed. 
+
+What distinguishes LemonDrop is its ability to frame the selection and scheduling process as a 
+natural Quadratic Assignment Problem (QAP) \cite{QAP}. 
+This allows an efficient assignment and scheduleing of the top-performing K VMs from a pool of N $>$ K
+, optimizing both latency and overall performance. Unlike prior works that primarily focused on 
+mitigating stragglers in batch processing, LemonDrop is particularly tailored to latency-sensitive applications, 
+making it highly effective in real-time, interactive cloud environments. 
+Furthermore, the system's ability to detect underperforming VMs
+makes it valuable for autoscaling and maintaining application responsiveness.
+
+% A relevant work in the domain of straggler optimization is LemonDrop, which is a method of selecting and scheduling
+% VMs that is optimized for an applications latency needs \cite{lemondrop}.
+% At the heart of LemonDrop lies a precise clock synchronization algorithm that detects subtle 
+% anomalies in one-way delays (OWD) between virtual machine (VM) pairs. 
+% Leveraging the communication patterns of the application, LemonDrop utilizes these inter-VM 
+% OWD measurements to frame and address a natural Quadratic Assignment Problem \cite{QAP}, 
+% enabling the selection and scheduling of the optimal K VMs from a pool of N $>$ K VMs.
+
+
+\begin{algorithm}
+\caption{FAQ Algorithm}\label{alg:faq}
+\begin{algorithmic}[1]
+\scalebox{0.7}{
+\begin{minipage}{1.3\linewidth}
+\Function{FAQ}{$\Lambda$, $\Delta$, $\epsilon$, $n$}
+    \State $P^{(0)} = 1 1^T$
+    \State $i = 0$
+    \State $s = 0$
+    \While{$s = 0$}
+        \State $\nabla f(P^{(i)}) = -\Lambda P^{(i)} \Delta^T - \Lambda^T P^{(i)} \Delta$ \Comment{Gradient wrt current solution}
+        \State $Q^{(i)} = \arg\min_{P \in \mathcal{D}} \text{trace}(\nabla f(P^{(i)})^T P)$ \Comment{Direction which minimizes 1st order approx of $f(P)$}
+        \State $\alpha^i = \min_{\alpha \in [0,1]} f(P^{(i)} + \alpha Q^{(i)})$ \Comment{Best step size in chosen direction}
+        \State $P^{(i+1)} = P^{(i)} + \alpha^i Q^{(i)}$ \Comment{Update our current solution}
+        \State \textbf{if} $\|P^{(i)} - P^{(i-1)}\|_F < \epsilon$ \textbf{then} $s = 1$ \Comment{Stop opt}
+        \State \textbf{if} $i > n$ \textbf{then} $s = 1$ \Comment{Stop opt}
+        % \If{$\|P^{(i)} - P^{(i-1)}\|_F < \epsilon$}
+        %     \State $s = 1$ \Comment{Stop opt}
+        % \EndIf
+        % \If{$i > n$}
+        %     \State $s = 1$ \Comment{Stop opt}
+        % \EndIf
+        \State $i = i + 1$ \Comment{Iteration number}
+    \EndWhile
+    \State $P_{\text{final}} = \arg\min_{P \in \mathcal{P}} P^{(i-1)} P^T$
+    \State \Return $P_{\text{final}}$
+\EndFunction
+\end{minipage}%
+}
+\end{algorithmic}
+\end{algorithm}
+
+\section{Motivation}

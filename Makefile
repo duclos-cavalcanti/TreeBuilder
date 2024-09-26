@@ -18,10 +18,8 @@ ifeq (, $(shell which terraform))
 $(error terraform not found)
 endif
 
-PREFIX  := 2024-08-01-15-38-39
-GPREFIX := 2024-07-21-13-08-04
-
-# treefinder-docker-2024-08-01-15-38-39
+PREFIX  := 2024-08-01-22-23-52
+GPREFIX := 2024-08-04-13-01-35
 
 .PHONY: proto build udp mcast docker pull process clean rm docs test 
 all: build
@@ -53,7 +51,7 @@ docker:
 	@python3 -m deploy -a build -i docker
 
 local:
-	@python3 -m deploy -a plan -i docker -s 14 -p 9092 -r 5000 -t 5 -w 2 -e 30 -d 2 -f 2 -n 1 -c 2 -b 1
+	@python3 -m deploy -a plan -i docker -s 14 -p 9092 -r 5000 -t 5 -w 2 -e 10 -d 2 -f 2 -n 1 -c 1 -b 1
 	@python3 -m deploy -a deploy -i docker
 
 pull:
@@ -69,8 +67,12 @@ destroy:
 image:
 	@python3 -m deploy -a build -i gcp
 
+instance:
+	@python3 -m deploy -a plan -i gcp -m test
+	@python3 -m deploy -a deploy -i gcp
+
 gcp:
-	@python3 -m deploy -a plan -i gcp -s 25 -p 9092 -r 5000 -t 10 -w 2 -e 30 -d 3 -f 2 -n 3 -c 2 -b 1
+	@python3 -m deploy -a plan -i gcp -s 25 -p 9092 -r 10000 -t 10 -w 2 -e 30 -d 3 -f 2 -n 1 -c 3 -b 2
 	@python3 -m deploy -a deploy -i gcp
 
 gpull:
@@ -98,4 +100,4 @@ docs:
 	$(MAKE) -C docs slides
 
 test:
-	@python3 -m pytest -v test/ -k Tree -s
+	@python3 -m pytest -v test/ -k Lemon -s

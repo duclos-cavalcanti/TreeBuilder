@@ -130,8 +130,8 @@ def tspResult(fig:plt.Figure, ax:plt.Axes, args, title:str, result:ResultDict, d
         interval_y = 100
 
 
-    ax.set_xticks(np.arange(1, max_x + 1, interval))
-    ax.set_yticks(np.arange(0, max_y *1.5, interval_y))
+    # ax.set_xticks(np.arange(1, max_x + 1, interval))
+    # ax.set_yticks(np.arange(0, max_y *1.5, interval_y))
 
     if args.ylabel:
         ax.set_ylabel("OWD(us)", fontsize=args.nfont)
@@ -154,12 +154,10 @@ def tspResult(fig:plt.Figure, ax:plt.Axes, args, title:str, result:ResultDict, d
     if args.legend:
         ax.legend(handles=handles, loc='best', fancybox=True, fontsize=args.nfont + 1, ncol=2)
 
-    return
+    return max_x, max_y, interval_y
 
 def cdfRun(fig:plt.Figure, ax:plt.Axes, args, title:str, i:int, run, item:ItemDict, data:List):
     name, key, tree, id = EXPERIMENT.run(run)
-    max_x    = 0
-    max_y    = 0
     handles  = []
         
     addr        = item["addr"].split(":")[0]
@@ -178,12 +176,50 @@ def cdfRun(fig:plt.Figure, ax:plt.Axes, args, title:str, i:int, run, item:ItemDi
 
     ax.set_xlim(0, max_x + 50)
     ax.set_ylim(0, 100)
+    ax.set_yticks(np.arange(0, 100, 10))
+    ax.set_xticks(np.arange(0, max_x, 100))
     
     if args.ylabel:
         ax.set_ylabel("CDF", fontsize=args.nfont)
     
     if args.xlabel:
         ax.set_xlabel("OWD(us)", fontsize=args.nfont)
+
+    ax.tick_params(axis='x', labelsize=args.nfont - 1)
+    ax.tick_params(axis='y', labelsize=args.nfont - 1)
+        
+    return max_x, max_y, handle
+
+def tspRun(fig:plt.Figure, ax:plt.Axes, args, title:str, i:int, run, item:ItemDict, data:List, key:str):
+    name, _, tree, id = EXPERIMENT.run(run)
+    rate   = run["parameters"]["rate"]
+    dur    = run["parameters"]["duration"]
+
+    handles     = []
+    addr        = item["addr"].split(":")[0]
+    addr        = EXPERIMENT.map(item["addr"])
+    label       = f"{id}"
+    color       = COLORS[ i+1 % len(COLORS) ]
+    linestyle   = '-'
+    
+    line, max_x, max_y = plot.tsp(ax, label=label, color=color, linestyle=linestyle, step=rate, data=data, key=key)
+    handle = plt.Line2D([0], [0], color=color, linestyle=linestyle, label=label)
+    
+    fig.suptitle(f"{title}", fontsize=args.tfont, fontweight='bold')
+    
+    if args.title:
+        ax.set_title(f"TIME SERIES {key.upper()} OWD (uS)", fontsize=args.nfont + 2, fontweight='bold')
+
+    ax.set_xlim(0, max_x + 50)
+    ax.set_ylim(0, max_y + 100)
+    # ax.set_yticks(np.arange(0, 100, 10))
+    # ax.set_xticks(np.arange(0, max_x, 100))
+    
+    if args.ylabel:
+        ax.set_ylabel("OWD(us)", fontsize=args.nfont)
+    
+    if args.xlabel:
+        ax.set_xlabel("t(s)", fontsize=args.nfont)
 
     ax.tick_params(axis='x', labelsize=args.nfont - 1)
     ax.tick_params(axis='y', labelsize=args.nfont - 1)
@@ -1092,7 +1128,7 @@ def plotGridComparison(runs:List[RunDict], rdir:str, title:str, file:str):
     plt.close(F)
     print(f"PLOTTED: {file}")
 
-def plotEvalComparison(run:RunDict, runs:List[RunDict], rdir:str, title:str, file:str):
+def plotEvalComparison(run:RunDict, runs:List[RunDict], rdir:str, title:str, file:str, fix:bool=True):
     F, G = plt.subplots(nrows=len(runs) + 1, 
                         ncols=5, 
                         figsize=(36, 18))
@@ -1101,6 +1137,19 @@ def plotEvalComparison(run:RunDict, runs:List[RunDict], rdir:str, title:str, fil
     arr = [ run ] + runs
     max_x = 0
     max_y = 0
+
+    prev_max_a = 0
+    max_x_a = 0
+    max_y_a = 0
+    int_a = 100
+
+    max_x_b = 0
+    max_y_b = 0
+    int_b = 0
+
+    max_x_c = 0
+    max_y_c = 0
+    int_c = 0
 
     cloud    = EXPERIMENT.schema['infra'].upper()
     rate     = run['parameters']['rate']
@@ -1126,7 +1175,7 @@ def plotEvalComparison(run:RunDict, runs:List[RunDict], rdir:str, title:str, fil
         ARGS2.legend = False
         ARGS2.title  = True
 
-        tableResult(fig=F, ax=G[i][0], args=ARGS2, title=f"{id} RESULTS", run=run, result=stage, data=data, cols=[1, -2])
+        tableResult(fig=F, ax=G[i][0], args=ARGS2, title=f"{id}", run=run, result=stage, data=data, cols=[1, -2])
         if i > 0:
             ARGS2.title  = False
 
@@ -1140,9 +1189,39 @@ def plotEvalComparison(run:RunDict, runs:List[RunDict], rdir:str, title:str, fil
             ax.set_yticks(np.arange(0, 100, 10))
             ax.set_xticks(np.arange(0, max_x, 100))
 
-        tspResult(fig=F,   ax=G[i][2], args=ARGS2, title=f"{tree} - EVAL[{iter}]", result=stage, data=data, key="p90")
-        tspResult(fig=F,   ax=G[i][3], args=ARGS2, title=f"{tree} - EVAL[{iter}]", result=stage, data=data, key="p50")
-        tspResult(fig=F,   ax=G[i][4], args=ARGS2, title=f"{tree} - EVAL[{iter}]", result=stage, data=data, key="stddev")
+        prev_max_a = max_y_a
+
+        max_x_i, max_y_i, int_i = tspResult(fig=F,   ax=G[i][2], args=ARGS2, title=f"{tree} - EVAL[{iter}]", result=stage, data=data, key="p90")
+        if fix:
+            max_x_a = max(max_x_a, max_x_i)
+            max_y_a = max(max_y_a, max_y_i)
+            int_a   = max(int_a,  int_i)
+
+        max_x_i, max_y_i, int_i = tspResult(fig=F,   ax=G[i][3], args=ARGS2, title=f"{tree} - EVAL[{iter}]", result=stage, data=data, key="p50")
+        if fix:
+            max_x_a = max(max_x_a, max_x_i)
+            max_y_a = max(max_y_a, max_y_i)
+            int_a   = max(int_a,  int_i)
+
+        if fix:
+            fac = 7
+            if max_y_a <= fac * prev_max_a: 
+                for k in range(len(arr)):
+                    for v in [ 2, 3]:
+                        ax = G[k][v]
+                        ax.set_ylim(0, max_y_a + 100)
+                        ax.set_yticks(np.arange(0, max_y_a + 100, int_a))
+
+        max_x_i, max_y_i, int_i = tspResult(fig=F,   ax=G[i][4], args=ARGS2, title=f"{tree} - EVAL[{iter}]", result=stage, data=data, key="stddev")
+        if fix:
+            max_x_c = max(max_x_c, max_x_i)
+            max_y_c = max(max_y_c, max_y_i)
+            int_c   = max(int_c,  int_i)
+            for k in range(len(arr)):
+                ax = G[k][4]
+                ax.set_ylim(0, max_y_c + 100)
+                ax.set_yticks(np.arange(0, max_y_c + 100, int_c))
+
         # graphTree(fig=F,   ax=G[i][4], args=ARGS2, title=f"{tree} - TREE", run=run, i=0)
 
         if "LEMON" in run["name"]: 
@@ -1190,6 +1269,21 @@ def plotStageComparison(run:RunDict, stages:List[ResultDict], rdir:str, title:st
     # P        = len(runs[0]['pool'])
     P        = len(EXPERIMENT.schema['names'][2:])
 
+    max_x = 0
+    max_y = 0
+
+    max_x_a = 0
+    max_y_a = 0
+    int_a = 0
+
+    max_x_b = 0
+    max_y_b = 0
+    int_b = 0
+
+    max_x_c = 0
+    max_y_c = 0
+    int_c = 0
+
     for i,stage in enumerate(stages):
         data    = EXPERIMENT.jobs[stage["id"]]
 
@@ -1204,14 +1298,46 @@ def plotStageComparison(run:RunDict, stages:List[ResultDict], rdir:str, title:st
         ARGS2.legend  = True
         tmp = ARGS2.nfont
         ARGS2.nfont = tmp - 5
-        cdfResult(fig=F, ax=G[i][1], args=ARGS2, title=f"{tree} - STAGE[{i + 1}]", result=stage, data=data)
+        max_x_i, max_y_i = cdfResult(fig=F, ax=G[i][1], args=ARGS2, title=f"{tree} - STAGE[{i + 1}]", result=stage, data=data)
+        max_x = max(max_x, max_x_i)
+        max_y = max(max_y, max_y_i)
+        for k in range(len(stages)):
+            ax = G[k][1]
+            ax.set_xlim(0, max_x + 50)
+            ax.set_ylim(0, max_y)
+            ax.set_yticks(np.arange(0, 100, 10))
+            ax.set_xticks(np.arange(0, max_x, 100))
 
         ARGS2.nfont = tmp
         ARGS2.legend  = False
 
-        tspResult(fig=F, ax=G[i][2], args=ARGS2, title=f"{tree} - STAGE[{i+1}]", result=stage, data=data, key="p90", interval=2)
-        tspResult(fig=F, ax=G[i][3], args=ARGS2, title=f"{tree} - STAGE[{i + 1}]", result=stage, data=data, key="p50", interval=2)
-        tspResult(fig=F, ax=G[i][4], args=ARGS2, title=f"{tree} - STAGE[{i + 1}]", result=stage, data=data, key="stddev", interval=2)
+        max_x_i, max_y_i, int_i = tspResult(fig=F, ax=G[i][2], args=ARGS2, title=f"{tree} - STAGE[{i+1}]", result=stage, data=data, key="p90", interval=2)
+        max_x_a = max(max_x_a, max_x_i)
+        max_y_a = max(max_y_a, max_y_i)
+        int_a   = max(int_a,  int_i)
+
+        max_x_i, max_y_i, int_i = tspResult(fig=F, ax=G[i][3], args=ARGS2, title=f"{tree} - STAGE[{i + 1}]", result=stage, data=data, key="p50", interval=2)
+        max_x_a = max(max_x_a, max_x_i)
+        max_y_a = max(max_y_a, max_y_i)
+        int_a   = max(int_a,  int_i)
+
+        for k in range(len(stages)):
+            for v in [2, 3]:
+                ax = G[k][v]
+                ax.set_ylim(0, max_y_a + 100)
+                ax.set_yticks(np.arange(0, max_y_a + 100, int_a))
+
+        max_x_i, max_y_i, int_i = tspResult(fig=F, ax=G[i][4], args=ARGS2, title=f"{tree} - STAGE[{i + 1}]", result=stage, data=data, key="stddev", interval=2)
+        max_x_c = max(max_x_c, max_x_i)
+        max_y_c = max(max_y_c, max_y_i)
+        int_c   = max(int_c,  int_i)
+        G[i][4].set_yticks(np.arange(0, max_y_i + 100, int_i))
+
+        # for k in range(len(stages)):
+        #     ax = G[k][4]
+        #     ax.set_ylim(0, max_y_c + 100)
+        #     ax.set_yticks(np.arange(0, 100, 10))
+        #     ax.set_yticks(np.arange(0, max_y_c + 100, int_c))
         
         handles, labels = legendResult(stage, data)
 
@@ -1249,6 +1375,14 @@ def plotEvalIterationsComparison(run:RunDict, rdir:str, title:str, file:str):
     max_x = 0
     max_y = 0
 
+    max_x_a = 0
+    max_y_a = 0
+    int_a = 0
+
+    max_x_c = 0
+    max_y_c = 0
+    int_c = 0
+
     for i, stage in enumerate(run["perf"]):
         data    = EXPERIMENT.jobs[stage["id"]]
 
@@ -1269,16 +1403,34 @@ def plotEvalIterationsComparison(run:RunDict, rdir:str, title:str, file:str):
             ax.set_yticks(np.arange(0, 100, 10))
             ax.set_xticks(np.arange(0, max_x, 100))
 
-        tspResult(fig=F, ax=G[i][2], args=ARGS2, title=f"EVAL[{i + 1}]", result=stage, data=data, key="p90")
-        tspResult(fig=F, ax=G[i][3], args=ARGS2, title=f"EVAL[{i + 1}]", result=stage, data=data, key="p50")
-        tspResult(fig=F, ax=G[i][4], args=ARGS2, title=f"EVAL[{i + 1}]", result=stage, data=data, key="stddev")
+        max_x_i, max_y_i, int_i = tspResult(fig=F, ax=G[i][2], args=ARGS2, title=f"EVAL[{i + 1}]", result=stage, data=data, key="p90")
+        max_x_a = max(max_x_a, max_x_i)
+        max_y_a = max(max_y_a, max_y_i)
+        int_a   = max(int_a,  int_i)
+
+        max_x_i, max_y_i, int_i = tspResult(fig=F, ax=G[i][3], args=ARGS2, title=f"EVAL[{i + 1}]", result=stage, data=data, key="p50")
+        max_x_a = max(max_x_a, max_x_i)
+        max_y_a = max(max_y_a, max_y_i)
+        int_a   = max(int_a,  int_i)
+
+        for k in range(len(run["perf"])):
+            for v in [ 2, 3]:
+                ax = G[k][v]
+                ax.set_ylim(0, max_y_a + 100)
+                ax.set_yticks(np.arange(0, max_y_a + 100, int_a))
+
+        max_x_i, max_y_i, int_i = tspResult(fig=F, ax=G[i][4], args=ARGS2, title=f"EVAL[{i + 1}]", result=stage, data=data, key="stddev")
+        max_x_c = max(max_x_c, max_x_i)
+        max_y_c = max(max_y_c, max_y_i)
+        int_c   = max(int_c,  int_i)
+        for k in range(len(run["perf"])):
+            ax = G[k][4]
+            ax.set_ylim(0, max_y_c + 100)
+            ax.set_yticks(np.arange(0, max_y_c + 100, int_c))
 
 
     title    = f"{title}"
     subtitle = f"N={N}, D={depth}, F={fanout}, K={K}, POOL={P}, Rate={rate} p/sec, Duration={eval} sec"
-
-    # subtitle = f"N={N}, D={depth}, F={fanout}, K={K}, POOL={P}"
-    # extra    = f"Rate={rate} p/sec, Duration={eval} sec, {cloud}"
 
     F.suptitle(f"{title}", fontsize=ARGS.tfont + 10, fontweight='bold')
     F.text(0.5, 0.93, f"{subtitle}", ha='center', fontsize=ARGS.tfont + 5)
@@ -1288,6 +1440,75 @@ def plotEvalIterationsComparison(run:RunDict, rdir:str, title:str, file:str):
     plt.close(F)
 
     print(f"PLOTTED: {file}")
+    return
+
+def plotEvalIterationsComparisonAlt(run:RunDict, rdir:str, title:str, file:str):
+    name, key, tree, id = EXPERIMENT.run(run) 
+    F = plt.figure(figsize=(36, 18))
+    G = []
+
+    gs   = gridspec.GridSpec(1, 5, figure=F)
+    grid = F.add_subplot(gs[0, 0])
+    grid.axis("off")
+
+    G.append([])
+    G.append(F.add_subplot(gs[0, 1]))
+    G.append(F.add_subplot(gs[0, 2]))
+    G.append(F.add_subplot(gs[0, 3]))
+    G.append(F.add_subplot(gs[0, 4]))
+
+    sub_gs = gridspec.GridSpecFromSubplotSpec(len(run["perf"]), 1, subplot_spec=gs[0, 0])
+    for k in range(len(run["perf"])):
+        G[0].append(F.add_subplot(sub_gs[k, 0]))
+        G[0][k].axis("off")
+
+    cloud    = EXPERIMENT.schema['infra'].upper()
+    rate     = run['parameters']['rate']
+    duration = run['parameters']['duration']
+    eval     = run['parameters']['evaluation']
+    depth    = run['tree']['depth']
+    fanout   = run['tree']['fanout']
+    N        = run['tree']['n']
+    K        = run['parameters']['hyperparameter']
+    # P        = len(runs[0]['pool'])
+    P        = len(EXPERIMENT.schema['names'][2:])
+
+    max_x   = 0
+    max_y   = 0
+    handles = []
+
+    for i, stage in enumerate(run["perf"]):
+        data    = EXPERIMENT.jobs[stage["id"]]
+
+        ARGS2.legend = False
+        ARGS2.title  = True
+        tableResult(fig=F, ax=G[0][i], args=ARGS2, title=f"{id} RUN {i + 1}", run=run, result=stage, data=data, cols=[1, -2])
+
+        max_x_i, max_y_i, handle =  cdfRun(fig=F, ax=G[1], args=ARGS2, title=f"{tree}", i=i, run=run, item=stage["items"][0], data=data[0])
+        handles.append(handle)
+
+        max_x_i, max_y_i, handle =  tspRun(fig=F, ax=G[2], args=ARGS2, title=f"{tree}", i=i, run=run, item=stage["items"][0], data=data[0], key="p90")
+        max_x_i, max_y_i, handle =  tspRun(fig=F, ax=G[3], args=ARGS2, title=f"{tree}", i=i, run=run, item=stage["items"][0], data=data[0], key="p50")
+        max_x_i, max_y_i, handle =  tspRun(fig=F, ax=G[4], args=ARGS2, title=f"{tree}", i=i, run=run, item=stage["items"][0], data=data[0], key="stddev")
+
+
+    G[1].legend(handles=handles,  loc='lower center', fontsize=ARGS2.font)
+    G[2].legend(handles=handles,  loc='lower center', fontsize=ARGS2.font)
+    G[3].legend(handles=handles,  loc='lower center', fontsize=ARGS2.font)
+    G[4].legend(handles=handles,  loc='lower center', fontsize=ARGS2.font)
+
+    title    = f"{title}"
+    subtitle = f"N={N}, D={depth}, F={fanout}, K={K}, POOL={P}, Rate={rate} p/sec, Duration={eval} sec"
+
+    F.suptitle(f"{title}", fontsize=ARGS.tfont + 10, fontweight='bold')
+    F.text(0.5, 0.93, f"{subtitle}", ha='center', fontsize=ARGS.tfont + 5)
+    # F.text(0.5, 0.91, f"{extra}", ha='center', fontsize=ARGS.tfont + 5)
+
+    F.savefig(f"{rdir}/{file}", format="png")
+    plt.close(F)
+
+    print(f"PLOTTED: {file}")
+    return
     
 def plotRun(run:RunDict, i:int, dir:str, compare:bool=True): 
     name, key, tree, id = EXPERIMENT.run(run)

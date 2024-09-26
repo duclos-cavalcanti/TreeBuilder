@@ -1,8 +1,40 @@
+import os
 import json
+import subprocess
 
-from .utils   import lexecute
 from manager  import Timer, TreeBuilder, RunDict, StrategyDict, ParametersDict, TreeDict, ResultDict, TimersDict
 from datetime import datetime
+
+def execute(command:str, wdir=None):
+    if not wdir: wdir = os.getcwd()
+
+    ret = 0
+    out = bytes() 
+    err = bytes()
+
+    try:
+        print(f"{command}")
+
+        p = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, cwd=wdir)
+        for line in p.stdout: 
+            print(line.decode('utf-8'), end='')
+
+        p.wait()
+
+        ret = p.returncode
+        out = p.stdout.read()
+        err = p.stderr.read()
+
+    except Exception as e:
+        raise(e)
+
+    finally: 
+        if ret != 0:
+            print(f"ERR[{ret}]:")
+            print(err.decode('utf-8'))
+            raise RuntimeError()
+
+    return out
 
 def run(name:str, key:str, args, epsilon:float=1e-4, max_i:int=1000, stress:bool=False):
     r:RunDict = RunDict({
@@ -61,23 +93,36 @@ def runs(args):
     names = [ "BEST" ]
     keys  = [ "p90", "p50", "heuristic" ]
 
-    if args.mode == "default":
-        for name in names:
-            for key in keys:
-                r = run(name, key, args)
-                r["parameters"]["rebuild"] = args.rebuild
-                runs.append(r)
+    if args.infra == "gcp":
+        if args.mode == "default":
+            # for name in names:
+            #     for key in keys:
+            #         r = run(name, key, args)
+            #         r["parameters"]["rebuild"] = args.rebuild
+            #         runs.append(r)
 
-        runs.append(run(name="WORST",  key="p90",  args=args))
-        runs.append(run(name="RAND",   key="NONE", args=args))
-        runs.append(run(name="LEMON",  key="NONE", args=args, epsilon=1e-4, max_i=1000, stress=False))
-        runs.append(run(name="LEMON-STRESS", key="NONE", args=args, epsilon=1e-4, max_i=1000, stress=True))
+            # runs.append(run(name="WORST",  key="p90",  args=args))
+            # runs.append(run(name="RAND",   key="NONE", args=args))
 
-    if args.mode == "lemondrop":
-        hyperparameters = [ (1e-4, 1000), (5.5e-5, 10000), (1e-5, 10000) ]
-        for tup in hyperparameters:
-            epsilon, max_i = tup
-            runs.append(run(name="LEMON", key="NONE", args=args, epsilon=epsilon, max_i=max_i))
+            runs.append(run(name="LEMON-A",           key="NONE", args=args, epsilon=1e-4,     max_i=1000,     stress=False))
+            runs.append(run(name="LEMON-B",           key="NONE", args=args, epsilon=2.2e-5,   max_i=10000,    stress=False))
+            runs.append(run(name="LEMON-C",           key="NONE", args=args, epsilon=1.7e-5,   max_i=100000,   stress=False))
+
+            runs.append(run(name="LEMON-A-STRESS",    key="NONE", args=args, epsilon=1e-4,     max_i=1000,     stress=True))
+            runs.append(run(name="LEMON-B-STRESS",    key="NONE", args=args, epsilon=2.2e-5,   max_i=10000,    stress=True))
+            runs.append(run(name="LEMON-C-STRESS",    key="NONE", args=args, epsilon=1.7e-5,   max_i=100000,   stress=True))
+
+        else:
+            raise NotImplementedError()
+    else:
+        if args.mode == "default":
+            runs.append(run(name="BEST",  key="heuristic",  args=args))
+
+        if args.mode == "lemondrop":
+            hyperparameters = [ (1e-4, 1000), (5.5e-5, 10000), (1e-5, 10000) ]
+            for tup in hyperparameters:
+                epsilon, max_i = tup
+                runs.append(run(name="LEMON", key="NONE", args=args, epsilon=epsilon, max_i=max_i))
 
     return runs
 
@@ -138,7 +183,7 @@ def config(args, path):
 
 def build(args, wdir):
     command=f"packer build -force -var-file=./variables.pkr.hcl {args.infra}.pkr.hcl"
-    lexecute(f"{command}", wdir=wdir)
+    execute(f"{command}", wdir=wdir)
 
 def plan(args, wdir):
     config(args, f"{wdir}/extract/data.json")
@@ -151,6 +196,7 @@ def plan(args, wdir):
 		           --exclude=examples \
 		           --exclude=lib \
 		           --exclude=build \
+		           --exclude=docs \
 		           --exclude=.cache \
 		           --exclude=terra \
 		           --exclude=infra \
@@ -158,13 +204,13 @@ def plan(args, wdir):
 		           --exclude-vcs-ignores \
 		           -zcvf"
 
-    lexecute(f"{command} {wdir}/extract/project.tar.gz .")
-    lexecute(f"terraform init", wdir=wdir)
-    lexecute(f"terraform plan -out=tf.plan -var mode={args.mode}", wdir=wdir)
+    execute(f"{command} {wdir}/extract/project.tar.gz .")
+    execute(f"terraform init", wdir=wdir)
+    execute(f"terraform plan -out=tf.plan -var mode={args.mode}", wdir=wdir)
 
 def deploy(args , wdir):
-    lexecute(f"terraform apply tf.plan", wdir=wdir)
+    execute(f"terraform apply tf.plan", wdir=wdir)
 
 def destroy(args, wdir):
-    lexecute(f"terraform destroy -auto-approve", wdir=wdir)
+    execute(f"terraform destroy -auto-approve", wdir=wdir)
 

@@ -1,6 +1,6 @@
 {
     "infra": "gcp",
-    "suffix": "2024-07-21-13-08-04",
+    "suffix": "2024-08-04-13-01-35",
     "port": 9092,
     "addrs": [
         "10.1.25.1",
@@ -116,375 +116,24 @@
     },
     "runs": [
         {
-            "name": "BEST",
-            "strategy": {
-                "key": "p90",
-                "reverse": false
-            },
-            "parameters": {
-                "num": 3,
-                "choices": 2,
-                "hyperparameter": 4,
-                "rate": 5000,
-                "duration": 20,
-                "epsilon": 0.0001,
-                "max_i": 1000,
-                "converge": false
-            },
-            "tree": {
-                "name": "",
-                "depth": 3,
-                "fanout": 2,
-                "n": 0,
-                "max": 0,
-                "root": "",
-                "nodes": []
-            },
-            "pool": [],
-            "stages": [],
-            "perf": [
-                {
-                    "id": "",
-                    "root": "",
-                    "key": "p90",
-                    "select": 0,
-                    "rate": 5000,
-                    "duration": 20,
-                    "items": [],
-                    "selected": []
-                },
-                {
-                    "id": "",
-                    "root": "",
-                    "key": "p90",
-                    "select": 0,
-                    "rate": 5000,
-                    "duration": 20,
-                    "items": [],
-                    "selected": []
-                },
-                {
-                    "id": "",
-                    "root": "",
-                    "key": "p90",
-                    "select": 0,
-                    "rate": 5000,
-                    "duration": 20,
-                    "items": [],
-                    "selected": []
-                }
-            ],
-            "timers": {
-                "build": 0.0,
-                "stages": [],
-                "convergence": 0.0,
-                "perf": [
-                    0.0,
-                    0.0,
-                    0.0
-                ],
-                "total": 0.0
-            }
-        },
-        {
-            "name": "BEST",
-            "strategy": {
-                "key": "p50",
-                "reverse": false
-            },
-            "parameters": {
-                "num": 3,
-                "choices": 2,
-                "hyperparameter": 4,
-                "rate": 5000,
-                "duration": 20,
-                "epsilon": 0.0001,
-                "max_i": 1000,
-                "converge": false
-            },
-            "tree": {
-                "name": "",
-                "depth": 3,
-                "fanout": 2,
-                "n": 0,
-                "max": 0,
-                "root": "",
-                "nodes": []
-            },
-            "pool": [],
-            "stages": [],
-            "perf": [
-                {
-                    "id": "",
-                    "root": "",
-                    "key": "p50",
-                    "select": 0,
-                    "rate": 5000,
-                    "duration": 20,
-                    "items": [],
-                    "selected": []
-                },
-                {
-                    "id": "",
-                    "root": "",
-                    "key": "p50",
-                    "select": 0,
-                    "rate": 5000,
-                    "duration": 20,
-                    "items": [],
-                    "selected": []
-                },
-                {
-                    "id": "",
-                    "root": "",
-                    "key": "p50",
-                    "select": 0,
-                    "rate": 5000,
-                    "duration": 20,
-                    "items": [],
-                    "selected": []
-                }
-            ],
-            "timers": {
-                "build": 0.0,
-                "stages": [],
-                "convergence": 0.0,
-                "perf": [
-                    0.0,
-                    0.0,
-                    0.0
-                ],
-                "total": 0.0
-            }
-        },
-        {
-            "name": "BEST",
-            "strategy": {
-                "key": "heuristic",
-                "reverse": false
-            },
-            "parameters": {
-                "num": 3,
-                "choices": 2,
-                "hyperparameter": 4,
-                "rate": 5000,
-                "duration": 20,
-                "epsilon": 0.0001,
-                "max_i": 1000,
-                "converge": false
-            },
-            "tree": {
-                "name": "",
-                "depth": 3,
-                "fanout": 2,
-                "n": 0,
-                "max": 0,
-                "root": "",
-                "nodes": []
-            },
-            "pool": [],
-            "stages": [],
-            "perf": [
-                {
-                    "id": "",
-                    "root": "",
-                    "key": "heuristic",
-                    "select": 0,
-                    "rate": 5000,
-                    "duration": 20,
-                    "items": [],
-                    "selected": []
-                },
-                {
-                    "id": "",
-                    "root": "",
-                    "key": "heuristic",
-                    "select": 0,
-                    "rate": 5000,
-                    "duration": 20,
-                    "items": [],
-                    "selected": []
-                },
-                {
-                    "id": "",
-                    "root": "",
-                    "key": "heuristic",
-                    "select": 0,
-                    "rate": 5000,
-                    "duration": 20,
-                    "items": [],
-                    "selected": []
-                }
-            ],
-            "timers": {
-                "build": 0.0,
-                "stages": [],
-                "convergence": 0.0,
-                "perf": [
-                    0.0,
-                    0.0,
-                    0.0
-                ],
-                "total": 0.0
-            }
-        },
-        {
-            "name": "WORST",
-            "strategy": {
-                "key": "p90",
-                "reverse": true
-            },
-            "parameters": {
-                "num": 3,
-                "choices": 2,
-                "hyperparameter": 4,
-                "rate": 5000,
-                "duration": 20,
-                "epsilon": 0.0001,
-                "max_i": 1000,
-                "converge": false
-            },
-            "tree": {
-                "name": "",
-                "depth": 3,
-                "fanout": 2,
-                "n": 0,
-                "max": 0,
-                "root": "",
-                "nodes": []
-            },
-            "pool": [],
-            "stages": [],
-            "perf": [
-                {
-                    "id": "",
-                    "root": "",
-                    "key": "p90",
-                    "select": 0,
-                    "rate": 5000,
-                    "duration": 20,
-                    "items": [],
-                    "selected": []
-                },
-                {
-                    "id": "",
-                    "root": "",
-                    "key": "p90",
-                    "select": 0,
-                    "rate": 5000,
-                    "duration": 20,
-                    "items": [],
-                    "selected": []
-                },
-                {
-                    "id": "",
-                    "root": "",
-                    "key": "p90",
-                    "select": 0,
-                    "rate": 5000,
-                    "duration": 20,
-                    "items": [],
-                    "selected": []
-                }
-            ],
-            "timers": {
-                "build": 0.0,
-                "stages": [],
-                "convergence": 0.0,
-                "perf": [
-                    0.0,
-                    0.0,
-                    0.0
-                ],
-                "total": 0.0
-            }
-        },
-        {
-            "name": "WORST",
-            "strategy": {
-                "key": "p50",
-                "reverse": true
-            },
-            "parameters": {
-                "num": 3,
-                "choices": 2,
-                "hyperparameter": 4,
-                "rate": 5000,
-                "duration": 20,
-                "epsilon": 0.0001,
-                "max_i": 1000,
-                "converge": false
-            },
-            "tree": {
-                "name": "",
-                "depth": 3,
-                "fanout": 2,
-                "n": 0,
-                "max": 0,
-                "root": "",
-                "nodes": []
-            },
-            "pool": [],
-            "stages": [],
-            "perf": [
-                {
-                    "id": "",
-                    "root": "",
-                    "key": "p50",
-                    "select": 0,
-                    "rate": 5000,
-                    "duration": 20,
-                    "items": [],
-                    "selected": []
-                },
-                {
-                    "id": "",
-                    "root": "",
-                    "key": "p50",
-                    "select": 0,
-                    "rate": 5000,
-                    "duration": 20,
-                    "items": [],
-                    "selected": []
-                },
-                {
-                    "id": "",
-                    "root": "",
-                    "key": "p50",
-                    "select": 0,
-                    "rate": 5000,
-                    "duration": 20,
-                    "items": [],
-                    "selected": []
-                }
-            ],
-            "timers": {
-                "build": 0.0,
-                "stages": [],
-                "convergence": 0.0,
-                "perf": [
-                    0.0,
-                    0.0,
-                    0.0
-                ],
-                "total": 0.0
-            }
-        },
-        {
-            "name": "RAND",
+            "name": "LEMON-A",
             "strategy": {
                 "key": "NONE",
                 "reverse": false
             },
             "parameters": {
-                "num": 3,
-                "choices": 2,
+                "num": 1,
+                "choices": 3,
+                "rebuild": 0,
                 "hyperparameter": 4,
-                "rate": 5000,
-                "duration": 20,
+                "rate": 10000,
+                "duration": 10,
+                "evaluation": 30,
+                "warmup": 2,
                 "epsilon": 0.0001,
                 "max_i": 1000,
-                "converge": false
+                "converge": false,
+                "stress": false
             },
             "tree": {
                 "name": "",
@@ -503,28 +152,8 @@
                     "root": "",
                     "key": "NONE",
                     "select": 0,
-                    "rate": 5000,
-                    "duration": 20,
-                    "items": [],
-                    "selected": []
-                },
-                {
-                    "id": "",
-                    "root": "",
-                    "key": "NONE",
-                    "select": 0,
-                    "rate": 5000,
-                    "duration": 20,
-                    "items": [],
-                    "selected": []
-                },
-                {
-                    "id": "",
-                    "root": "",
-                    "key": "NONE",
-                    "select": 0,
-                    "rate": 5000,
-                    "duration": 20,
+                    "rate": 10000,
+                    "duration": 10,
                     "items": [],
                     "selected": []
                 }
@@ -534,99 +163,30 @@
                 "stages": [],
                 "convergence": 0.0,
                 "perf": [
-                    0.0,
-                    0.0,
                     0.0
                 ],
                 "total": 0.0
             }
         },
         {
-            "name": "LEMON",
+            "name": "LEMON-B",
             "strategy": {
                 "key": "NONE",
                 "reverse": false
             },
             "parameters": {
-                "num": 3,
-                "choices": 2,
+                "num": 1,
+                "choices": 3,
+                "rebuild": 0,
                 "hyperparameter": 4,
-                "rate": 5000,
-                "duration": 20,
-                "epsilon": 0.0001,
-                "max_i": 1000,
-                "converge": false
-            },
-            "tree": {
-                "name": "",
-                "depth": 3,
-                "fanout": 2,
-                "n": 0,
-                "max": 0,
-                "root": "",
-                "nodes": []
-            },
-            "pool": [],
-            "stages": [],
-            "perf": [
-                {
-                    "id": "",
-                    "root": "",
-                    "key": "NONE",
-                    "select": 0,
-                    "rate": 5000,
-                    "duration": 20,
-                    "items": [],
-                    "selected": []
-                },
-                {
-                    "id": "",
-                    "root": "",
-                    "key": "NONE",
-                    "select": 0,
-                    "rate": 5000,
-                    "duration": 20,
-                    "items": [],
-                    "selected": []
-                },
-                {
-                    "id": "",
-                    "root": "",
-                    "key": "NONE",
-                    "select": 0,
-                    "rate": 5000,
-                    "duration": 20,
-                    "items": [],
-                    "selected": []
-                }
-            ],
-            "timers": {
-                "build": 0.0,
-                "stages": [],
-                "convergence": 0.0,
-                "perf": [
-                    0.0,
-                    0.0,
-                    0.0
-                ],
-                "total": 0.0
-            }
-        },
-        {
-            "name": "LEMON",
-            "strategy": {
-                "key": "NONE",
-                "reverse": false
-            },
-            "parameters": {
-                "num": 3,
-                "choices": 2,
-                "hyperparameter": 4,
-                "rate": 5000,
-                "duration": 20,
-                "epsilon": 5.5e-05,
+                "rate": 10000,
+                "duration": 10,
+                "evaluation": 30,
+                "warmup": 2,
+                "epsilon": 2.2e-05,
                 "max_i": 10000,
-                "converge": false
+                "converge": false,
+                "stress": false
             },
             "tree": {
                 "name": "",
@@ -645,28 +205,8 @@
                     "root": "",
                     "key": "NONE",
                     "select": 0,
-                    "rate": 5000,
-                    "duration": 20,
-                    "items": [],
-                    "selected": []
-                },
-                {
-                    "id": "",
-                    "root": "",
-                    "key": "NONE",
-                    "select": 0,
-                    "rate": 5000,
-                    "duration": 20,
-                    "items": [],
-                    "selected": []
-                },
-                {
-                    "id": "",
-                    "root": "",
-                    "key": "NONE",
-                    "select": 0,
-                    "rate": 5000,
-                    "duration": 20,
+                    "rate": 10000,
+                    "duration": 10,
                     "items": [],
                     "selected": []
                 }
@@ -676,8 +216,218 @@
                 "stages": [],
                 "convergence": 0.0,
                 "perf": [
-                    0.0,
-                    0.0,
+                    0.0
+                ],
+                "total": 0.0
+            }
+        },
+        {
+            "name": "LEMON-C",
+            "strategy": {
+                "key": "NONE",
+                "reverse": false
+            },
+            "parameters": {
+                "num": 1,
+                "choices": 3,
+                "rebuild": 0,
+                "hyperparameter": 4,
+                "rate": 10000,
+                "duration": 10,
+                "evaluation": 30,
+                "warmup": 2,
+                "epsilon": 1.7e-05,
+                "max_i": 100000,
+                "converge": false,
+                "stress": false
+            },
+            "tree": {
+                "name": "",
+                "depth": 3,
+                "fanout": 2,
+                "n": 0,
+                "max": 0,
+                "root": "",
+                "nodes": []
+            },
+            "pool": [],
+            "stages": [],
+            "perf": [
+                {
+                    "id": "",
+                    "root": "",
+                    "key": "NONE",
+                    "select": 0,
+                    "rate": 10000,
+                    "duration": 10,
+                    "items": [],
+                    "selected": []
+                }
+            ],
+            "timers": {
+                "build": 0.0,
+                "stages": [],
+                "convergence": 0.0,
+                "perf": [
+                    0.0
+                ],
+                "total": 0.0
+            }
+        },
+        {
+            "name": "LEMON-A-STRESS",
+            "strategy": {
+                "key": "NONE",
+                "reverse": false
+            },
+            "parameters": {
+                "num": 1,
+                "choices": 3,
+                "rebuild": 0,
+                "hyperparameter": 4,
+                "rate": 10000,
+                "duration": 10,
+                "evaluation": 30,
+                "warmup": 2,
+                "epsilon": 0.0001,
+                "max_i": 1000,
+                "converge": false,
+                "stress": true
+            },
+            "tree": {
+                "name": "",
+                "depth": 3,
+                "fanout": 2,
+                "n": 0,
+                "max": 0,
+                "root": "",
+                "nodes": []
+            },
+            "pool": [],
+            "stages": [],
+            "perf": [
+                {
+                    "id": "",
+                    "root": "",
+                    "key": "NONE",
+                    "select": 0,
+                    "rate": 10000,
+                    "duration": 10,
+                    "items": [],
+                    "selected": []
+                }
+            ],
+            "timers": {
+                "build": 0.0,
+                "stages": [],
+                "convergence": 0.0,
+                "perf": [
+                    0.0
+                ],
+                "total": 0.0
+            }
+        },
+        {
+            "name": "LEMON-B-STRESS",
+            "strategy": {
+                "key": "NONE",
+                "reverse": false
+            },
+            "parameters": {
+                "num": 1,
+                "choices": 3,
+                "rebuild": 0,
+                "hyperparameter": 4,
+                "rate": 10000,
+                "duration": 10,
+                "evaluation": 30,
+                "warmup": 2,
+                "epsilon": 2.2e-05,
+                "max_i": 10000,
+                "converge": false,
+                "stress": true
+            },
+            "tree": {
+                "name": "",
+                "depth": 3,
+                "fanout": 2,
+                "n": 0,
+                "max": 0,
+                "root": "",
+                "nodes": []
+            },
+            "pool": [],
+            "stages": [],
+            "perf": [
+                {
+                    "id": "",
+                    "root": "",
+                    "key": "NONE",
+                    "select": 0,
+                    "rate": 10000,
+                    "duration": 10,
+                    "items": [],
+                    "selected": []
+                }
+            ],
+            "timers": {
+                "build": 0.0,
+                "stages": [],
+                "convergence": 0.0,
+                "perf": [
+                    0.0
+                ],
+                "total": 0.0
+            }
+        },
+        {
+            "name": "LEMON-C-STRESS",
+            "strategy": {
+                "key": "NONE",
+                "reverse": false
+            },
+            "parameters": {
+                "num": 1,
+                "choices": 3,
+                "rebuild": 0,
+                "hyperparameter": 4,
+                "rate": 10000,
+                "duration": 10,
+                "evaluation": 30,
+                "warmup": 2,
+                "epsilon": 1.7e-05,
+                "max_i": 100000,
+                "converge": false,
+                "stress": true
+            },
+            "tree": {
+                "name": "",
+                "depth": 3,
+                "fanout": 2,
+                "n": 0,
+                "max": 0,
+                "root": "",
+                "nodes": []
+            },
+            "pool": [],
+            "stages": [],
+            "perf": [
+                {
+                    "id": "",
+                    "root": "",
+                    "key": "NONE",
+                    "select": 0,
+                    "rate": 10000,
+                    "duration": 10,
+                    "items": [],
+                    "selected": []
+                }
+            ],
+            "timers": {
+                "build": 0.0,
+                "stages": [],
+                "convergence": 0.0,
+                "perf": [
                     0.0
                 ],
                 "total": 0.0

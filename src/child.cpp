@@ -128,7 +128,7 @@ int child(void) {
     std::vector<int64_t> latencies;
     float killfactor = ( config.killfactor == 0.0 ? 1.5 : config.killfactor );
 
-    auto deadline_ts = deadline((killfactor) * (config.duration + config.warmup));
+    auto deadline_ts = deadline(3 + (config.duration + config.warmup));
     auto t = timeout(1);
 
     if ( (sockfd = socket(AF_INET, SOCK_DGRAM, 0)) < 0 ) {

@@ -221,7 +221,7 @@ layout: default
 <img 
     alt="LEMONxOthers"
     src="/plot/LEMONxOthers.png"
-    style="width: 100%; height: auto; bottom: 25px; display: block; position: relative"
+    style="width: 100%; height: auto; top: 10px; bottom: 0px; display: block; position: relative; transform: scale(1.1)"
 />
 
 <TUMLogo variant="white" />
@@ -233,7 +233,7 @@ layout: default
 <img 
     alt="LEMONxOthers"
     src="/plot/LEMON-STRESSxOthers.png"
-    style="width: 100%; height: auto; bottom: 25px; display: block; position: relative"
+    style="width: 100%; height: auto; top: 10px; bottom: 0px; display: block; position: relative; transform: scale(1.1)"
 />
 
 <TUMLogo variant="white" />
@@ -245,7 +245,7 @@ layout: default
 <img 
     alt="LEMON-AxRUNS"
     src="/plot/LEMON-AxRUNS.png"
-    style="width: 100%; height: auto; bottom: 25px; display: block; position: relative"
+    style="width: 100%; height: auto; top: 10px; bottom: 0px; display: block; position: relative; transform: scale(1.1)"
 />
 
 <TUMLogo variant="white" />
@@ -257,7 +257,7 @@ layout: default
 <img 
     alt="LEMON-BxRUNS"
     src="/plot/LEMON-BxRUNS.png"
-    style="width: 100%; height: auto; bottom: 25px; display: block; position: relative"
+    style="width: 100%; height: auto; top: 10px; bottom: 0px; display: block; position: relative; transform: scale(1.1)"
 />
 
 <TUMLogo variant="white" />
@@ -269,7 +269,7 @@ layout: default
 <img 
     alt="LEMON-CxRUNS"
     src="/plot/LEMON-CxRUNS.png"
-    style="width: 100%; height: auto; bottom: 25px; display: block; position: relative"
+    style="width: 100%; height: auto; top: 10px; bottom: 0px; display: block; position: relative; transform: scale(1.1)"
 />
 
 <TUMLogo variant="white" />

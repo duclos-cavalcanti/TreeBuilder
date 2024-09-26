@@ -175,7 +175,7 @@ int proxy(void) {
     MsgUDP_t* msg;
     int sz = sizeof(MsgUDP_t);
 
-    auto deadline_ts = deadline(1.5  * config.duration);
+    auto deadline_ts = deadline(5 + (config.duration + config.warmup));
     auto t = timeout(1);
 
     if ( (sockfd = socket(AF_INET, SOCK_DGRAM, 0)) < 0 ) {
@@ -247,7 +247,7 @@ int leaf(void) {
     int sz = sizeof(MsgUDP_t);
     std::vector<int64_t> latencies;
 
-    auto deadline_ts = deadline(1.5  * config.duration);
+    auto deadline_ts = deadline(5 + (config.duration + config.warmup));
     auto t = timeout(1);
 
     if ( (sockfd = socket(AF_INET, SOCK_DGRAM, 0)) < 0 ) {

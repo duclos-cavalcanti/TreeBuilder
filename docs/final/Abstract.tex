@@ -2,6 +2,17 @@
 \thispagestyle{plain}
 
 \section*{Abstract}
-A short abstract of the thesis in English. 
+Financial exchanges consider a migration to the cloud for scalability, robustness, and cost-efficiency.
+Jasper presents a scalable and fair multicast solution for cloud-based exchanges, 
+addressing the lack of cloud-native mechanisms for such. 
+To achieve this, Jasper employs an overlay multicast tree, leveraging clock synchronization, kernel-bypass techniques, 
+and more.
+However, there are opportunities for enhancement by confronting the issue of inconsistent VM performance 
+within identical instances. LemonDrop tackles this problem, detecting under-performing VMs in a cluster 
+and selecting a subset of VMs optimized for a given application's latency needs.
+Yet, we believe that LemonDrop's approach of using time-expensive all-to-all latency measurements and an optimization routine 
+for the framed Quadratic Assignment Problem (QAP) is overly complex. 
+The proposed work aims to develop a simpler and scalable heuristic, that achieves reasonably good results
+within Jasper's time constraints. 
 
 
