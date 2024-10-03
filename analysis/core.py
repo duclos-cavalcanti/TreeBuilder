@@ -4,6 +4,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
 import networkx as nx
+import re
 
 from matplotlib.table   import table
 from typing             import List
@@ -108,7 +109,8 @@ def tspResult(fig:plt.Figure, ax:plt.Axes, args, title:str, result:ResultDict, d
         handle = plt.Line2D([0], [0], color=color, linestyle=linestyle, label=label)
         handles.append(handle)
     
-    fig.suptitle(f"{title}", fontsize=args.tfont, fontweight='bold')
+    if args.title:
+        fig.suptitle(f"{title}", fontsize=args.tfont, fontweight='bold')
     
     if args.title:
         ax.set_title(f"TIME SERIES {key.upper()} OWD (uS)", fontsize=args.nfont + 2, fontweight='bold')
@@ -152,7 +154,7 @@ def tspResult(fig:plt.Figure, ax:plt.Axes, args, title:str, result:ResultDict, d
         handles.append(plt.Line2D([0], [0], marker='s', color='w', alpha=0, label=f" "))
     
     if args.legend:
-        ax.legend(handles=handles, loc='best', fancybox=True, fontsize=args.nfont + 1, ncol=2)
+        ax.legend(handles=handles, loc='best', fancybox=True, fontsize=args.nfont - 6, ncol=2)
 
     return max_x, max_y, interval_y
 
@@ -262,7 +264,8 @@ def cdfResult(fig:plt.Figure, ax:plt.Axes, args, title:str, result:ResultDict, d
         max_x = max(max_x, max_xi)
         max_y = max(max_y, max_yi)
         
-    fig.suptitle(f"{title}", fontsize=args.tfont, fontweight='bold')
+    if args.title:
+        fig.suptitle(f"{title}", fontsize=args.tfont, fontweight='bold')
     
     if args.title:
         ax.set_title(f"CDF OWD LATENCY (uS)", fontsize=args.nfont + 2, fontweight='bold')
@@ -290,11 +293,11 @@ def cdfResult(fig:plt.Figure, ax:plt.Axes, args, title:str, result:ResultDict, d
         handles.append(plt.Line2D([0], [0], marker='s', color='w', alpha=0, label=f" "))
         
     if args.legend:
-        ax.legend(handles=handles, loc='best', fancybox=True, fontsize=args.nfont + 1, ncol=2)
+        ax.legend(handles=handles, loc='best', fancybox=True, fontsize=args.nfont - 6, ncol=2)
 
     return max_x, max_y
 
-def tableResult(fig:plt.Figure, ax:plt.Axes, args, title:str, run:RunDict, result:ResultDict, data:List[List], cols:List=[], override=""):
+def tableResult(fig:plt.Figure, ax:plt.Axes, args, title:str, run:RunDict, result:ResultDict, data:List[List], cols:List=[], override="", subtitle=""):
     key         = run['strategy']['key']
     rate        = run['parameters']['rate']
     duration    = run['parameters']['duration']
@@ -314,7 +317,7 @@ def tableResult(fig:plt.Figure, ax:plt.Axes, args, title:str, run:RunDict, resul
     cellcolors  = [ ['white' for _ in range(len(clabels))] for _ in range(len(rlabels)) ]
     cells       = []
 
-    fig.suptitle(f"{title}", fontsize=args.tfont, fontweight='bold')
+    # fig.suptitle(f"{title}", fontsize=args.tfont, fontweight='bold')
 
     if args.title:
         ax.set_title(f"{title}", fontsize=args.nfont + 2, fontweight='bold')
@@ -1536,3 +1539,570 @@ def plotAll(dir:str):
 def plotTarget(key:str, name:str, dir:str, root:str=""): 
     run, i = find(key=key, name=name, root=root)
     plotRun(run, i, dir, compare=False)
+
+def plotStageComparisonFINAL(run:RunDict, stages:List[ResultDict], rdir:str, base:int=0, fix:bool=False):
+    name, key, tree, id = EXPERIMENT.run(run) 
+    dir     = f"{rdir}" 
+    handles = [] 
+    labels = []
+
+    cloud    = EXPERIMENT.schema['infra'].upper()
+    rate     = run['parameters']['rate']
+    duration = run['parameters']['duration']
+    eval     = run['parameters']['evaluation']
+    depth    = run['tree']['depth']
+    fanout   = run['tree']['fanout']
+    N        = run['tree']['n']
+    K        = run['parameters']['hyperparameter']
+    # P        = len(runs[0]['pool'])
+    P        = len(EXPERIMENT.schema['names'][2:])
+
+    max_x = 0
+    max_y = 0
+
+    max_x_a = 0
+    max_y_a = 0
+    int_a = 0
+
+    max_x_b = 0
+    max_y_b = 0
+    int_b = 0
+
+    max_x_c = 0
+    max_y_c = 0
+    int_c = 0
+
+    cdfs    = []
+    p90s    = []
+    p50s    = []
+    stddevs = []
+
+    for i,stage in enumerate(stages):
+        data    = EXPERIMENT.jobs[stage["id"]]
+
+        ARGS2.legend  = True
+        ARGS2.title  = True
+
+        id = re.sub(r'\b[hH]euristic\b', lambda m: 'Weighted' if m.group(0)[0].isupper() else 'weighted', id)
+        id = str(id)
+
+        F = plt.figure(figsize=(int(ARGS2.w), ARGS2.h))
+        ax = F.add_subplot(1, 1, 1)
+        ax.set_title(f"{id} STAGE {base + i + 1}", fontsize=ARGS2.nfont + 2)
+        F.suptitle(f"STAGE RESULTS", fontsize=ARGS.tfont + 10, fontweight='bold')
+        tableResult(fig=F, ax=ax, args=ARGS2, title=f"{id}", run=run, result=stage, data=data, cols=[1, -2])
+        F.savefig(f"{rdir}/{id}-STAGES-TABLE.png", format="png")
+        print(f"PLOTTED: {id} - table")
+        
+        tmp = ARGS2.nfont
+        ARGS2.nfont = tmp - 5
+        max_x_i, max_y_i = cdfResult(fig=F, ax=G[i][1], args=ARGS2, title=f"{tree} - STAGE[{i + 1}]", result=stage, data=data)
+        max_x = max(max_x, max_x_i)
+        max_y = max(max_y, max_y_i)
+        for k in range(len(stages)):
+            ax = G[k][1]
+            ax.set_xlim(0, max_x + 50)
+            ax.set_ylim(0, max_y)
+            ax.set_yticks(np.arange(0, 100, 10))
+            ax.set_xticks(np.arange(0, max_x, 100))
+
+        ARGS2.nfont = tmp
+        ARGS2.legend  = False
+
+        max_x_i, max_y_i, int_i = tspResult(fig=F, ax=G[i][2], args=ARGS2, title=f"{tree} - STAGE[{i+1}]", result=stage, data=data, key="p90", interval=2)
+        max_x_a = max(max_x_a, max_x_i)
+        max_y_a = max(max_y_a, max_y_i)
+        int_a   = max(int_a,  int_i)
+
+        max_x_i, max_y_i, int_i = tspResult(fig=F, ax=G[i][3], args=ARGS2, title=f"{tree} - STAGE[{i + 1}]", result=stage, data=data, key="p50", interval=2)
+        max_x_a = max(max_x_a, max_x_i)
+        max_y_a = max(max_y_a, max_y_i)
+        int_a   = max(int_a,  int_i)
+
+        for k in range(len(stages)):
+            for v in [2, 3]:
+                ax = G[k][v]
+                ax.set_ylim(0, max_y_a + 100)
+                ax.set_yticks(np.arange(0, max_y_a + 100, int_a))
+
+        max_x_i, max_y_i, int_i = tspResult(fig=F, ax=G[i][4], args=ARGS2, title=f"{tree} - STAGE[{i + 1}]", result=stage, data=data, key="stddev", interval=2)
+        max_x_c = max(max_x_c, max_x_i)
+        max_y_c = max(max_y_c, max_y_i)
+        int_c   = max(int_c,  int_i)
+        G[i][4].set_yticks(np.arange(0, max_y_i + 100, int_i))
+
+        # for k in range(len(stages)):
+        #     ax = G[k][4]
+        #     ax.set_ylim(0, max_y_c + 100)
+        #     ax.set_yticks(np.arange(0, 100, 10))
+        #     ax.set_yticks(np.arange(0, max_y_c + 100, int_c))
+        
+        handles, labels = legendResult(stage, data)
+
+    title    = f"{title}"
+    subtitle = f"N={N}, D={depth}, F={fanout}, K={K}, POOL={P}, Rate={rate} p/sec, Duration={duration} sec"
+
+def plotEvalComparisonFINAL(run:RunDict, runs:List[RunDict], rdir:str, suptitle:bool=True, title:bool=False, fix:bool=True):
+    _, _, _, ID = EXPERIMENT.run(run)  
+    arr = [ run ] + runs
+    max_x = 0
+    max_y = 0
+
+    prev_max_a = 0
+    max_x_a = 0
+    max_y_a = 0
+    int_a = 100
+
+    max_x_b = 0
+    max_y_b = 0
+    int_b = 0
+
+    max_x_c = 0
+    max_y_c = 0
+    int_c = 0
+
+    cloud    = EXPERIMENT.schema['infra'].upper()
+    rate     = run['parameters']['rate']
+    duration = run['parameters']['duration']
+    eval     = run['parameters']['evaluation']
+    depth    = run['tree']['depth']
+    fanout   = run['tree']['fanout']
+    N        = run['tree']['n']
+    K        = run['parameters']['hyperparameter']
+    # P        = len(runs[0]['pool'])
+    P        = len(EXPERIMENT.schema['names'][2:])
+
+    cdfs    = []
+    p90s    = []
+    p50s    = []
+    stddevs = []
+
+    for i, run in enumerate(arr): 
+        name, key, tree, id = EXPERIMENT.run(run)
+        root                = EXPERIMENT.map(run["tree"]["root"])
+        iter                = EXPERIMENT.worst(run["perf"])
+        stage               = run["perf"][iter]
+        data                = EXPERIMENT.jobs[stage["id"]]
+
+        if "LEMON" in name or "RAND" in name:
+            id = f"{name}-{root}"
+
+        ARGS2.legend = True
+        ARGS2.title  = False
+
+
+        id = re.sub(r'\b[hH]euristic\b', lambda m: 'Weighted' if m.group(0)[0].isupper() else 'weighted', id)
+        id = str(id)
+        id = id.upper()
+
+        F = plt.figure(figsize=(int(ARGS2.w), ARGS2.h))
+        ax = F.add_subplot(1, 1, 1)
+        if title:
+            ax.set_title(f"{id}", fontsize=ARGS2.nfont + 2)
+        if suptitle:
+            F.suptitle(f"LEAF RESULTS", fontsize=ARGS2.tfont + 10, fontweight='bold')
+        tableResult(fig=F, ax=ax, args=ARGS2, title=f"{id}", run=run, result=stage, data=data, cols=[1, -2])
+        F.savefig(f"{rdir}/{id}-TABLE.png", format="png")
+        print(f"PLOTTED: {id} - table")
+
+        F = plt.figure(figsize=(int(ARGS2.w), ARGS2.h))
+        ax = F.add_subplot(1, 1, 1)
+        if title:
+            ax.set_title(f"{id}", fontsize=ARGS2.nfont + 2)
+        max_x_i, max_y_i = cdfResult(fig=F, ax=ax, args=ARGS2, title=f"{tree} - EVAL[{iter}]", result=stage, data=data)
+        if suptitle:
+            F.suptitle(f"CDF OWD LATENCY (uS)", fontsize=ARGS.tfont + 10, fontweight='bold')
+
+        if "LEMON" in run["name"]: 
+            print("HERE")
+            handles = [ 
+                       plt.Line2D([0], [0], marker='s', color='w', markerfacecolor='black', markersize=10, label=f"eps={run['parameters']['epsilon']} , max_i={run['parameters']['max_i']}"), 
+                       plt.Line2D([0], [0], marker='s', color='w', markerfacecolor='black', markersize=10, label=f"converged={run['parameters']['converge']}"), 
+                       plt.Line2D([0], [0], marker='s', color='w', markerfacecolor='black', markersize=10, label=f"time={utils.rnd(run['timers']['convergence'], 4)} sec"), 
+                       ]
+            ax.legend(handles=handles,  loc='best', fontsize=ARGS2.font)
+
+        F.savefig(f"{rdir}/{id}-CDF.pdf", format="pdf", bbox_inches='tight')
+        cdfs.append((ax, F, f"{rdir}/{id}-CDF.pdf"))
+        print(f"PLOTTED: {id} - cdf")
+
+        max_x = max(max_x, max_x_i)
+        max_y = max(max_y, max_y_i)
+        for k in range(len(cdfs)):
+            ax_, F_, name = cdfs[k]
+            ax_.set_xlim(0, max_x + 50)
+            ax_.set_ylim(0, max_y)
+            ax_.set_yticks(np.arange(0, 100, 10))
+            ax_.set_xticks(np.arange(0, max_x, 100))
+            F_.savefig(f"{name}", format="pdf", bbox_inches='tight')
+
+        prev_max_a = max_y_a
+
+        F = plt.figure(figsize=(int(ARGS2.w), ARGS2.h))
+        ax = F.add_subplot(1, 1, 1)
+        if title:
+            ax.set_title(f"{id}", fontsize=ARGS2.nfont + 2)
+        max_x_i, max_y_i, int_i = tspResult(fig=F,   ax=ax, args=ARGS2, title=f"{tree} - EVAL[{iter}]", result=stage, data=data, key="p90")
+        if suptitle:
+            F.suptitle(f"TIME SERIES P90 OWD (uS)", fontsize=ARGS2.tfont + 10, fontweight='bold')
+        F.savefig(f"{rdir}/{id}-p90.pdf", format="pdf")
+        p90s.append((ax, F, f"{rdir}/{id}-p90.pdf"))
+        # plt.close(F)
+        print(f"PLOTTED: {id} - p90")
+        if fix:
+            max_x_a = max(max_x_a, max_x_i)
+            max_y_a = max(max_y_a, max_y_i)
+            int_a   = max(int_a,  int_i)
+
+        F = plt.figure(figsize=(int(ARGS2.w), ARGS2.h))
+        ax = F.add_subplot(1, 1, 1)
+        if title:
+            ax.set_title(f"{id}", fontsize=ARGS2.nfont + 2, fontweight='bold')
+        max_x_i, max_y_i, int_i = tspResult(fig=F,   ax=ax, args=ARGS2, title=f"{tree} - EVAL[{iter}]", result=stage, data=data, key="p50")
+        if suptitle:
+            F.suptitle(f"TIME SERIES P50 OWD (uS)", fontsize=ARGS2.tfont + 10, fontweight='bold')
+        F.savefig(f"{rdir}/{id}-p50.pdf", format="pdf")
+        p50s.append((ax, F, f"{rdir}/{id}-p50.pdf"))
+        # plt.close(F)
+        print(f"PLOTTED: {id} - p50")
+        if fix:
+            max_x_a = max(max_x_a, max_x_i)
+            max_y_a = max(max_y_a, max_y_i)
+            int_a   = max(int_a,  int_i)
+
+        if fix:
+            for k in range(len(p50s)):
+                ax_, F_, name = p50s[k]
+                ax_.set_ylim(0, max_y_a + 100)
+                ax_.set_yticks(np.arange(0, max_y_a + 100, int_a))
+                F_.savefig(f"{name}", format="pdf", bbox_inches='tight')
+                
+            for k in range(len(p90s)):
+                ax_, F_, name = p90s[k]
+                ax_.set_ylim(0, max_y_a + 100)
+                ax_.set_yticks(np.arange(0, max_y_a + 100, int_a))
+                F_.savefig(f"{name}", format="pdf", bbox_inches='tight')
+
+        F = plt.figure(figsize=(int(ARGS2.w), ARGS2.h))
+        ax = F.add_subplot(1, 1, 1)
+        ax.set_title(f"{id}", fontsize=ARGS2.nfont + 2)
+        max_x_i, max_y_i, int_i = tspResult(fig=F,   ax=ax, args=ARGS2, title=f"{tree} - EVAL[{iter}]", result=stage, data=data, key="stddev")
+        print(f"TREE {id} | YLIM {max_y_i}")
+        if fix:
+            max_x_c = max(max_x_c, max_x_i)
+            max_y_c = max(max_y_c, max_y_i)
+            int_c   = max(int_c,  int_i)
+
+        if suptitle:
+            F.suptitle(f"TIME SERIES STDDEV OWD (uS)", fontsize=ARGS2.tfont + 10, fontweight='bold')
+
+        if "LEMON" in run["name"]: 
+            handles = [ 
+                       plt.Line2D([0], [0], marker='s', color='w', markerfacecolor='black', markersize=10, label=f"eps={run['parameters']['epsilon']} , max_i={run['parameters']['max_i']}"), 
+                       plt.Line2D([0], [0], marker='s', color='w', markerfacecolor='black', markersize=10, label=f"converged={run['parameters']['converge']}"), 
+                       plt.Line2D([0], [0], marker='s', color='w', markerfacecolor='black', markersize=10, label=f"time={utils.rnd(run['timers']['convergence'], 4)} sec"), 
+                       ]
+            ax.legend(handles=handles,  loc='best', fontsize=ARGS2.font)
+
+
+        F.savefig(f"{rdir}/{id}-stddev.pdf", format="pdf", bbox_inches='tight')
+        stddevs.append((ax, F, f"{rdir}/{id}-stddev.pdf"))
+
+        if fix:
+            for k in range(len(stddevs)):
+                ax_, F_, name = stddevs[k]
+                ax_.set_ylim(0, max_y_c + 100)
+                ax_.set_yticks(np.arange(0, max_y_c + 100, int_c))
+                F_.savefig(f"{name}", format="pdf", bbox_inches='tight')
+
+        # plt.close(F)
+        print(f"PLOTTED: {id} - stddev")
+
+    plt.close('all')
+
+
+
+    # title    = f"{title}"
+    # subtitle = f"N={N}, D={depth}, F={fanout}, K={K}, POOL={P}, Rate={rate} p/sec, Duration={eval} sec"
+
+    # subtitle = f"N={N}, D={depth}, F={fanout}, K={K}, POOL={P}"
+    # extra    = f"Rate={rate} p/sec, Duration={eval} sec, {cloud}"
+
+
+def plotEvalIterationsComparisonFINAL(runs:List[RunDict], rdir:str, title:bool=False, suptitle:bool=False):
+    run = runs[0]
+    _, _, _, ID = EXPERIMENT.run(run)  
+    arr = runs
+    max_x = 0
+    max_y = 0
+
+    prev_max_a = 0
+    max_x_a = 0
+    max_y_a = 0
+    int_a = 100
+
+    max_x_b = 0
+    max_y_b = 0
+    int_b = 0
+
+    max_x_c = 0
+    max_y_c = 0
+    int_c = 0
+
+    cloud    = EXPERIMENT.schema['infra'].upper()
+    rate     = run['parameters']['rate']
+    duration = run['parameters']['duration']
+    eval     = run['parameters']['evaluation']
+    depth    = run['tree']['depth']
+    fanout   = run['tree']['fanout']
+    N        = run['tree']['n']
+    K        = run['parameters']['hyperparameter']
+    # P        = len(runs[0]['pool'])
+    P        = len(EXPERIMENT.schema['names'][2:])
+
+    cdf    = []
+    stddev = []
+    handles = []
+
+    meta_id = ""
+
+    for i, run in enumerate(arr): 
+        name, key, tree, id = EXPERIMENT.run(run)
+        root                = EXPERIMENT.map(run["tree"]["root"])
+
+        if "LEMON" in name or "RAND" in name:
+            id = f"{name}-{root}"
+
+        id = re.sub(r'\b[hH]euristic\b', lambda m: 'Weighted' if m.group(0)[0].isupper() else 'weighted', id)
+        id = str(id)
+        id = id.upper()
+
+        meta_id = f"{meta_id}x{id}"
+
+    F = plt.figure(figsize=(int(ARGS2.w), ARGS2.h))
+    ax = F.add_subplot(1, 1, 1)
+    cdf = (ax, F, f"{rdir}/{meta_id}-cdf.pdf")
+    
+    F = plt.figure(figsize=(int(ARGS2.w), ARGS2.h))
+    ax = F.add_subplot(1, 1, 1)
+    stddev = (ax, F, f"{rdir}/{meta_id}-stddev.pdf")
+
+    for i, run in enumerate(arr): 
+        name, key, tree, id = EXPERIMENT.run(run)
+        root                = EXPERIMENT.map(run["tree"]["root"])
+        iter                = EXPERIMENT.worst(run["perf"])
+        stage               = run["perf"][iter]
+        data                = EXPERIMENT.jobs[stage["id"]]
+
+        item        = stage["items"][0]
+        addr        = item["addr"].split(":")[0]
+        addr        = EXPERIMENT.map(item["addr"])
+        label       = f"{id}"
+        color       = COLORS[ i % len(COLORS) ]
+        linestyle   = LINESTYLES[ i+1 % len(LINESTYLES) ]
+
+
+        ARGS2.legend = True
+        ARGS2.title  = False
+
+        if "LEMON" in name or "RAND" in name:
+            id = f"{name}-{root}"
+
+        id = re.sub(r'\b[hH]euristic\b', lambda m: 'Weighted' if m.group(0)[0].isupper() else 'weighted', id)
+        id = str(id)
+        id = id.upper()
+
+        ax, F, name = cdf
+        line, max_x, max_y = plot.cdf(ax, label=label, color=color, linestyle=linestyle, data=data[0])
+        if title: ax.set_title(f"CDF COMPARISON", fontsize=ARGS2.nfont + 2)
+        max_x_a = max(max_x, max_x_a)
+        max_y_a = max(max_y, max_y_a)
+        ax.set_ylabel("CDF", fontsize=ARGS2.nfont)
+        ax.set_xlabel("OWD(us)", fontsize=ARGS2.nfont)
+        ax.set_xlim(0, max_x_a + 50)
+        ax.set_ylim(0, 100)
+        ax.set_yticks(np.arange(0, 100, 10))
+        ax.set_xticks(np.arange(0, max_x_a, 100))
+        if suptitle: F.suptitle(f"CDF OWD LATENCY (uS)", fontsize=ARGS.tfont + 10, fontweight='bold')
+        ax.tick_params(axis='x', labelsize=ARGS2.nfont - 1)
+        ax.tick_params(axis='y', labelsize=ARGS2.nfont - 1)
+        F.savefig(f"{name}", format="pdf", bbox_inches='tight')
+        print(f"PLOTTED: DIRECT {id} - cdf")
+
+        ax, F, name = stddev
+        line, max_x, max_y = plot.tsp(ax, label=label, color=color, linestyle=linestyle, step=rate, data=data[0], key="stddev")
+        if title: ax.set_title(f"STDDEV TSP COMPARISON", fontsize=ARGS2.nfont + 2)
+        if suptitle: F.suptitle(f"TIME SERIES STDDEV OWD (uS)", fontsize=ARGS2.tfont + 10, fontweight='bold')
+        max_y_b = max(max_y, max_y_b)
+        ax.set_xlim(0, max_x + 1)
+        ax.set_ylim(0, max_y_b * 1.5)
+        ax.set_ylabel("OWD(us)", fontsize=ARGS2.nfont)
+        ax.set_xlabel("t(s)", fontsize=ARGS2.nfont)
+        interval = 0
+        if max_y_b > 15000:
+            interval = 5000
+        elif max_y_b > 10000:
+            interval = 2000
+        elif max_y_b > 1000:
+            interval = 200
+        else:
+            interval = 100
+        ax.set_ylim(0, max_y_b + 100)
+        ax.set_yticks(np.arange(0, max_y_b + 100, interval))
+        ax.tick_params(axis='x', labelsize=ARGS2.nfont - 1)
+        ax.tick_params(axis='y', labelsize=ARGS2.nfont - 1)
+        F.savefig(f"{name}", format="pdf", bbox_inches='tight')
+        print(f"PLOTTED: DIRECT {id} - tsp")
+        print(f"TREE {id} | YLIM {max_y}")
+
+        handles.append(plt.Line2D([0], [0], color=color, linestyle=linestyle, label=f"{id}: {addr}"))
+        # if "LEMON" in name: 
+            # handles += [ 
+                       # plt.Line2D([0], [0], marker='s', color=color, markerfacecolor='black', markersize=10, label=f"eps={run['parameters']['epsilon']} , max_i={run['parameters']['max_i']}"), 
+                       # plt.Line2D([0], [0], marker='s', color=color, markerfacecolor='black', markersize=10, label=f"converged={run['parameters']['converge']}"), 
+                       # plt.Line2D([0], [0], marker='s', color=color, markerfacecolor='black', markersize=10, label=f"time={utils.rnd(run['timers']['convergence'], 4)} sec"), 
+                       #]
+
+    figs = [ cdf, stddev ]
+    for tup in figs:
+        ax_, F_, name = tup
+       # if "LEMON" in name: ax_.legend(handles=handles,  loc='best', ncol=3, fontsize=ARGS2.nfont - 6)
+       # else: ax_.legend(handles=handles,  loc='best', fontsize=ARGS2.nfont - 6)
+        ax_.legend(handles=handles,  loc='best', fontsize=ARGS2.nfont - 6)
+        F_.savefig(f"{name}", format="pdf", bbox_inches='tight')
+
+    return
+
+def plotEvalIterationsComparisonFINAL_ALL(runs:List[RunDict], rdir:str, title:bool=False, suptitle:bool=False):
+    run = runs[0]
+    _, _, _, ID = EXPERIMENT.run(run)  
+    arr = runs
+    max_x = 0
+    max_y = 0
+
+    prev_max_a = 0
+    max_x_a = 0
+    max_y_a = 0
+    int_a = 100
+
+    max_x_b = 0
+    max_y_b = 0
+    int_b = 0
+
+    max_x_c = 0
+    max_y_c = 0
+    int_c = 0
+
+    cloud    = EXPERIMENT.schema['infra'].upper()
+    rate     = run['parameters']['rate']
+    duration = run['parameters']['duration']
+    eval     = run['parameters']['evaluation']
+    depth    = run['tree']['depth']
+    fanout   = run['tree']['fanout']
+    N        = run['tree']['n']
+    K        = run['parameters']['hyperparameter']
+    # P        = len(runs[0]['pool'])
+    P        = len(EXPERIMENT.schema['names'][2:])
+
+    cdf    = []
+    stddev = []
+    handles = []
+
+    meta_id = ""
+
+    for i, run in enumerate(arr): 
+        name, key, tree, id = EXPERIMENT.run(run)
+        root                = EXPERIMENT.map(run["tree"]["root"])
+
+        if "LEMON" in name or "RAND" in name:
+            id = f"{name}-{root}"
+
+        id = re.sub(r'\b[hH]euristic\b', lambda m: 'Weighted' if m.group(0)[0].isupper() else 'weighted', id)
+        id = str(id)
+        id = id.upper()
+
+        meta_id = f"{meta_id}x{id}"
+
+    F = plt.figure(figsize=(int(ARGS2.w), ARGS2.h))
+    ax = F.add_subplot(1, 1, 1)
+    cdf = (ax, F, f"{rdir}/{meta_id}-cdf-ALL.pdf")
+    
+    F = plt.figure(figsize=(int(ARGS2.w), ARGS2.h))
+    ax = F.add_subplot(1, 1, 1)
+    stddev = (ax, F, f"{rdir}/{meta_id}-stddev-ALL.pdf")
+
+    for i, run in enumerate(arr): 
+        name, key, tree, id = EXPERIMENT.run(run)
+        root                = EXPERIMENT.map(run["tree"]["root"])
+        iter                = EXPERIMENT.worst(run["perf"])
+        stage               = run["perf"][iter]
+        data                = EXPERIMENT.jobs[stage["id"]]
+
+        label       = f"{id}"
+        color       = COLORS[ i % len(COLORS) ]
+        linestyle   = LINESTYLES[ i+1 % len(LINESTYLES) ]
+
+
+        ARGS2.legend = True
+        ARGS2.title  = False
+
+        if "LEMON" in name or "RAND" in name:
+            id = f"{name}-{root}"
+
+        id = re.sub(r'\b[hH]euristic\b', lambda m: 'Weighted' if m.group(0)[0].isupper() else 'weighted', id)
+        id = str(id)
+        id = id.upper()
+
+        ax, F, name = cdf
+        for d in data:
+            line, max_x, max_y = plot.cdf(ax, label=label, color=color, linestyle=linestyle, data=d)
+            if title: ax.set_title(f"CDF COMPARISON", fontsize=ARGS2.nfont + 2)
+            max_x_a = max(max_x, max_x_a)
+            max_y_a = max(max_y, max_y_a)
+            ax.set_ylabel("CDF", fontsize=ARGS2.nfont)
+            ax.set_xlabel("OWD(us)", fontsize=ARGS2.nfont)
+            ax.set_xlim(0, max_x_a + 50)
+            ax.set_ylim(0, 100)
+            ax.set_yticks(np.arange(0, 100, 10))
+            ax.set_xticks(np.arange(0, max_x_a, 100))
+            if suptitle: F.suptitle(f"CDF OWD LATENCY (uS)", fontsize=ARGS.tfont + 10, fontweight='bold')
+            ax.tick_params(axis='x', labelsize=ARGS2.nfont - 1)
+            ax.tick_params(axis='y', labelsize=ARGS2.nfont - 1)
+            F.savefig(f"{name}", format="pdf", bbox_inches='tight')
+        print(f"PLOTTED: DIRECT {id} - cdf")
+
+        ax, F, name = stddev
+        for d in data:
+            line, max_x, max_y = plot.tsp(ax, label=label, color=color, linestyle=linestyle, step=rate, data=d, key="stddev")
+            if title: ax.set_title(f"STDDEV TSP COMPARISON", fontsize=ARGS2.nfont + 2)
+            if suptitle: F.suptitle(f"TIME SERIES STDDEV OWD (uS)", fontsize=ARGS2.tfont + 10, fontweight='bold')
+            max_y_b = max(max_y, max_y_b)
+            ax.set_xlim(0, max_x + 1)
+            ax.set_ylim(0, max_y_b * 1.5)
+            ax.set_ylabel("OWD(us)", fontsize=ARGS2.nfont)
+            ax.set_xlabel("t(s)", fontsize=ARGS2.nfont)
+            interval = 0
+            if max_y_b > 15000:
+                interval = 5000
+            elif max_y_b > 10000:
+                interval = 2000
+            elif max_y_b > 1000:
+                interval = 200
+            else:
+                interval = 100
+            ax.set_ylim(0, max_y_b + 100)
+            ax.set_yticks(np.arange(0, max_y_b + 100, interval))
+            ax.tick_params(axis='x', labelsize=ARGS2.nfont - 1)
+            ax.tick_params(axis='y', labelsize=ARGS2.nfont - 1)
+            F.savefig(f"{name}", format="pdf", bbox_inches='tight')
+        print(f"PLOTTED: DIRECT {id} - tsp")
+
+        handles.append(plt.Line2D([0], [0], color=color, linestyle=linestyle, label=f"{id}"))
+
+    figs = [ cdf, stddev ]
+    for tup in figs:
+        ax_, F_, name = tup
+        ax_.legend(handles=handles,  loc='best', fontsize=ARGS2.nfont - 6)
+        F_.savefig(f"{name}", format="pdf", bbox_inches='tight')
+
+    return
